@@ -19,7 +19,7 @@ import { MockInterceptor } from './core/interceptors/mock.interceptor';
     SharedModule,
   ],
   providers: [
-    // { provide: HTTP_INTERCEPTORS, useClass: MockInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: MockInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]
