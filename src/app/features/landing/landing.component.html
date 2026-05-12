@@ -1,0 +1,186 @@
+<!-- ── NAV ── -->
+<nav class="landing-nav">
+  <div class="nav-brand">
+    <div class="nav-logo"><mat-icon>school</mat-icon></div>
+    <span class="nav-title">SkillSync</span>
+  </div>
+  <div class="nav-links">
+    <a href="#use-cases">Use Cases</a>
+    <a href="#features">Features</a>
+    <a href="#demo">Demo</a>
+  </div>
+  <button class="btn-signin" (click)="goToLogin()">Sign In</button>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Training Management Platform</div>
+    <h1>Empower Your Organization<br/>With <span class="gradient-text">Smarter Training</span><br/>Management</h1>
+    <p class="hero-sub">Streamline onboarding, track performance, manage batches, and run assessments — all in one powerful platform built for modern enterprises.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" (click)="goToLogin()">Start Free <mat-icon>arrow_forward</mat-icon></button>
+      <button class="btn-outline" (click)="goToDemo()">Learn More</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat" *ngFor="let s of stats">
+        <span class="stat-val">{{ s.value }}</span>
+        <span class="stat-lbl">{{ s.label }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card main-card">
+      <div class="card-header-row">
+        <span class="dot green"></span><span class="dot yellow"></span><span class="dot red"></span>
+      </div>
+      <div class="mock-bar"></div>
+      <div class="mock-bar short"></div>
+      <div class="mock-chart">
+        <div class="bar b1"></div><div class="bar b2"></div><div class="bar b3"></div>
+        <div class="bar b4"></div><div class="bar b5"></div>
+      </div>
+      <div class="mock-badge">246 <span>Trainees Active</span></div>
+    </div>
+    <div class="hero-card mini-card">
+      <mat-icon>school</mat-icon>
+      <span>New Batch Started</span>
+    </div>
+    <div class="hero-glow"></div>
+  </div>
+</section>
+
+<!-- ── PARTNERS ── -->
+<section class="partners">
+  <p class="partners-label">Trusted by leading organizations</p>
+  <div class="partners-row">
+    <div class="partner-chip" *ngFor="let p of partners">{{ p }}</div>
+  </div>
+</section>
+
+<!-- ── USE CASES ── -->
+<section class="use-cases" id="use-cases">
+  <h2 class="section-title">Use Cases</h2>
+  <div class="use-cases-layout">
+    <div class="use-cases-sidebar">
+      <div class="use-case-item"
+           *ngFor="let u of useCases; let i = index"
+           [class.active]="activeUseCase === i"
+           (click)="activeUseCase = i">
+        <mat-icon>{{ u.icon }}</mat-icon>
+        <span>{{ u.label }}</span>
+        <mat-icon class="arrow">chevron_right</mat-icon>
+      </div>
+    </div>
+    <div class="use-cases-content">
+      <div class="use-case-detail">
+        <div class="uc-icon-wrap">
+          <mat-icon>{{ useCases[activeUseCase].icon }}</mat-icon>
+        </div>
+        <h3>{{ useCases[activeUseCase].label }}</h3>
+        <p>{{ useCases[activeUseCase].desc }}</p>
+        <button class="btn-primary sm" (click)="goToLogin()">Get Started <mat-icon>arrow_forward</mat-icon></button>
+      </div>
+      <div class="use-case-visual">
+        <div class="uc-mock-card">
+          <div class="uc-mock-header">
+            <span class="dot green"></span><span class="dot yellow"></span><span class="dot red"></span>
+          </div>
+          <div class="uc-mock-rows">
+            <div class="uc-row" *ngFor="let _ of [1,2,3,4]">
+              <div class="uc-avatar"></div>
+              <div class="uc-lines">
+                <div class="uc-line long"></div>
+                <div class="uc-line short"></div>
+              </div>
+              <div class="uc-chip"></div>
+            </div>
+          </div>
+          <div class="uc-chart-row">
+            <div class="uc-pie"></div>
+            <div class="uc-mini-bars">
+              <div class="mb" *ngFor="let _ of [1,2,3,4,5]"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section" id="features">
+  <h2 class="section-title">SkillSync Features</h2>
+  <div class="features-grid">
+    <div class="feature-card" *ngFor="let f of features">
+      <div class="feature-icon-wrap">
+        <mat-icon>{{ f.icon }}</mat-icon>
+      </div>
+      <h4>{{ f.title }}</h4>
+      <p>{{ f.desc }}</p>
+      <div class="feature-mock">
+        <div class="fm-bar" *ngFor="let _ of [1,2,3]"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEMO CTA ── -->
+<section class="demo-section" id="demo">
+  <div class="demo-left">
+    <h2>Ready To See More?<br/><span class="gradient-text">Get A Demo.</span></h2>
+    <p>See how SkillSync can transform your organization's training programs with a personalized walkthrough from our team.</p>
+    <div class="demo-trust">
+      <div class="trust-item"><mat-icon>verified</mat-icon><span>No credit card required</span></div>
+      <div class="trust-item"><mat-icon>lock</mat-icon><span>Enterprise-grade security</span></div>
+      <div class="trust-item"><mat-icon>support_agent</mat-icon><span>24/7 support</span></div>
+    </div>
+  </div>
+  <div class="demo-right">
+    <div class="demo-form-card">
+      <h3>Book a Demo</h3>
+      <div class="demo-field"><label>Full Name</label><input type="text" placeholder="Your full name"/></div>
+      <div class="demo-field"><label>Work Email</label><input type="email" placeholder="you@company.com"/></div>
+      <div class="demo-field"><label>Company</label><input type="text" placeholder="Company name"/></div>
+      <div class="demo-field"><label>Number of Employees</label>
+        <select><option>1–50</option><option>51–200</option><option>201–1000</option><option>1000+</option></select>
+      </div>
+      <button class="btn-primary full" (click)="goToDemo()">Get Demo</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="landing-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="nav-logo sm"><mat-icon>school</mat-icon></div>
+      <span class="nav-title">SkillSync</span>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h5>SkillSync</h5>
+        <a>About Us</a><a>Careers</a><a>Blog</a><a>Press</a>
+      </div>
+      <div class="footer-col">
+        <h5>Compliance</h5>
+        <a>Privacy Policy</a><a>Terms of Service</a><a>GDPR</a>
+      </div>
+      <div class="footer-col">
+        <h5>Support</h5>
+        <a>Help Center</a><a>Contact Us</a><a>Status</a>
+      </div>
+      <div class="footer-col">
+        <h5>Follow Us</h5>
+        <div class="social-icons">
+          <button class="social-ic"><mat-icon>language</mat-icon></button>
+          <button class="social-ic"><mat-icon>tag</mat-icon></button>
+          <button class="social-ic"><mat-icon>work</mat-icon></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 SkillSync. All rights reserved.</span>
+  </div>
+</footer>

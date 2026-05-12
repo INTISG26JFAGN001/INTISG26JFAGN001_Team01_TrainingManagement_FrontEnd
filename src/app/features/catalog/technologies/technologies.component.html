@@ -1,0 +1,56 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info"><h2>Technologies</h2><p>Manage available technologies and skills</p></div>
+    <button mat-flat-button color="primary" (click)="openForm()" *ngIf="canEdit"><mat-icon>add</mat-icon> Add Technology</button>
+  </div>
+
+  <!-- Inline Form -->
+  <mat-card class="form-card" *ngIf="showForm">
+    <mat-card-header><mat-card-title>{{ editId ? 'Edit' : 'New' }} Technology</mat-card-title></mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" class="inline-form">
+        <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name"/></mat-form-field>
+        <mat-form-field appearance="outline" class="desc-field"><mat-label>Description</mat-label><input matInput formControlName="description"/></mat-form-field>
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="closeForm()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">{{ saving ? 'Saving...' : 'Save' }}</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="content-card">
+    <div class="table-toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-icon matPrefix>search</mat-icon><mat-label>Search technologies...</mat-label>
+        <input matInput (keyup)="applyFilter($event)"/>
+      </mat-form-field>
+    </div>
+    <div class="table-container" *ngIf="!loading; else loadingTpl">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Technology</th>
+          <td mat-cell *matCellDef="let t">
+            <div class="tech-cell"><div class="tech-icon"><mat-icon>code</mat-icon></div><span>{{ t.name }}</span></div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let t">{{ t.description || '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let t">
+            <button mat-icon-button color="primary" (click)="openForm(t)" *ngIf="canEdit" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="delete(t)" *ngIf="canEdit" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr class="mat-row" *matNoDataRow><td [attr.colspan]="displayedColumns.length" class="no-data">No technologies found.</td></tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10,25,50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card>
+</div>
+<ng-template #loadingTpl><div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div></ng-template>

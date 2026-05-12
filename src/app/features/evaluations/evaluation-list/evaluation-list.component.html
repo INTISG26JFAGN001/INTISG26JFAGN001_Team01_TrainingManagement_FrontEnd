@@ -1,0 +1,80 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>Evaluations</h2>
+      <p>{{ isAssociate ? 'View your performance scores' : 'View calculated performance evaluations by batch' }}</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="calculate()" *ngIf="canCalculate && selectedBatch" [disabled]="!selectedBatch">
+      <mat-icon>calculate</mat-icon> Calculate Evaluations
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="batch-filter">
+      <mat-label>{{ isAssociate ? 'Select Batch to View Scores' : 'Select Batch' }}</mat-label>
+      <mat-select [(value)]="selectedBatch" (selectionChange)="loadEvaluations()">
+        <mat-option [value]="null">— Select a Batch —</mat-option>
+        <mat-option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="empty-state" *ngIf="!selectedBatch">
+    <mat-icon>bar_chart</mat-icon>
+    <h3>Select a Batch</h3>
+    <p>{{ isAssociate ? 'Choose your batch to view your scores' : 'Choose a batch above to view its evaluations' }}</p>
+  </div>
+
+  <mat-card class="content-card" *ngIf="selectedBatch && !loading">
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+        <ng-container matColumnDef="associateName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Associate</th>
+          <td mat-cell *matCellDef="let e">
+            <div class="assoc-cell">
+              <div class="avatar-sm">{{ e.associateName?.charAt(0) }}</div>
+              {{ e.associateName }}
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalScore">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Score</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="score-badge" [ngClass]="getScoreColor(e.totalScore)">{{ e.totalScore | number:'1.1-1' }}%</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="quizScore">
+          <th mat-header-cell *matHeaderCellDef>Quiz</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-progress-bar mode="determinate" [value]="e.quizScore" class="score-bar"></mat-progress-bar>
+            <span class="score-text">{{ e.quizScore | number:'1.1-1' }}%</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="interviewScore">
+          <th mat-header-cell *matHeaderCellDef>Interview</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-progress-bar mode="determinate" [value]="e.interviewScore" class="score-bar"></mat-progress-bar>
+            <span class="score-text">{{ e.interviewScore | number:'1.1-1' }}%</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="projectScore">
+          <th mat-header-cell *matHeaderCellDef>Project</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-progress-bar mode="determinate" [value]="e.projectScore" class="score-bar"></mat-progress-bar>
+            <span class="score-text">{{ e.projectScore | number:'1.1-1' }}%</span>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td [attr.colspan]="displayedColumns.length" class="no-data">
+            {{ canCalculate ? 'No evaluations yet. Click "Calculate Evaluations" to generate scores.' : 'No evaluation scores available for this batch yet.' }}
+          </td>
+        </tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10,25,50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card>
+
+  <div class="loading-center" *ngIf="loading"><mat-spinner diameter="40"></mat-spinner></div>
+</div>

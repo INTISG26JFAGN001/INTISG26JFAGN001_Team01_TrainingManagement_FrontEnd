@@ -1,0 +1,15 @@
+.filter-bar { margin-bottom: 0; .batch-filter { width: 280px; } }
+.assoc-cell { display: flex; align-items: center; gap: 8px; }
+.avatar-sm {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-glow); color: var(--accent);
+  font-weight: 700; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  border: 1px solid rgba(0,198,255,0.2);
+}
+.score-badge { padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+.score-high { background: rgba(16,185,129,0.15);  color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.score-mid  { background: rgba(245,158,11,0.15);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.score-low  { background: rgba(239,68,68,0.15);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.score-bar  { height: 5px; border-radius: 4px; display: inline-block; width: 80px; vertical-align: middle; margin-right: 8px; }
+.score-text { font-size: 12px; color: var(--text-secondary); }

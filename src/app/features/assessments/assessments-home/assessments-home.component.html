@@ -1,0 +1,22 @@
+<div class="assessments-home">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>Assessments</h2>
+      <p>Manage quizzes, interviews, projects and evaluations</p>
+    </div>
+  </div>
+
+  <div class="tiles-grid">
+    <div class="tile" *ngFor="let t of tiles" (click)="go(t.route)"
+         [style.--tile-color]="t.color" [style.--tile-glow]="t.glow">
+      <div class="tile-icon-wrap">
+        <mat-icon class="tile-icon">{{ t.icon }}</mat-icon>
+      </div>
+      <h3 class="tile-label">{{ t.label }}</h3>
+      <p class="tile-desc">{{ t.desc }}</p>
+      <div class="tile-arrow">
+        <mat-icon>arrow_forward</mat-icon>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+<header class="app-header">
+  <div class="header-left">
+    <button class="icon-btn menu-btn" (click)="menuToggle.emit()">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <div class="search-bar">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input type="text" placeholder="Search SkillSync..." class="search-input" />
+      <button class="search-btn">Search</button>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button class="icon-btn" matTooltip="Settings">
+      <mat-icon>settings</mat-icon>
+    </button>
+    <button class="icon-btn notif-btn" matTooltip="Notifications">
+      <mat-icon>notifications_none</mat-icon>
+      <span class="notif-dot"></span>
+    </button>
+    <button class="icon-btn" (click)="toggleTheme()" [matTooltip]="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+      <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <div class="user-menu" [matMenuTriggerFor]="userMenu">
+      <div class="avatar">{{ username.charAt(0).toUpperCase() }}</div>
+      <mat-icon class="chevron">expand_more</mat-icon>
+    </div>
+
+    <mat-menu #userMenu="matMenu" class="user-dropdown">
+      <div class="menu-user-info">
+        <span class="menu-username">{{ username }}</span>
+        <span class="menu-role">{{ getRoleLabel() }}</span>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item>
+        <mat-icon>person_outline</mat-icon><span>My Profile</span>
+      </button>
+      <button mat-menu-item (click)="logout()" class="logout-item">
+        <mat-icon>logout</mat-icon><span>Sign Out</span>
+      </button>
+    </mat-menu>
+  </div>
+</header>

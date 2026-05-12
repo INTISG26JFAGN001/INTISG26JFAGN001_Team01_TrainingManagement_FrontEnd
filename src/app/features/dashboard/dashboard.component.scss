@@ -1,0 +1,247 @@
+.dashboard { display: flex; flex-direction: column; gap: 22px; }
+
+/* ── Greeting banner ── */
+.greeting-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 4px;
+
+  .greeting-text {
+    h2 { font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+    .greeting-sub { font-size: 13px; color: var(--text-secondary); margin: 0; }
+    .role-badge-line { margin: 4px 0 0; }
+    .role-badge {
+      display: inline-flex; align-items: center;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(0,198,255,0.25);
+      border-radius: 20px; padding: 2px 12px;
+      font-size: 11px; font-weight: 600;
+    }
+  }
+
+  .greeting-illustration mat-icon {
+    font-size: 56px; width: 56px; height: 56px;
+    color: var(--accent); opacity: 0.15;
+  }
+
+  /* role tint on icon only */
+  &.role-trainer      .greeting-illustration mat-icon { color: #10b981; }
+  &.role-associate    .greeting-illustration mat-icon { color: #6366f1; }
+  &.role-coach        .greeting-illustration mat-icon { color: #a78bfa; }
+  &.role-tech_lead    .greeting-illustration mat-icon { color: #f59e0b; }
+  &.role-scrum_lead   .greeting-illustration mat-icon { color: #64748b; }
+}
+
+/* ── Stat cards grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  @media(max-width: 900px) { grid-template-columns: repeat(2,1fr); }
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-card);
+  cursor: default;
+  transition: border-color 0.2s, transform 0.18s;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle at top right, rgba(255,255,255,0.03), transparent 70%);
+    pointer-events: none;
+  }
+
+  &:hover { border-color: var(--border-active); transform: translateY(-2px); }
+
+  .stat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
+  }
+
+  .stat-info {
+    flex: 1;
+    display: flex; flex-direction: column;
+  }
+
+  .stat-value {
+    font-size: 26px; font-weight: 700;
+    color: var(--text-primary); line-height: 1;
+    &.small { font-size: 15px; font-weight: 600; }
+  }
+
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+
+  .stat-trend mat-icon { font-size: 18px; opacity: 0.4; }
+
+  /* three-dot menu placeholder */
+  .stat-more {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 18px; color: var(--text-muted); cursor: pointer;
+    &:hover { color: var(--text-secondary); }
+  }
+}
+
+/* Card icon colour variants */
+.icon-blue   { background: rgba(99,102,241,0.15); mat-icon { color: #818cf8; } }
+.icon-teal   { background: rgba(0,198,255,0.12);  mat-icon { color: var(--accent); } }
+.icon-green  { background: rgba(16,185,129,0.12); mat-icon { color: #34d399; } }
+.icon-orange { background: rgba(245,158,11,0.12); mat-icon { color: #fbbf24; } }
+.icon-purple { background: rgba(167,139,250,0.12);mat-icon { color: #a78bfa; } }
+.icon-red    { background: rgba(239,68,68,0.12);  mat-icon { color: #f87171; } }
+
+/* ── Secondary stats ── */
+.secondary-stats {
+  display: flex; gap: 14px;
+
+  .secondary-card {
+    flex: 1; border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+
+    mat-icon { font-size: 26px; }
+    .sec-val  { display: block; font-size: 22px; font-weight: 700; color: var(--text-primary); }
+    .sec-label{ display: block; font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    &.ongoing   { border-left: 3px solid #34d399; mat-icon { color: #34d399; } }
+    &.upcoming  { border-left: 3px solid #fbbf24; mat-icon { color: #fbbf24; } }
+    &.completed { border-left: 3px solid #818cf8; mat-icon { color: #818cf8; } }
+  }
+}
+
+/* ── Dashboard row (table + ongoing) ── */
+.dashboard-row {
+  display: grid; grid-template-columns: 3fr 2fr; gap: 18px;
+  @media(max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+/* ── Cards (table, ongoing, quick actions) ── */
+.table-card, .ongoing-card, .quick-actions-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-card) !important;
+  color: var(--text-primary);
+
+  mat-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 0;
+
+    mat-card-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px !important; font-weight: 600;
+      color: var(--text-primary) !important;
+      mat-icon { font-size: 18px; color: var(--accent); }
+    }
+
+    button { color: var(--accent) !important; font-size: 12px; }
+  }
+
+  mat-card-content { padding: 16px 20px !important; }
+}
+
+.dash-table { width: 100%; background: transparent !important; }
+.clickable-row { cursor: pointer; &:hover td { background: rgba(255,255,255,0.02) !important; } }
+
+/* ── Ongoing batch items ── */
+.batch-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: padding 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { padding: 10px 8px; background: rgba(255,255,255,0.02); border-radius: 8px; }
+
+  .batch-avatar {
+    width: 36px; height: 36px;
+    background: var(--accent-glow); border: 1px solid rgba(0,198,255,0.2);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--accent); font-size: 14px; flex-shrink: 0;
+  }
+
+  .batch-info {
+    flex: 1;
+    .batch-name  { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .batch-meta  { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  }
+
+  .batch-arrow { color: var(--text-muted); font-size: 18px; }
+}
+
+/* ── Quick action buttons ── */
+.actions-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+  @media(max-width: 600px) { grid-template-columns: repeat(2,1fr); }
+}
+
+.action-btn {
+  display: flex !important; flex-direction: column; align-items: center;
+  gap: 8px; padding: 16px 10px !important;
+  height: auto !important; border-radius: 12px !important;
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid var(--border) !important;
+  transition: background 0.18s, border-color 0.18s !important;
+  cursor: pointer;
+
+  mat-icon { font-size: 22px; color: var(--accent); }
+  span { font-size: 11px; color: var(--text-secondary); }
+
+  &:hover {
+    background: var(--accent-glow) !important;
+    border-color: rgba(0,198,255,0.3) !important;
+    span { color: var(--text-primary); }
+  }
+
+  &.full {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    padding: 12px 14px !important;
+    mat-icon { font-size: 20px; }
+    span { font-size: 13px; }
+  }
+}
+
+.actions-list { display: flex; flex-direction: column; gap: 8px; }
+.side-actions { height: fit-content; }
+
+/* ── Associate profile card ── */
+.associate-welcome { margin-bottom: 4px; }
+.welcome-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-card) !important;
+
+  .welcome-inner { display: flex; align-items: center; gap: 18px; }
+  h3 { margin: 0 0 4px; color: var(--accent); font-size: 18px; }
+  p  { margin: 0; color: var(--text-secondary); font-size: 13px; }
+  .welcome-icon { font-size: 52px; width: 52px; height: 52px; color: var(--accent); opacity: 0.15; }
+}
+
+.associate-stats { grid-template-columns: repeat(2,1fr) !important; }
+.stat-value.small { font-size: 16px; }
+
+/* ── Misc ── */
+.no-data { text-align: center; color: var(--text-secondary); font-size: 13px; padding: 24px 0; }
+.loading-center {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 400px; gap: 16px;
+  p { color: var(--text-secondary); }
+}

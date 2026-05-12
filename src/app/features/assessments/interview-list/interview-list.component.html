@@ -1,0 +1,102 @@
+<div class="list-page">
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-fields">
+      <div class="filter-field">
+        <label>From Date</label>
+        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" />
+      </div>
+      <div class="filter-field">
+        <label>To Date</label>
+        <input type="date" [(ngModel)]="filter.toDate" class="field-input" />
+      </div>
+      <div class="filter-field">
+        <label>Candidate ID</label>
+        <input type="text" placeholder="Enter candidate ID" [(ngModel)]="filter.candidateId" class="field-input" />
+      </div>
+      <div class="filter-field">
+        <label>Batch ID</label>
+        <select [(ngModel)]="filter.batchId" class="field-input">
+          <option value="">All Batches</option>
+          <option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label>Status</label>
+        <select [(ngModel)]="filter.status" class="field-input">
+          <option value="">All Status</option>
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="CLOSED">Closed</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-search" (click)="applyAdvancedFilter()">
+        <mat-icon>search</mat-icon> Search
+      </button>
+      <button class="btn-reset" (click)="resetFilter()">
+        <mat-icon>refresh</mat-icon> Reset
+      </button>
+      <button class="btn-add" (click)="openForm()" *ngIf="canCreate">
+        <mat-icon>add</mat-icon> Add Interview
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card" *ngIf="!loading; else loadingTpl">
+    <table mat-table [dataSource]="dataSource" matSort class="data-table">
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Interview Title</th>
+        <td mat-cell *matCellDef="let i">
+          <div class="cell-with-icon">
+            <mat-icon class="row-icon purple">record_voice_over</mat-icon>
+            {{ i.title }}
+          </div>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="batch">
+        <th mat-header-cell *matHeaderCellDef>Batch</th>
+        <td mat-cell *matCellDef="let i">{{ getBatchName(i.batchId) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let i">
+          <span class="status-pill" [ngClass]="i.status?.toLowerCase()">{{ i.status }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
+        <td mat-cell *matCellDef="let i">{{ i.createdAt | date:'dd MMM yyyy' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let i">
+          <button mat-icon-button (click)="openForm(i)" matTooltip="Edit">
+            <mat-icon class="action-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="publish(i.id)" *ngIf="i.status === 'DRAFT'" matTooltip="Publish">
+            <mat-icon class="action-pub">publish</mat-icon>
+          </button>
+          <button mat-icon-button (click)="delete(i)" matTooltip="Delete">
+            <mat-icon class="action-del">delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td [attr.colspan]="displayedColumns.length" class="no-data">
+          No interviews found. <span *ngIf="canCreate">Click "+ Add Interview" to schedule one.</span>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[10,25,50]" showFirstLastButtons></mat-paginator>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+</ng-template>

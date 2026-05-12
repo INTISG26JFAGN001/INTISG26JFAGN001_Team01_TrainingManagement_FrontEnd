@@ -1,0 +1,14 @@
+<div class="assess-layout">
+  <div class="assess-tabs">
+    <div class="assess-tab"
+         *ngFor="let tab of tabs"
+         [class.active]="isActive(tab.route)"
+         (click)="navigate(tab)">
+      <mat-icon>{{ tab.icon }}</mat-icon>
+      <span>{{ tab.label }}</span>
+    </div>
+  </div>
+  <div class="assess-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

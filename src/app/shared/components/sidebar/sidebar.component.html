@@ -1,0 +1,70 @@
+<div class="sidebar">
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <mat-icon>school</mat-icon>
+    </div>
+    <span class="brand-title">SkillSync</span>
+    <button class="collapse-btn" (click)="closeSidenav.emit()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+  </div>
+
+  <div class="sidebar-divider"></div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <ng-container *ngFor="let item of navItems">
+      <ng-container *ngIf="isVisible(item)">
+
+        <!-- Single item -->
+        <div *ngIf="!item.children"
+             class="nav-item"
+             [class.active]="isActive(item.route)"
+             (click)="navigate(item.route!)">
+          <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+          <span class="nav-label">{{ item.label }}</span>
+        </div>
+
+        <!-- Group -->
+        <div *ngIf="item.children">
+          <div class="nav-item nav-group-header"
+               [class.active]="isActive(item.route)"
+               [class.expanded]="item.expanded"
+               (click)="toggleGroup(item)">
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            <span class="nav-label">{{ item.label }}</span>
+            <mat-icon class="nav-arrow">{{ item.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          <div class="nav-children" [class.open]="item.expanded">
+            <ng-container *ngFor="let child of item.children">
+              <div *ngIf="isVisible(child)"
+                   class="nav-child"
+                   [class.active]="isActive(child.route)"
+                   (click)="navigate(child.route!)">
+                <mat-icon class="nav-icon-sm">{{ child.icon }}</mat-icon>
+                <span class="nav-label">{{ child.label }}</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+      </ng-container>
+    </ng-container>
+
+    <!-- Help Desk (always visible) -->
+    <div class="nav-item nav-help">
+      <mat-icon class="nav-icon">help_outline</mat-icon>
+      <span class="nav-label">Help Desk</span>
+    </div>
+  </nav>
+
+  <!-- Footer user info -->
+  <div class="sidebar-user">
+    <div class="user-avatar">{{ username.charAt(0).toUpperCase() }}</div>
+    <div class="user-info">
+      <span class="user-name">{{ username }}</span>
+      <span class="user-role">{{ getRoleLabel() }}</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>User Management</h2>
+      <p>Manage all system users and their roles</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openForm()">
+      <mat-icon>person_add</mat-icon> Add User
+    </button>
+  </div>
+
+  <mat-card class="content-card">
+    <div class="table-toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Search users...</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Name, email, username..."/>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container" *ngIf="!loading; else loadingTpl">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="user-cell">
+              <div class="avatar-sm">{{ u.username?.charAt(0)?.toUpperCase() }}</div>
+              <span>{{ u.username }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Full Name</th>
+          <td mat-cell *matCellDef="let u">{{ u.fullName }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let u">
+            <span class="role-badge" [ngClass]="getRoleClass(u.role)">{{ getRoleBadge(u.role) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let u">
+            <button mat-icon-button color="primary" (click)="openForm(u)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="delete(u)" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr class="mat-row" *matNoDataRow><td [attr.colspan]="displayedColumns.length" class="no-data">No users found.</td></tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card>
+</div>
+<ng-template #loadingTpl><div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div></ng-template>

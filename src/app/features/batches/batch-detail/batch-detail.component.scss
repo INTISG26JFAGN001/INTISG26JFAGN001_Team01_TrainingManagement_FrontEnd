@@ -1,0 +1,26 @@
+.page-header { align-items: flex-start; .header-info { display: flex; align-items: center; gap: 8px; h2 { margin: 0 0 4px; } } }
+
+.info-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 4px; }
+
+.info-card {
+  display: flex; align-items: center; gap: 14px; padding: 16px !important;
+  border-radius: 12px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-card) !important;
+  mat-icon { font-size: 26px; color: var(--accent); }
+  .info-label { display: block; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .info-value { display: block; font-size: 22px; font-weight: 700; color: var(--text-primary); }
+}
+
+.detail-tabs {
+  background: var(--bg-card) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: hidden;
+}
+
+.tab-content { padding: 16px; }
+.status-select { width: 200px; }
+.course-chips { padding: 8px 0; }

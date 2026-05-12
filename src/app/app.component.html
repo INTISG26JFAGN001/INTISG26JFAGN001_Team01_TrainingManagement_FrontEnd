@@ -1,0 +1,15 @@
+<mat-sidenav-container class="app-container" *ngIf="showShell; else plainOutlet">
+  <mat-sidenav #sidenav mode="side" [opened]="sidenavOpen" class="app-sidenav">
+    <app-sidebar (closeSidenav)="sidenav.close()"></app-sidebar>
+  </mat-sidenav>
+  <mat-sidenav-content class="app-content">
+    <app-header (menuToggle)="sidenav.toggle()"></app-header>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<ng-template #plainOutlet>
+  <router-outlet></router-outlet>
+</ng-template>

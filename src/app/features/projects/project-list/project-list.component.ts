@@ -1,0 +1,46 @@
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ProjectService } from '../../../core/services/project.service';
+import { Project } from '../../../core/models';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ProjectFormComponent } from '../project-form/project-form.component';
+import { AuthService } from '../../../core/services/auth.service';
+
+@Component({ selector: 'app-project-list', templateUrl: './project-list.component.html', styleUrls: ['./project-list.component.scss'] })
+export class ProjectListComponent implements OnInit {
+  dataSource = new MatTableDataSource<Project>();
+  loading = true;
+  isAssociate = this.auth.isAssociate();
+  canDelete = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
+  get displayedColumns(): string[] {
+    if (this.isAssociate) return ['title', 'submissionDate', 'repositoryUrl', 'actions'];
+    return ['title', 'associateName', 'submissionDate', 'repositoryUrl', 'actions'];
+  }
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(private svc: ProjectService, private dialog: MatDialog, private snack: MatSnackBar, private auth: AuthService) {}
+
+  ngOnInit(): void { this.load(); }
+
+  load(): void {
+    this.loading = true;
+    this.svc.getProjects().subscribe({ next: d => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; }, error: () => this.loading = false });
+  }
+
+  applyFilter(e: Event): void { this.dataSource.filter = (e.target as HTMLInputElement).value.trim().toLowerCase(); }
+
+  openForm(project?: Project): void {
+    this.dialog.open(ProjectFormComponent, { width: '540px', data: project }).afterClosed().subscribe(r => { if (r) this.load(); });
+  }
+
+  delete(p: Project): void {
+    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete Project', message: `Delete "${p.title}"?`, danger: true, confirmText: 'Delete' } })
+      .afterClosed().subscribe(c => { if (c) this.svc.deleteProject(p.id).subscribe({ next: () => { this.snack.open('Deleted', 'Close', { duration: 3000 }); this.load(); } }); });
+  }
+}
