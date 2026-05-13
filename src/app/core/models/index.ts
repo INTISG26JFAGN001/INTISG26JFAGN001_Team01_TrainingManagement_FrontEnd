@@ -1,10 +1,15 @@
 // Auth
 export interface LoginRequest { username: string; password: string; }
-export interface LoginResponse { accessToken: string; role: string; userId: number; username: string; }
-export interface SignupRequest { username: string; password: string; email: string; fullName: string; role: string; }
+export interface LoginResponse {
+  timestamp: string;
+  message: string;
+  loginSuccess: boolean;
+  accessToken: string;
+}
+export interface SignupRequest { username: string; password: string; email: string; fullName: string; roles: string[]; }
 
 // User
-export interface User { id: number; username: string; email: string; fullName: string; role: string; }
+export interface User { id: number; username: string; email: string; fullName: string; roles: string[]; }
 
 // Technology
 export interface Technology { id: number; name: string; description: string; }
