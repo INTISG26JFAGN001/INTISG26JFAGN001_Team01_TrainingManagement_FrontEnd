@@ -16,7 +16,7 @@ import { Associate, Enrollment } from '../../../core/models';
         <div class="enrollment-item" *ngFor="let e of enrollments">
           <span class="batch-name">Batch #{{ e.batchId }}</span>
           <span class="status-chip" [ngClass]="getStatusClass(e.status)">{{ e.status }}</span>
-          <button mat-icon-button color="warn" (click)="removeEnrollment(e.id)" matTooltip="Remove"><mat-icon>remove_circle</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="removeEnrollment((e.enrollmentId ?? e.id)!)" matTooltip="Remove"><mat-icon>remove_circle</mat-icon></button>
         </div>
       </div>
       <mat-divider *ngIf="enrollments.length"></mat-divider>

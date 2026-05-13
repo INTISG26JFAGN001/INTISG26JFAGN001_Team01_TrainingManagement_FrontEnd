@@ -13,7 +13,7 @@ export class BatchDetailComponent implements OnInit {
   schedules: any[] = [];
   loading = true;
   isAdmin = this.auth.isAdmin();
-  statuses: BatchStatus[] = ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'];
+  statuses: BatchStatus[] = ['UPCOMING', 'ACTIVE', 'COMPLETED'];
   selectedTab = 0;
 
   constructor(private route: ActivatedRoute, private svc: BatchService, private scheduleSvc: ScheduleService, private auth: AuthService, private snack: MatSnackBar) {}
@@ -30,6 +30,6 @@ export class BatchDetailComponent implements OnInit {
   }
 
   getStatusClass(s: string): string {
-    return { ONGOING:'status-ongoing', UPCOMING:'status-upcoming', COMPLETED:'status-completed', CANCELLED:'status-cancelled' }[s] ?? '';
+    return { ACTIVE:'status-ongoing', UPCOMING:'status-upcoming', COMPLETED:'status-completed' }[s] ?? '';
   }
 }

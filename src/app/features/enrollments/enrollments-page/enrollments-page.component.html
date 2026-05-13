@@ -1,0 +1,131 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-info">
+      <h2>Enrollments</h2>
+      <p>Manage associate batch enrollments and track their status</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openForm()" *ngIf="canManage && !showForm">
+      <mat-icon>add</mat-icon> New Enrollment
+    </button>
+  </div>
+
+  <!-- New Enrollment Form -->
+  <mat-card class="form-card" *ngIf="showForm">
+    <mat-card-header>
+      <mat-card-title><mat-icon>assignment_turned_in</mat-icon> Enroll an Associate</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" class="enroll-form">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Associate</mat-label>
+          <mat-select formControlName="associateId">
+            <mat-option *ngFor="let a of associates" [value]="a.id">
+              {{ a.fullName || ('User #' + a.userId) }}
+            </mat-option>
+          </mat-select>
+          <mat-error>Associate is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Batch</mat-label>
+          <mat-select formControlName="batchId">
+            <mat-option *ngFor="let b of batches" [value]="b.id">
+              {{ b.courseNames?.join(', ') || ('Batch #' + b.id) }}
+              <span class="batch-status"> — {{ b.status }}</span>
+            </mat-option>
+          </mat-select>
+          <mat-error>Batch is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Initial Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="closeForm()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="enroll()" [disabled]="form.invalid || saving">
+            {{ saving ? 'Enrolling...' : 'Enroll' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Search -->
+  <mat-card class="content-card">
+    <div class="table-toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Search enrollments...</mat-label>
+        <input matInput (keyup)="applyFilter($event)"/>
+      </mat-form-field>
+    </div>
+
+    <div class="table-container" *ngIf="!loading; else loadingTpl">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+
+        <!-- Associate Column -->
+        <ng-container matColumnDef="associate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Associate</th>
+          <td mat-cell *matCellDef="let e">
+            <div class="cell-name">
+              <div class="avatar-sm">{{ getAssociateName(e.associateId).charAt(0) }}</div>
+              <span>{{ getAssociateName(e.associateId) }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Batch Column -->
+        <ng-container matColumnDef="batch">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Batch</th>
+          <td mat-cell *matCellDef="let e">{{ getBatchLabel(e.batchId) }}</td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let e">
+            <mat-select class="status-select" [value]="e.status" (selectionChange)="updateStatus(e, $event.value)" *ngIf="canManage; else statusChip">
+              <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s }}</mat-option>
+            </mat-select>
+            <ng-template #statusChip>
+              <span class="status-chip" [ngClass]="getStatusClass(e.status)">{{ e.status }}</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <!-- Join Date Column -->
+        <ng-container matColumnDef="joinDate">
+          <th mat-header-cell *matHeaderCellDef>Enrolled On</th>
+          <td mat-cell *matCellDef="let e">{{ (e.joinDate || e.enrollmentDate) | date:'mediumDate' }}</td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let e">
+            <button mat-icon-button color="warn" (click)="delete(e)" *ngIf="isAdmin" matTooltip="Remove enrollment">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td [attr.colspan]="displayedColumns.length" class="no-data">No enrollments found.</td>
+        </tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+</ng-template>

@@ -4,6 +4,29 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Assessment, Quiz, Interview, Rubric, AssessmentType, AssessmentStatus } from '../models';
 
+export interface InterviewEvaluationRequest {
+  assessmentId: number;
+  associateId: number;
+  evaluatorId: number;
+  evaluatorRole?: string;
+  evaluatorRemarks?: string;
+  rubricScores: { rubricId: number; criteria?: string; weight: number; scoreAwarded: number; remarks?: string; }[];
+}
+
+export interface InterviewEvaluationResponse {
+  id: number;
+  assessmentId: number;
+  associateId: number;
+  evaluatorId: number;
+  evaluatorRole: string;
+  evaluatorRemarks: string;
+  totalScore: number;
+  maxScore: number;
+  resultStatus: string;
+  evaluatedAt: string;
+  rubricScores: { id: number; rubricId: number; criteria: string; weight: number; scoreAwarded: number; remarks: string; }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AssessmentService {
   private base = `${environment.apiUrl}/assessments`;
@@ -34,4 +57,19 @@ export class AssessmentService {
   getRubrics(assessmentId: number): Observable<Rubric[]> { return this.http.get<Rubric[]>(`${this.base}/${assessmentId}/rubrics`); }
   createRubric(assessmentId: number, p: Partial<Rubric>): Observable<Rubric> { return this.http.post<Rubric>(`${this.base}/${assessmentId}/rubrics`, p); }
   deleteRubric(assessmentId: number, rubricId: number): Observable<void> { return this.http.delete<void>(`${this.base}/${assessmentId}/rubrics/${rubricId}`); }
+
+  // Interview — get full detail with rubrics
+  getInterviewDetail(id: number): Observable<Interview> { return this.http.get<Interview>(`${this.base}/interview/${id}`); }
+
+  // Interview Evaluation (PES service)
+  private evalBase = `${environment.apiUrl}/interview-evaluations`;
+  submitInterviewEvaluation(p: InterviewEvaluationRequest): Observable<InterviewEvaluationResponse> {
+    return this.http.post<InterviewEvaluationResponse>(this.evalBase, p);
+  }
+  getEvaluationsByAssessment(assessmentId: number): Observable<InterviewEvaluationResponse[]> {
+    return this.http.get<InterviewEvaluationResponse[]>(`${this.evalBase}/assessment/${assessmentId}`);
+  }
+  getEvaluationByAssociate(assessmentId: number, associateId: number): Observable<InterviewEvaluationResponse> {
+    return this.http.get<InterviewEvaluationResponse>(`${this.evalBase}/assessment/${assessmentId}/associate/${associateId}`);
+  }
 }

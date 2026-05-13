@@ -20,6 +20,8 @@ const routes: Routes = [
   { path: 'assessments', loadChildren: () => import('./features/assessments/assessments.module').then(m => m.AssessmentsModule), canActivate: [AuthGuard, RoleGuard], data: { roles: STAFF } },
   { path: 'projects', loadChildren: () => import('./features/projects/projects.module').then(m => m.ProjectsModule), canActivate: [AuthGuard] },
   { path: 'evaluations', loadChildren: () => import('./features/evaluations/evaluations.module').then(m => m.EvaluationsModule), canActivate: [AuthGuard, RoleGuard], data: { roles: STAFF } },
+  { path: 'schedules', loadChildren: () => import('./features/schedules/schedules.module').then(m => m.SchedulesModule), canActivate: [AuthGuard] },
+  { path: 'enrollments', loadChildren: () => import('./features/enrollments/enrollments.module').then(m => m.EnrollmentsModule), canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

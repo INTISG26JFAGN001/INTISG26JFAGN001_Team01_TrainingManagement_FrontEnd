@@ -6,6 +6,8 @@ import { InterviewListComponent } from './interview-list/interview-list.componen
 import { AssessmentsLayoutComponent } from './assessments-layout/assessments-layout.component';
 import { QuizFormComponent } from './quiz-form/quiz-form.component';
 import { InterviewFormComponent } from './interview-form/interview-form.component';
+import { InterviewRubricDialogComponent } from './interview-rubric-dialog/interview-rubric-dialog.component';
+import { InterviewEvaluateDialogComponent } from './interview-evaluate-dialog/interview-evaluate-dialog.component';
 import { AuthGuard } from '../../core/guards/auth.guard';
 
 @NgModule({
@@ -15,6 +17,8 @@ import { AuthGuard } from '../../core/guards/auth.guard';
     AssessmentsLayoutComponent,
     QuizFormComponent,
     InterviewFormComponent,
+    InterviewRubricDialogComponent,
+    InterviewEvaluateDialogComponent,
   ],
   imports: [
     SharedModule,

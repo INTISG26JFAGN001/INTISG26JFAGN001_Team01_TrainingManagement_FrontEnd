@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, Validators } from '@angular/forms';
 import { CatalogService } from '../../../core/services/catalog.service';
-import { Course, CourseRequest, Technology } from '../../../core/models';
+import { Course, Technology } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -53,7 +53,7 @@ export class CoursesComponent implements OnInit {
   save(): void {
     if (this.form.invalid) return;
     this.saving = true;
-    const payload = this.form.value as CourseRequest;
+    const payload = this.form.value as any;
     const action = this.editId ? this.svc.updateCourse(this.editId, payload) : this.svc.createCourse(payload);
     action.subscribe({
       next: () => { this.snack.open(`Course ${this.editId ? 'updated' : 'created'}`, 'Close', { duration: 3000 }); this.closeForm(); this.load(); this.saving = false; },
@@ -66,5 +66,5 @@ export class CoursesComponent implements OnInit {
       .afterClosed().subscribe(conf => { if (conf) this.svc.deleteCourse(c.id).subscribe({ next: () => { this.snack.open('Deleted', 'Close', { duration: 3000 }); this.load(); } }); });
   }
 
-  getTechName(id: number): string { return this.technologies.find(t => t.id === id)?.name ?? '—'; }
+  getTechName(c: Course): string { return c.technologyName || this.technologies.find(t => t.id === c.technologyId)?.name || '—'; }
 }

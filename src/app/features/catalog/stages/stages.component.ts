@@ -47,5 +47,5 @@ export class StagesComponent implements OnInit {
       .afterClosed().subscribe(c => { if (c) this.svc.deleteStage(s.id).subscribe({ next: () => { this.snack.open('Deleted', 'Close', { duration: 3000 }); this.load(); } }); });
   }
 
-  getCourseName(id: number): string { return this.courses.find(c => c.id === id)?.name ?? '—'; }
+  getCourseName(id: number): string { return this.courses.find(c => c.id === id)?.title ?? '—'; }
 }

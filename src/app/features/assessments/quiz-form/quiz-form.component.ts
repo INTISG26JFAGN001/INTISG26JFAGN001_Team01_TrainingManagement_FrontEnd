@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormArray, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
@@ -8,63 +8,44 @@ import { Batch, Quiz } from '../../../core/models';
 
 @Component({
   selector: 'app-quiz-form',
-  template: `
-    <h2 mat-dialog-title>{{ data ? 'Edit Quiz' : 'Create Quiz' }}</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Quiz Title</mat-label>
-          <mat-icon matPrefix>fact_check</mat-icon>
-          <input matInput formControlName="title" placeholder="e.g. Java Fundamentals Quiz"/>
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Title is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId">
-            <mat-option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('batchId')?.hasError('required')">Batch is required</mat-error>
-        </mat-form-field>
-
-        <div class="row-fields">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Duration (minutes)</mat-label>
-            <mat-icon matPrefix>timer</mat-icon>
-            <input matInput type="number" formControlName="durationMinutes" min="5" max="180"/>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Passing Score (%)</mat-label>
-            <mat-icon matPrefix>grade</mat-icon>
-            <input matInput type="number" formControlName="passingScore" min="0" max="100"/>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
-      <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
-        {{ saving ? 'Saving...' : (data ? 'Update' : 'Create Quiz') }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; min-width: 460px; }
-    .full-width { width: 100%; }
-    .row-fields { display: flex; gap: 12px; }
-    .half-width { flex: 1; }
-  `]
+  templateUrl: './quiz-form.component.html',
+  styleUrls: ['./quiz-form.component.scss']
 })
 export class QuizFormComponent implements OnInit {
   batches: Batch[] = [];
   saving = false;
+  readonly answerOptions: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
+  readonly statusOptions = ['DRAFT', 'PUBLISHED'];
+
   form = this.fb.group({
-    title: ['', Validators.required],
+    title: ['', [Validators.required, Validators.maxLength(200)]],
     batchId: [null as number | null, Validators.required],
-    durationMinutes: [30, [Validators.required, Validators.min(5)]],
-    passingScore: [60, [Validators.required, Validators.min(0), Validators.max(100)]]
+    durationMinutes: [null as number | null, [Validators.min(1)]],
+    passingMarks: [null as number | null, [Validators.min(0)]],
+    dueDate: [null as string | null],
+    status: ['DRAFT'],
+    questions: this.fb.array([this.newQuestion()])
   });
+
+  get questions(): FormArray { return this.form.get('questions') as FormArray; }
+
+  newQuestion(): FormGroup {
+    return this.fb.group({
+      questionText: ['', Validators.required],
+      optionA: ['', Validators.required],
+      optionB: ['', Validators.required],
+      optionC: ['', Validators.required],
+      optionD: ['', Validators.required],
+      correctOption: ['A', Validators.required],
+      marks: [1, [Validators.required, Validators.min(1)]]
+    });
+  }
+
+  addQuestion(): void { this.questions.push(this.newQuestion()); }
+
+  removeQuestion(i: number): void {
+    if (this.questions.length > 1) this.questions.removeAt(i);
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -81,26 +62,64 @@ export class QuizFormComponent implements OnInit {
       this.form.patchValue({
         title: this.data.title,
         batchId: this.data.batchId,
-        durationMinutes: (this.data as any).durationMinutes ?? 30,
-        passingScore: (this.data as any).passingScore ?? 60
+        durationMinutes: this.data.durationMinutes ?? null,
+        passingMarks: this.data.passingMarks ?? null,
+        status: this.data.status ?? 'DRAFT'
       });
+      if (this.data.questions?.length) {
+        this.questions.clear();
+        this.data.questions.forEach(q => {
+          this.questions.push(this.fb.group({
+            questionText: [q.questionText, Validators.required],
+            optionA: [q.optionA, Validators.required],
+            optionB: [q.optionB, Validators.required],
+            optionC: [q.optionC, Validators.required],
+            optionD: [q.optionD, Validators.required],
+            correctOption: [q.correctOption ?? 'A', Validators.required],
+            marks: [q.marks ?? 1, [Validators.required, Validators.min(1)]]
+          }));
+        });
+      }
     }
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = { ...this.form.value, type: 'QUIZ' };
+    const v = this.form.value;
+
+    const payload: any = {
+      title: v.title,
+      batchId: v.batchId,
+      status: v.status || 'DRAFT',
+      questions: v.questions
+    };
+    if (v.durationMinutes) payload.durationMinutes = v.durationMinutes;
+    if (v.passingMarks != null) payload.passingMarks = v.passingMarks;
+    if (v.dueDate) payload.dueDate = v.dueDate;
+
     const action = this.data
-      ? this.svc.update(this.data.id, payload as any)
-      : this.svc.createQuiz(payload as any);
+      ? this.svc.update(this.data.id, payload)
+      : this.svc.createQuiz(payload);
 
     action.subscribe({
       next: () => {
-        this.snack.open(`Quiz ${this.data ? 'updated' : 'created'}`, 'Close', { duration: 3000 });
+        this.snack.open(`Quiz ${this.data ? 'updated' : 'created'} successfully`, 'Close', { duration: 3000 });
         this.dialogRef.close(true);
       },
-      error: () => { this.saving = false; }
+      error: e => {
+        this.snack.open(e.error?.message || 'Failed to save quiz', 'Close', { duration: 4000 });
+        this.saving = false;
+      }
     });
+  }
+
+  /** Sum of marks across all questions — shown in dialog footer */
+  get totalMarks(): number {
+    return this.questions.controls.reduce((sum, q) => sum + (q.get('marks')?.value || 0), 0);
+  }
+
+  getOptionValue(questionGroup: any, opt: string): string {
+    return questionGroup.get('option' + opt)?.value || 'Option ' + opt;
   }
 }

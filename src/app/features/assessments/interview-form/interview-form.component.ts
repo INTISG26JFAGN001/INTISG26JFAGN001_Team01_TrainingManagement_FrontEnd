@@ -8,66 +8,22 @@ import { Batch, Interview } from '../../../core/models';
 
 @Component({
   selector: 'app-interview-form',
-  template: `
-    <h2 mat-dialog-title>{{ data ? 'Edit Interview' : 'Schedule Interview' }}</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Interview Title</mat-label>
-          <mat-icon matPrefix>record_voice_over</mat-icon>
-          <input matInput formControlName="title" placeholder="e.g. Technical Interview – Round 1"/>
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Title is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId">
-            <mat-option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('batchId')?.hasError('required')">Batch is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Category</mat-label>
-          <mat-select formControlName="category">
-            <mat-option value="TECHNICAL">Technical</mat-option>
-            <mat-option value="HR">HR</mat-option>
-            <mat-option value="MANAGERIAL">Managerial</mat-option>
-            <mat-option value="BEHAVIORAL">Behavioral</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('category')?.hasError('required')">Category is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Interview Date</mat-label>
-          <mat-icon matPrefix>event</mat-icon>
-          <input matInput [matDatepicker]="picker" formControlName="interviewDate"/>
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-          <mat-error *ngIf="form.get('interviewDate')?.hasError('required')">Date is required</mat-error>
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
-      <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
-        {{ saving ? 'Saving...' : (data ? 'Update' : 'Schedule Interview') }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; min-width: 460px; }
-    .full-width { width: 100%; }
-  `]
+  templateUrl: './interview-form.component.html',
+  styleUrls: ['./interview-form.component.scss']
 })
 export class InterviewFormComponent implements OnInit {
   batches: Batch[] = [];
   saving = false;
+
   form = this.fb.group({
-    title: ['', Validators.required],
+    title: ['', [Validators.required, Validators.maxLength(200)]],
     batchId: [null as number | null, Validators.required],
-    category: ['TECHNICAL', Validators.required],
-    interviewDate: [null as string | null, Validators.required]
+    interviewCategory: ['INTERIM', Validators.required],
+    dueDate: ['', Validators.required],
+    scheduledDateTime: [null as string | null],
+    evaluatorRole: [''],
+    maxScore: [100, [Validators.min(1)]],
+    status: ['DRAFT']
   });
 
   constructor(
@@ -85,26 +41,45 @@ export class InterviewFormComponent implements OnInit {
       this.form.patchValue({
         title: this.data.title,
         batchId: this.data.batchId,
-        category: (this.data as any).category ?? 'TECHNICAL',
-        interviewDate: (this.data as any).interviewDate ?? null
+        interviewCategory: this.data.interviewCategory ?? 'INTERIM',
+        dueDate: this.data.dueDate ?? '',
+        scheduledDateTime: this.data.scheduledDateTime ?? null,
+        evaluatorRole: this.data.evaluatorRole ?? '',
+        maxScore: this.data.maxScore ?? 100,
+        status: this.data.status ?? 'DRAFT'
       });
     }
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = { ...this.form.value, type: 'INTERVIEW' };
+    const v = this.form.value;
+
+    const payload: any = {
+      title: v.title,
+      batchId: v.batchId,
+      interviewCategory: v.interviewCategory,
+      dueDate: v.dueDate,
+      status: v.status || 'DRAFT'
+    };
+    if (v.scheduledDateTime) payload.scheduledDateTime = v.scheduledDateTime;
+    if (v.evaluatorRole) payload.evaluatorRole = v.evaluatorRole;
+    if (v.maxScore) payload.maxScore = v.maxScore;
+
     const action = this.data
-      ? this.svc.update(this.data.id, payload as any)
-      : this.svc.createInterview(payload as any);
+      ? this.svc.update(this.data.id, payload)
+      : this.svc.createInterview(payload);
 
     action.subscribe({
       next: () => {
-        this.snack.open(`Interview ${this.data ? 'updated' : 'scheduled'}`, 'Close', { duration: 3000 });
+        this.snack.open(`Interview ${this.data ? 'updated' : 'created'}. Add rubrics to enable publishing.`, 'Close', { duration: 4000 });
         this.dialogRef.close(true);
       },
-      error: () => { this.saving = false; }
+      error: e => {
+        this.snack.open(e.error?.message || 'Failed to save interview', 'Close', { duration: 4000 });
+        this.saving = false;
+      }
     });
   }
 }

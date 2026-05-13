@@ -13,12 +13,12 @@ import { AuthService } from '../../../core/services/auth.service';
 
 @Component({ selector: 'app-batch-list', templateUrl: './batch-list.component.html', styleUrls: ['./batch-list.component.scss'] })
 export class BatchListComponent implements OnInit {
-  displayedColumns = ['name', 'status', 'startDate', 'endDate', 'capacity', 'actions'];
+  displayedColumns = ['courses', 'status', 'startDate', 'endDate', 'actions'];
   dataSource = new MatTableDataSource<Batch>();
   loading = true;
   isAdmin = this.auth.isAdmin();
   statusFilter = '';
-  statuses: BatchStatus[] = ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'];
+  statuses: BatchStatus[] = ['UPCOMING', 'ACTIVE', 'COMPLETED'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -40,11 +40,11 @@ export class BatchListComponent implements OnInit {
   viewDetail(id: number): void { this.router.navigate(['/batches', id]); }
 
   delete(b: Batch): void {
-    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete Batch', message: `Delete batch "${b.name}"?`, danger: true, confirmText: 'Delete' } })
+    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete Batch', message: `Delete batch #${b.id}?`, danger: true, confirmText: 'Delete' } })
       .afterClosed().subscribe(c => { if (c) this.svc.delete(b.id).subscribe({ next: () => { this.snack.open('Batch deleted', 'Close', { duration: 3000 }); this.load(); } }); });
   }
 
   getStatusClass(s: string): string {
-    return { ONGOING: 'status-ongoing', UPCOMING: 'status-upcoming', COMPLETED: 'status-completed', CANCELLED: 'status-cancelled' }[s] ?? '';
+    return { ACTIVE: 'status-ongoing', UPCOMING: 'status-upcoming', COMPLETED: 'status-completed' }[s] ?? '';
   }
 }

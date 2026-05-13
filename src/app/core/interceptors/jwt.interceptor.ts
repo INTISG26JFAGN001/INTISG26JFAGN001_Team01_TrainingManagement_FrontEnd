@@ -14,7 +14,15 @@ export class JwtInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
-    const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    const userId = this.authService.getUserId();
+    const authReq = token
+      ? req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`,
+            ...(userId ? { 'X-User-Id': String(userId) } : {})
+          }
+        })
+      : req;
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
@@ -35,7 +43,8 @@ export class JwtInterceptor implements HttpInterceptor {
         switchMap((res) => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(res.accessToken);
-          return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}` } }));
+          const uid = this.authService.getUserId();
+          return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}`, ...(uid ? { 'X-User-Id': String(uid) } : {}) } }));
         }),
         catchError(() => {
           this.isRefreshing = false;

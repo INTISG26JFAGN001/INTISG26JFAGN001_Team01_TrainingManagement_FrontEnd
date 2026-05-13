@@ -71,10 +71,10 @@ export class QuizListComponent implements OnInit {
     this.dataSource.data = this.allData;
   }
 
-  getBatchName(id: number): string { return this.batches.find(b => b.id === id)?.name ?? `Batch #${id}`; }
+  getBatchName(id: number): string { const b = this.batches.find(b => b.id === id); return b?.courseNames?.join(', ') || `Batch #${id}`; }
 
   openForm(quiz?: Assessment): void {
-    this.dialog.open(QuizFormComponent, { width: '520px', data: quiz ?? null })
+    this.dialog.open(QuizFormComponent, { width: '700px', maxHeight: '90vh', data: quiz ?? null })
       .afterClosed().subscribe(r => { if (r) this.load(); });
   }
 

@@ -45,13 +45,10 @@ export class TrainerFormComponent implements OnInit {
   save(): void {
     if (this.form.invalid) return;
     this.saving = true;
-    this.svc.create({ userId: this.form.value.userId! } as any).subscribe({
-      next: (trainer) => {
-        const ids = (this.form.value.technologyIds ?? []) as number[];
-        if (ids?.length) {
-          this.svc.updateTechnologies(trainer.id, ids).subscribe({ next: () => { this.snack.open('Trainer added', 'Close', { duration: 3000 }); this.dialogRef.close(true); } });
-        } else { this.snack.open('Trainer added', 'Close', { duration: 3000 }); this.dialogRef.close(true); }
-      },
+    const technologyIds = (this.form.value.technologyIds ?? []) as number[];
+    // Send userId + technologyIds together — backend TrainerDTO accepts both in one call
+    this.svc.create({ userId: this.form.value.userId!, technologyIds } as any).subscribe({
+      next: () => { this.snack.open('Trainer added', 'Close', { duration: 3000 }); this.dialogRef.close(true); },
       error: (e) => { this.snack.open(e.error?.message || 'Error', 'Close', { duration: 3000 }); this.saving = false; }
     });
   }

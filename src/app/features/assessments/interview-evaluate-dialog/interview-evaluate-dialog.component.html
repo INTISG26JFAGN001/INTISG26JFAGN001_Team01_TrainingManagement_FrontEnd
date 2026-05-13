@@ -1,0 +1,92 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>star_rate</mat-icon>
+  Evaluate — {{ data.title }}
+</h2>
+
+<mat-dialog-content class="dialog-body">
+
+  <div *ngIf="loading" class="loading-center"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <form [formGroup]="form" *ngIf="!loading">
+
+    <!-- Associate selector -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Associate</mat-label>
+      <mat-icon matPrefix>person</mat-icon>
+      <mat-select formControlName="associateId" (selectionChange)="onAssociateChange()">
+        <mat-option *ngFor="let a of associates" [value]="a.id">
+          {{ getAssociateName(a) }}
+        </mat-option>
+      </mat-select>
+      <mat-error>Select an associate</mat-error>
+    </mat-form-field>
+
+    <!-- Already evaluated notice -->
+    <mat-card class="result-card" *ngIf="existingResult">
+      <mat-icon [class]="existingResult.resultStatus === 'PASS' ? 'icon-pass' : 'icon-fail'">
+        {{ existingResult.resultStatus === 'PASS' ? 'check_circle' : 'cancel' }}
+      </mat-icon>
+      <div>
+        <strong>Already Evaluated</strong>
+        <p>Score: {{ existingResult.totalScore }} / {{ existingResult.maxScore }} — <strong>{{ existingResult.resultStatus }}</strong></p>
+        <p class="eval-date">Evaluated on {{ existingResult.evaluatedAt | date:'medium' }}</p>
+      </div>
+    </mat-card>
+
+    <!-- Rubric scores (only if not already evaluated) -->
+    <ng-container *ngIf="!existingResult">
+
+      <p class="section-label">Rubric Scores</p>
+
+      <!-- Score summary -->
+      <div class="score-summary">
+        <span>Current Score:</span>
+        <strong [class.score-pass]="totalScore / maxScore >= 0.6" [class.score-fail]="maxScore > 0 && totalScore / maxScore < 0.6">
+          {{ totalScore }} / {{ maxScore }}
+        </strong>
+        <span class="pass-info">(Pass ≥ 60%)</span>
+      </div>
+
+      <div *ngIf="rubrics.length === 0" class="no-rubrics">
+        No rubrics defined for this interview.
+      </div>
+
+      <div formArrayName="rubricScores">
+        <div *ngFor="let score of rubricScores.controls; let i = index" [formGroupName]="i" class="rubric-score-row">
+          <div class="rubric-label">
+            <span class="criteria-name">{{ rubrics[i]?.criteria }}</span>
+            <span class="weight-tag">max {{ rubrics[i]?.weight }}</span>
+          </div>
+          <mat-form-field appearance="outline" class="score-field">
+            <mat-label>Score</mat-label>
+            <input matInput type="number" formControlName="scoreAwarded"
+                   min="0" [attr.max]="rubrics[i]?.weight" placeholder="0"/>
+            <mat-hint>0 – {{ rubrics[i]?.weight }}</mat-hint>
+            <mat-error>Score must be 0–{{ rubrics[i]?.weight }}</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="remarks-field">
+            <mat-label>Remarks</mat-label>
+            <input matInput formControlName="remarks" placeholder="Optional remarks"/>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width" style="margin-top: 8px;">
+        <mat-label>Overall Remarks</mat-label>
+        <textarea matInput formControlName="evaluatorRemarks" rows="2" placeholder="Overall evaluator comments..."></textarea>
+      </mat-form-field>
+
+    </ng-container>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
+  <button mat-flat-button color="primary" (click)="submit()"
+          [disabled]="form.invalid || saving || !!existingResult || loading"
+          *ngIf="!existingResult">
+    <mat-icon>{{ saving ? 'hourglass_empty' : 'send' }}</mat-icon>
+    {{ saving ? 'Submitting...' : 'Submit Evaluation' }}
+  </button>
+</mat-dialog-actions>

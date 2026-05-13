@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 import { BatchService } from '../../core/services/batch.service';
 import { AssociateService } from '../../core/services/associate.service';
 import { TrainerService } from '../../core/services/trainer.service';
@@ -70,11 +71,11 @@ export class DashboardComponent implements OnInit {
         this.stats.associates = res.associates.length;
         this.stats.trainers = res.trainers.length;
         this.stats.assessments = res.assessments.length;
-        this.stats.ongoing = res.batches.filter((b: any) => b.status === 'ONGOING').length;
+        this.stats.ongoing = res.batches.filter((b: any) => b.status === 'ACTIVE').length;
         this.stats.upcoming = res.batches.filter((b: any) => b.status === 'UPCOMING').length;
         this.stats.completed = res.batches.filter((b: any) => b.status === 'COMPLETED').length;
         this.recentBatches = res.batches.slice(0, 5);
-        this.ongoingBatches = res.batches.filter((b: any) => b.status === 'ONGOING').slice(0, 4);
+        this.ongoingBatches = res.batches.filter((b: any) => b.status === 'ACTIVE').slice(0, 4);
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -82,12 +83,19 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadTrainerDashboard(): void {
-    forkJoin({
-      batches: this.batchSvc.getAll(),
-      assessments: this.assessmentSvc.getAll()
-    }).subscribe({
+    const userId = this.auth.getUserId();
+    this.trainerSvc.getAll().pipe(
+      switchMap(trainers => {
+        const me = trainers.find(t => t.userId === userId);
+        const trainerId = me ? (me.trainerId ?? me.id) : null;
+        const batchObs = trainerId != null
+          ? this.batchSvc.filterByTrainer(trainerId)
+          : this.batchSvc.getAll();
+        return forkJoin({ batches: batchObs, assessments: this.assessmentSvc.getAll() });
+      })
+    ).subscribe({
       next: (res) => {
-        this.myBatches = res.batches.filter((b: any) => b.status === 'ONGOING' || b.status === 'UPCOMING');
+        this.myBatches = res.batches.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
         this.trainerStats.myBatches = this.myBatches.length;
         this.trainerStats.myAssociates = this.myBatches.reduce((sum: number, b: any) => sum + (b.associates?.length ?? 0), 0);
         this.trainerStats.quizzes = res.assessments.filter((a: any) => a.type === 'QUIZ').length;
@@ -99,12 +107,27 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadAssociateDashboard(): void {
-    this.batchSvc.getAll().subscribe({
-      next: (batches) => {
-        const myBatch = batches.find((b: any) => b.status === 'ONGOING');
-        if (myBatch) {
-          this.associateStats.myBatch = myBatch.name;
-          this.associateStats.batchStatus = myBatch.status;
+    const userId = this.auth.getUserId();
+    forkJoin({
+      associates: this.associateSvc.getAll(),
+      batches: this.batchSvc.getAll()
+    }).pipe(
+      switchMap(res => {
+        const me = res.associates.find((a: any) => a.userId === userId);
+        if (!me) return of({ ...res, enrollments: [] as any[] });
+        return this.associateSvc.getEnrollmentsByAssociate(me.id).pipe(
+          map(enrollments => ({ ...res, enrollments }))
+        );
+      })
+    ).subscribe({
+      next: res => {
+        const activeEnrollment = res.enrollments.find((e: any) => e.status === 'ACTIVE');
+        if (activeEnrollment) {
+          const batch = res.batches.find((b: any) => b.id === activeEnrollment.batchId);
+          if (batch) {
+            this.associateStats.myBatch = batch.courseNames?.join(', ') || ('Batch #' + batch.id);
+            this.associateStats.batchStatus = batch.status;
+          }
         }
         this.loading = false;
       },
@@ -119,7 +142,7 @@ export class DashboardComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.stats.batches = res.batches.length;
-        this.stats.ongoing = res.batches.filter((b: any) => b.status === 'ONGOING').length;
+        this.stats.ongoing = res.batches.filter((b: any) => b.status === 'ACTIVE').length;
         this.stats.upcoming = res.batches.filter((b: any) => b.status === 'UPCOMING').length;
         this.stats.assessments = res.assessments.length;
         this.recentBatches = res.batches.slice(0, 5);
@@ -130,7 +153,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
-    const map: Record<string, string> = { ONGOING: 'status-ongoing', UPCOMING: 'status-upcoming', COMPLETED: 'status-completed', CANCELLED: 'status-cancelled' };
+    const map: Record<string, string> = { ACTIVE: 'status-ongoing', UPCOMING: 'status-upcoming', COMPLETED: 'status-completed' };
     return map[status] ?? '';
   }
 

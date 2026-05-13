@@ -34,7 +34,13 @@ export class TrainerListComponent implements OnInit {
   openForm(): void { this.dialog.open(TrainerFormComponent, { width: '500px' }).afterClosed().subscribe(r => { if (r) this.load(); }); }
 
   delete(t: Trainer): void {
-    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete Trainer', message: `Remove trainer "${t.fullName}"?`, danger: true, confirmText: 'Delete' } })
-      .afterClosed().subscribe(c => { if (c) this.svc.delete(t.id).subscribe({ next: () => { this.snack.open('Trainer removed', 'Close', { duration: 3000 }); this.load(); } }); });
+    const displayName = t.fullName || ('Trainer #' + (t.trainerId ?? t.id));
+    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete Trainer', message: `Remove "${displayName}"?`, danger: true, confirmText: 'Delete' } })
+      .afterClosed().subscribe(c => {
+        if (c) this.svc.delete((t.trainerId ?? t.id)!).subscribe({
+          next: () => { this.snack.open('Trainer removed', 'Close', { duration: 3000 }); this.load(); },
+          error: (e) => this.snack.open(e.error?.message || 'Failed to remove', 'Close', { duration: 3000 })
+        });
+      });
   }
 }

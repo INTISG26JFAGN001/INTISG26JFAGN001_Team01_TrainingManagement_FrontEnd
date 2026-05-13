@@ -1,0 +1,33 @@
+.page-container { padding: 24px; max-width: 1200px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.header-info h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+.header-info p { margin: 0; color: #546e7a; font-size: 13px; }
+
+.form-card { margin-bottom: 20px; border-radius: 12px; }
+mat-card-title { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+
+.enroll-form { display: flex; flex-wrap: wrap; gap: 12px; padding-top: 8px; }
+.field { flex: 1; min-width: 220px; }
+.form-actions { display: flex; gap: 8px; align-items: center; padding-top: 4px; }
+.batch-status { font-size: 11px; color: #78909c; }
+
+.content-card { border-radius: 12px; }
+.table-toolbar { padding: 16px 16px 0; }
+.search-field { width: 320px; }
+.table-container { overflow-x: auto; }
+.data-table { width: 100%; }
+
+.cell-name { display: flex; align-items: center; gap: 8px; }
+.avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: #e8eaf6; color: #3f51b5; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+
+.status-select { font-size: 13px; border: none; background: transparent; }
+::ng-deep .status-select .mat-mdc-select-trigger { font-size: 13px; }
+
+.status-chip { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-active    { background: #e8f5e9; color: #2e7d32; }
+.status-pending   { background: #fff8e1; color: #f57f17; }
+.status-completed { background: #e3f2fd; color: #1565c0; }
+.status-dropped   { background: #ffebee; color: #c62828; }
+
+.no-data { text-align: center; padding: 32px; color: #90a4ae; font-size: 14px; }
+.loading-center { display: flex; justify-content: center; padding: 48px; }

@@ -16,7 +16,7 @@ import { AuthService } from '../../../core/services/auth.service';
         <mat-form-field appearance="outline" class="full-width"><mat-label>Project Title</mat-label><input matInput formControlName="title"/></mat-form-field>
         <mat-form-field appearance="outline" class="full-width"><mat-label>Description</mat-label><textarea matInput formControlName="description" rows="3"></textarea></mat-form-field>
         <mat-form-field appearance="outline" class="full-width"><mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId"><mat-option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</mat-option></mat-select>
+          <mat-select formControlName="batchId"><mat-option *ngFor="let b of batches" [value]="b.id">{{ b.courseNames?.join(', ') || ('Batch #' + b.id) }}</mat-option></mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width"><mat-label>Repository URL</mat-label><input matInput formControlName="repositoryUrl" placeholder="https://github.com/..."/></mat-form-field>
       </form>

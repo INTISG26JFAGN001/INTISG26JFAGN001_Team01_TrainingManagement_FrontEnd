@@ -19,7 +19,7 @@
         <label>Batch ID</label>
         <select [(ngModel)]="filter.batchId" class="field-input">
           <option value="">All Batches</option>
-          <option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</option>
+          <option *ngFor="let b of batches" [value]="b.id">{{ b.courseNames?.join(', ') || ('Batch #' + b.id) }}</option>
         </select>
       </div>
       <div class="filter-field">

@@ -9,7 +9,7 @@
       <form [formGroup]="form" class="grid-form">
         <mat-form-field appearance="outline"><mat-label>Stage Name</mat-label><input matInput formControlName="name"/></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Course</mat-label>
-          <mat-select formControlName="courseId"><mat-option *ngFor="let c of courses" [value]="c.id">{{ c.name }}</mat-option></mat-select>
+          <mat-select formControlName="courseId"><mat-option *ngFor="let c of courses" [value]="c.id">{{ c.title }}</mat-option></mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Order</mat-label><input matInput type="number" formControlName="order"/></mat-form-field>
         <mat-form-field appearance="outline" class="span-full"><mat-label>Description</mat-label><input matInput formControlName="description"/></mat-form-field>
