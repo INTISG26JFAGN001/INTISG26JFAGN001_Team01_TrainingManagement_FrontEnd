@@ -1,8 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse } from '../models';
+
+interface UserInfo {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  roles: string[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -16,20 +24,23 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(payload: LoginRequest): Observable<LoginResponse> {
+  login(payload: LoginRequest): Observable<UserInfo> {
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, payload).pipe(
-      tap(res => {
-        localStorage.setItem(this.tokenKey, res.accessToken);
-        localStorage.setItem(this.roleKey, res.role);
-        localStorage.setItem(this.userIdKey, String(res.userId));
-        localStorage.setItem(this.usernameKey, res.username);
+      tap(res => localStorage.setItem(this.tokenKey, res.accessToken)),
+      switchMap(() => this.http.get<UserInfo>(`${environment.apiUrl}/user/username`, {
+        params: { key: payload.username }
+      })),
+      tap(user => {
+        localStorage.setItem(this.roleKey, user.roles[0]);
+        localStorage.setItem(this.userIdKey, String(user.id));
+        localStorage.setItem(this.usernameKey, user.username);
         this.loggedIn$.next(true);
       })
     );
   }
 
   refreshToken(): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/refresh-token`, {}).pipe(
+    return this.http.post<LoginResponse>(`${this.baseUrl}/refresh-token`, {}, { withCredentials: true }).pipe(
       tap(res => localStorage.setItem(this.tokenKey, res.accessToken))
     );
   }
