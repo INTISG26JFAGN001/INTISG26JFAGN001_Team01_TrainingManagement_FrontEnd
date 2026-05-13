@@ -15,8 +15,9 @@ export interface User { id: number; username: string; email: string; fullName: s
 export interface Technology { id: number; name: string; description: string; }
 
 // Course
-export interface Course { id: number; name: string; description: string; technologyId: number; durationInDays: number; }
-
+export interface Course { id: number; title:string; name: string; description: string; technologyId: number; durationInDays: number; }
+// Course
+export interface CourseRequest { code: string; title: string; technologyId: number; durationDays: number; }
 // Stage
 export interface Stage { id: number; name: string; description: string; courseId: number; order: number; }
 
