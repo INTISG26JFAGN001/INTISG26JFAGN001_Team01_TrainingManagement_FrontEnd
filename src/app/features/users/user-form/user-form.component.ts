@@ -29,7 +29,7 @@ import { User } from '../../../core/models';
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Role</mat-label>
-          <mat-select formControlName="role">
+          <mat-select formControlName="roles">
             <mat-option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</mat-option>
           </mat-select>
         </mat-form-field>
@@ -53,17 +53,48 @@ export class UserFormComponent implements OnInit {
     { value: 'ROLE_TECH_LEAD', label: 'Tech Lead' },
     { value: 'ROLE_SCRUM_LEAD', label: 'Scrum Lead' },
   ];
-  form = this.fb.group({ username: ['', Validators.required], fullName: ['', Validators.required], email: ['', [Validators.required, Validators.email]], password: [''], role: ['ROLE_ASSOCIATE', Validators.required] });
+
+  form = this.fb.group({
+    username: ['', Validators.required],
+    fullName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: [''],
+    roles: ['ROLE_ASSOCIATE', Validators.required]
+  });
+
   saving = false;
 
-  constructor(private fb: FormBuilder, private svc: UserService, private snack: MatSnackBar, public dialogRef: MatDialogRef<UserFormComponent>, @Inject(MAT_DIALOG_DATA) public data: User) {}
+  constructor(
+    private fb: FormBuilder,
+    private svc: UserService,
+    private snack: MatSnackBar,
+    public dialogRef: MatDialogRef<UserFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: User
+  ) {}
 
-  ngOnInit(): void { if (this.data) { this.form.patchValue(this.data); this.form.get('password')?.clearValidators(); } else { this.form.get('password')?.setValidators(Validators.required); } }
+  ngOnInit(): void {
+    if (this.data) {
+      this.form.patchValue({
+        ...this.data,
+        roles: this.data.roles?.[0] ?? 'ROLE_ASSOCIATE'  // string[] → single string for select
+      });
+      this.form.get('password')?.clearValidators();
+    } else {
+      this.form.get('password')?.setValidators(Validators.required);
+    }
+  }
 
   save(): void {
     if (this.form.invalid) return;
     this.saving = true;
-    const action = this.data ? this.svc.update({ ...this.form.value as any, id: this.data.id }) : this.svc.create(this.form.value as any);
-    action.subscribe({ next: () => { this.snack.open(`User ${this.data ? 'updated' : 'created'}`, 'Close', { duration: 3000 }); this.dialogRef.close(true); }, error: (e) => { this.snack.open(e.error?.message || 'Error', 'Close', { duration: 3000 }); this.saving = false; } });
+    const formVal = this.form.value as any;
+    const payload = { ...formVal, roles: [formVal.roles] };  // single string → string[] for backend
+    const action = this.data
+      ? this.svc.update({ ...payload, id: this.data.id })
+      : this.svc.create(payload);
+    action.subscribe({
+      next: () => { this.snack.open(`User ${this.data ? 'updated' : 'created'}`, 'Close', { duration: 3000 }); this.dialogRef.close(true); },
+      error: (e) => { this.snack.open(e.error?.message || 'Error', 'Close', { duration: 3000 }); this.saving = false; }
+    });
   }
 }
