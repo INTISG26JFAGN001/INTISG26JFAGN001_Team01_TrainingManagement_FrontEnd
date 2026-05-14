@@ -1,5 +1,7 @@
 .filter-bar { display: flex; gap: 12px; margin-bottom: 0; .search-field { flex: 1; } .status-filter { width: 200px; } }
-.batch-name-cell { display: flex; align-items: center; gap: 10px; }
+
+.batch-id-cell { display: flex; align-items: center; gap: 10px; }
+
 .batch-avatar {
   width: 34px; height: 34px; border-radius: 8px;
   background: var(--accent-glow); border: 1px solid rgba(0,198,255,0.2);
@@ -7,3 +9,5 @@
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   font-size: 14px;
 }
+
+.batch-id-text { font-weight: 600; color: var(--text-primary); }

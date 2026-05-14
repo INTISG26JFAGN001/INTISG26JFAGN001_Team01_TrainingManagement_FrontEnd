@@ -15,7 +15,7 @@ import { UserFormComponent } from '../user-form/user-form.component';
   styleUrls: ['./user-list.component.scss']
 })
 export class UserListComponent implements OnInit {
-  displayedColumns = ['username', 'fullName', 'email', 'role', 'actions'];
+  displayedColumns = ['id', 'username', 'fullName', 'email', 'role', 'actions'];
   dataSource = new MatTableDataSource<User>();
   loading = true;
 
@@ -42,10 +42,17 @@ export class UserListComponent implements OnInit {
       .afterClosed().subscribe(c => { if (c) this.svc.delete(user.id).subscribe({ next: () => { this.snack.open('User deleted', 'Close', { duration: 3000 }); this.load(); }, error: () => this.snack.open('Failed to delete', 'Close', { duration: 3000 }) }); });
   }
 
+  /** Extracts the primary role from the roles array */
+  getRole(u: User): string {
+    const r = Array.isArray(u.roles) ? u.roles[0] : (u.roles as any);
+    return r ?? '';
+  }
+
   getRoleBadge(role: string): string {
     const map: Record<string,string> = { ROLE_ADMIN:'Admin', ROLE_TRAINER:'Trainer', ROLE_ASSOCIATE:'Associate', ROLE_COACH:'Coach', ROLE_TECH_LEAD:'Tech Lead', ROLE_SCRUM_LEAD:'Scrum Lead' };
     return map[role] ?? role;
   }
+
   getRoleClass(role: string): string {
     const map: Record<string,string> = { ROLE_ADMIN:'badge-admin', ROLE_TRAINER:'badge-trainer', ROLE_ASSOCIATE:'badge-associate', ROLE_COACH:'badge-coach', ROLE_TECH_LEAD:'badge-techlead', ROLE_SCRUM_LEAD:'badge-scrum' };
     return map[role] ?? '';

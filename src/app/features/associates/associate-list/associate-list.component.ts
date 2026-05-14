@@ -4,43 +4,69 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin } from 'rxjs';
 import { AssociateService } from '../../../core/services/associate.service';
-import { Associate } from '../../../core/models';
+import { BatchService } from '../../../core/services/batch.service';
+import { UserService } from '../../../core/services/user.service';
+import { Associate, Batch, User } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
-import { EnrollmentComponent } from '../enrollment/enrollment.component';
 import { AssociateFormComponent } from '../associate-form/associate-form.component';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({ selector: 'app-associate-list', templateUrl: './associate-list.component.html', styleUrls: ['./associate-list.component.scss'] })
 export class AssociateListComponent implements OnInit {
   dataSource = new MatTableDataSource<Associate>();
+  batches: Batch[] = [];
   loading = true;
   isAdmin = this.auth.isAdmin();
   isAssociate = this.auth.isAssociate();
-  canManageEnrollment = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
   myProfile: Associate | null = null;
 
   get displayedColumns(): string[] {
-    if (this.isAssociate) return ['fullName', 'email', 'experienceLevel'];
-    return ['fullName', 'email', 'experienceLevel', 'actions'];
+    if (this.isAssociate) return ['fullName', 'experienceLevel', 'batch'];
+    if (this.isAdmin) return ['userId', 'fullName', 'email', 'experienceLevel', 'batch', 'actions'];
+    return ['userId', 'fullName', 'email', 'experienceLevel', 'batch'];
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private svc: AssociateService, private dialog: MatDialog, private snack: MatSnackBar, private auth: AuthService) {}
+  constructor(
+    private svc: AssociateService,
+    private batchSvc: BatchService,
+    private userSvc: UserService,
+    private dialog: MatDialog,
+    private snack: MatSnackBar,
+    private auth: AuthService
+  ) { }
 
   ngOnInit(): void { this.load(); }
 
   load(): void {
     this.loading = true;
-    this.svc.getAll().subscribe({
-      next: d => {
+    forkJoin({
+      associates: this.svc.getAll(),
+      batches: this.batchSvc.getAll(),
+      users: this.userSvc.getAll()
+    }).subscribe({
+      next: ({ associates, batches, users }) => {
+        this.batches = batches;
+
+        // Build a quick userId → User lookup map
+        const userMap = new Map<number, User>(users.map(u => [u.id, u]));
+
+        // Enrich each associate with fullName and email from the users list
+        const enriched: Associate[] = associates.map((a: Associate) => {
+          const u = userMap.get(a.userId);
+          return u ? { ...a, fullName: u.fullName || u.username, email: u.email } : a;
+        });
+
         if (this.isAssociate) {
           const userId = this.auth.getUserId();
-          this.myProfile = d.find((a: Associate) => a.userId === userId) ?? d[0] ?? null;
+          this.myProfile = enriched.find(a => a.userId === userId) ?? enriched[0] ?? null;
           this.dataSource.data = this.myProfile ? [this.myProfile] : [];
         } else {
-          this.dataSource.data = d;
+          this.dataSource.data = enriched;
         }
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
@@ -56,14 +82,30 @@ export class AssociateListComponent implements OnInit {
     this.dialog.open(AssociateFormComponent, { width: '480px' }).afterClosed().subscribe(r => { if (r) this.load(); });
   }
 
-  openEnrollment(associate: Associate): void {
-    this.dialog.open(EnrollmentComponent, { width: '520px', data: associate }).afterClosed().subscribe(r => { if (r) this.load(); });
+  delete(a: Associate): void {
+    const displayName = a.fullName || ('User #' + a.userId);
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Remove Associate',
+        message: `Remove "${displayName}" as an associate?\n\nNote: This only removes the associate profile. Their user account will remain active.`,
+        danger: true,
+        confirmText: 'Remove'
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.svc.delete(a.id).subscribe({
+          next: () => {
+            this.snack.open('Associate profile removed. User account is still active.', 'Close', { duration: 4000 });
+            this.load();
+          },
+          error: (e) => this.snack.open(e.error?.message || e.error || 'Failed to remove associate', 'Close', { duration: 3000 })
+        });
+      }
+    });
   }
 
-  /** Returns display name — falls back to "User #userId" when fullName is missing (backend may not enrich response) */
   getDisplayName(a: Associate): string { return a.fullName || ('User #' + a.userId); }
 
-  /** Returns display XP — maps int xp to label, or returns experienceLevel string as-is */
   getXpLabel(a: Associate): string {
     if (a.experienceLevel) return a.experienceLevel;
     const map: Record<number, string> = { 0: 'JUNIOR', 1: 'MID', 2: 'SENIOR' };
@@ -73,5 +115,17 @@ export class AssociateListComponent implements OnInit {
   getXpClass(xp: string): string {
     const map: Record<string, string> = { JUNIOR: 'badge-junior', MID: 'badge-mid', SENIOR: 'badge-senior' };
     return map[xp?.toUpperCase()] ?? 'badge-junior';
+  }
+
+  getBatchLabel(a: Associate): string {
+    const id = a.batchId ?? a.currentBatchId ?? 0;
+    if (!id || id === 0) return '—';
+    const b = this.batches.find(b => b.id === id);
+    return b ? (b.courseNames?.join(', ') || `Batch #${id}`) : `Batch #${id}`;
+  }
+
+  isBatchAssigned(a: Associate): boolean {
+    const id = a.batchId ?? a.currentBatchId ?? 0;
+    return !!id && id !== 0;
   }
 }

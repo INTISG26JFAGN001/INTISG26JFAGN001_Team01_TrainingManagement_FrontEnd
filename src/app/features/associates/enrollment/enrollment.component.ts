@@ -9,7 +9,7 @@ import { Associate, Enrollment } from '../../../core/models';
 @Component({
   selector: 'app-enrollment',
   template: `
-    <h2 mat-dialog-title><mat-icon>assignment_turned_in</mat-icon> Enroll: {{ data?.fullName }}</h2>
+    <h2 mat-dialog-title><mat-icon>assignment_turned_in</mat-icon> Enroll: {{ data.fullName }}</h2>
     <mat-dialog-content>
       <div class="enrollments-list" *ngIf="enrollments.length">
         <h4>Current Enrollments</h4>

@@ -1,81 +1,131 @@
 <div class="page-container" *ngIf="!loading; else loadingTpl">
+
+  <!-- Header -->
   <div class="page-header">
     <div class="header-info">
       <button mat-icon-button routerLink="/batches"><mat-icon>arrow_back</mat-icon></button>
       <div>
-        <h2>{{ batch?.courseNames?.join(', ') || ('Batch #' + batch?.id) }}</h2>
-        <span class="status-chip" [ngClass]="getStatusClass(batch?.status || '')">{{ batch?.status }}</span>
+        <h2>Batch <span class="batch-id-accent">#{{ batch.id }}</span></h2>
+        <span class="status-chip" [ngClass]="getStatusClass(batch.status)">{{ batch.status }}</span>
       </div>
     </div>
     <div class="header-actions" *ngIf="isAdmin">
       <mat-form-field appearance="outline" class="status-select">
         <mat-label>Change Status</mat-label>
-        <mat-select [value]="batch?.status" (selectionChange)="updateStatus($event.value)">
+        <mat-select [value]="batch.status" (selectionChange)="updateStatus($event.value)">
           <mat-option *ngFor="let s of statuses" [value]="s">{{ s }}</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
   </div>
 
-  <!-- Info Cards -->
+  <!-- Summary info cards -->
   <div class="info-grid">
     <mat-card class="info-card">
+      <mat-icon>tag</mat-icon>
+      <div>
+        <span class="info-label">Batch ID</span>
+        <span class="info-value">{{ batch.id }}</span>
+      </div>
+    </mat-card>
+    <mat-card class="info-card">
       <mat-icon>calendar_today</mat-icon>
-      <div><span class="info-label">Start Date</span><span class="info-value">{{ batch?.startDate | date:'mediumDate' }}</span></div>
+      <div>
+        <span class="info-label">Start Date</span>
+        <span class="info-value-sm">{{ formatDate(batch.startDate) }}</span>
+      </div>
     </mat-card>
     <mat-card class="info-card">
       <mat-icon>event</mat-icon>
-      <div><span class="info-label">End Date</span><span class="info-value">{{ batch?.endDate | date:'mediumDate' }}</span></div>
+      <div>
+        <span class="info-label">End Date</span>
+        <span class="info-value-sm">{{ formatDate(batch.endDate) }}</span>
+      </div>
     </mat-card>
     <mat-card class="info-card">
       <mat-icon>people</mat-icon>
-      <div><span class="info-label">Associates</span><span class="info-value">{{ batch?.associates?.length ?? 0 }}</span></div>
-    </mat-card>
-    <mat-card class="info-card">
-      <mat-icon>book</mat-icon>
-      <div><span class="info-label">Courses</span><span class="info-value">{{ batch?.courseNames?.length ?? 0 }}</span></div>
+      <div>
+        <span class="info-label">Enrolled</span>
+        <span class="info-value">{{ batch.associates.length }}</span>
+      </div>
     </mat-card>
   </div>
 
-  <mat-tab-group [(selectedIndex)]="selectedTab" class="detail-tabs">
-    <!-- Associates Tab -->
-    <mat-tab label="Associates">
-      <div class="tab-content">
-        <table mat-table [dataSource]="batch?.associates ?? []" class="data-table">
-          <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef>Name</th><td mat-cell *matCellDef="let a">{{ a.fullName }}</td></ng-container>
-          <ng-container matColumnDef="email"><th mat-header-cell *matHeaderCellDef>Email</th><td mat-cell *matCellDef="let a">{{ a.email }}</td></ng-container>
-          <ng-container matColumnDef="xp"><th mat-header-cell *matHeaderCellDef>Experience</th><td mat-cell *matCellDef="let a">{{ a.experienceLevel ?? a.xp }}</td></ng-container>
-          <tr mat-header-row *matHeaderRowDef="['name','email','xp']"></tr>
-          <tr mat-row *matRowDef="let r; columns: ['name','email','xp'];"></tr>
-          <tr class="mat-row" *matNoDataRow><td colspan="3" class="no-data">No associates enrolled.</td></tr>
-        </table>
+  <!-- Trainer section -->
+  <mat-card class="section-card">
+    <div class="section-header">
+      <mat-icon>school</mat-icon>
+      <h3>Trainer</h3>
+    </div>
+    <div class="trainer-row" *ngIf="batch.trainerId">
+      <div class="trainer-avatar">{{ (trainerName || 'T').charAt(0) }}</div>
+      <div class="trainer-info">
+        <span class="trainer-name">{{ trainerName || ('Trainer #' + batch.trainerId) }}</span>
+        <span class="trainer-meta">
+          Trainer ID: <strong>{{ batch.trainerId }}</strong>
+          <span *ngIf="trainerUserId"> &nbsp;·&nbsp; User ID: <strong>{{ trainerUserId }}</strong></span>
+        </span>
       </div>
-    </mat-tab>
+    </div>
+    <p class="no-data" *ngIf="!batch.trainerId">No trainer assigned.</p>
+  </mat-card>
 
-    <!-- Courses Tab -->
-    <mat-tab label="Courses">
-      <div class="tab-content">
-        <div class="course-chips">
-          <mat-chip-listbox>
-            <mat-chip *ngFor="let name of batch?.courseNames">{{ name }}</mat-chip>
-          </mat-chip-listbox>
-          <p *ngIf="!batch?.courseNames?.length" class="no-data">No courses assigned.</p>
-        </div>
-      </div>
-    </mat-tab>
+  <!-- Courses section -->
+  <mat-card class="section-card">
+    <div class="section-header">
+      <mat-icon>menu_book</mat-icon>
+      <h3>Courses ({{ batch.courseNames?.length ?? 0 }})</h3>
+    </div>
+    <div class="course-chips" *ngIf="batch.courseNames?.length; else noCourses">
+      <span class="course-chip" *ngFor="let name of batch.courseNames">{{ name }}</span>
+    </div>
+    <ng-template #noCourses><p class="no-data">No courses assigned.</p></ng-template>
+  </mat-card>
 
-    <!-- Schedules Tab -->
-    <mat-tab label="Schedules">
-      <div class="tab-content">
-        <table mat-table [dataSource]="schedules" class="data-table">
-          <ng-container matColumnDef="scheduleId"><th mat-header-cell *matHeaderCellDef>#</th><td mat-cell *matCellDef="let s">{{ s.scheduleId ?? s.id }}</td></ng-container>
-          <ng-container matColumnDef="sessionDate"><th mat-header-cell *matHeaderCellDef>Session Date</th><td mat-cell *matCellDef="let s">{{ s.sessionDate | date:'medium' }}</td></ng-container>
-          <tr mat-header-row *matHeaderRowDef="['scheduleId','sessionDate']"></tr>
-          <tr mat-row *matRowDef="let r; columns: ['scheduleId','sessionDate'];"></tr>
-          <tr class="mat-row" *matNoDataRow><td colspan="2" class="no-data">No schedules found.</td></tr>
-        </table>
-      </div>
-    </mat-tab>
-  </mat-tab-group>
+  <!-- Enrolled Students section -->
+  <mat-card class="section-card">
+    <div class="section-header">
+      <mat-icon>groups</mat-icon>
+      <h3>Enrolled Students ({{ batch.associates.length }})</h3>
+    </div>
+    <table mat-table [dataSource]="batch.associates" class="data-table students-table" *ngIf="batch.associates.length; else noStudents">
+
+      <!-- Name -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let a">
+          <div class="user-cell">
+            <div class="avatar-sm">{{ (a.fullName || a.userId).toString().charAt(0).toUpperCase() }}</div>
+            <span>{{ a.fullName || ('User #' + a.userId) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- User ID -->
+      <ng-container matColumnDef="userId">
+        <th mat-header-cell *matHeaderCellDef>User ID</th>
+        <td mat-cell *matCellDef="let a"><span class="id-chip">{{ a.userId }}</span></td>
+      </ng-container>
+
+      <!-- Email -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let a">{{ a.email || '—' }}</td>
+      </ng-container>
+
+      <!-- Experience -->
+      <ng-container matColumnDef="xp">
+        <th mat-header-cell *matHeaderCellDef>Experience</th>
+        <td mat-cell *matCellDef="let a">
+          <span class="xp-chip">{{ getXpLabel(a.xp, a.experienceLevel) }}</span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="['name','userId','email','xp']"></tr>
+      <tr mat-row *matRowDef="let r; columns: ['name','userId','email','xp'];"></tr>
+    </table>
+    <ng-template #noStudents><p class="no-data">No students enrolled in this batch yet.</p></ng-template>
+  </mat-card>
+
 </div>
 <ng-template #loadingTpl><div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div></ng-template>

@@ -1,0 +1,75 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>person_add</mat-icon> Add Associate
+</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form">
+
+    <!-- Step 1: User ID + Verify -->
+    <p class="step-label">Step 1 — Verify User</p>
+
+    <div class="user-id-row">
+      <mat-form-field appearance="outline" class="userid-field">
+        <mat-label>User ID</mat-label>
+        <mat-icon matPrefix>badge</mat-icon>
+        <input matInput type="number" formControlName="userId" min="1"
+               placeholder="Enter the user's ID"
+               (input)="onUserIdChange()"
+               (blur)="verifyUser()"/>
+        <mat-hint>Find the ID in User Management</mat-hint>
+        <mat-error>User ID is required</mat-error>
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" class="verify-btn"
+              (click)="verifyUser()"
+              [disabled]="!form.value.userId || validating">
+        <mat-icon>{{ validating ? 'hourglass_empty' : 'search' }}</mat-icon>
+        {{ validating ? 'Checking...' : 'Verify' }}
+      </button>
+    </div>
+
+    <!-- Validation result: success -->
+    <div class="user-card valid" *ngIf="validatedUser">
+      <mat-icon class="check-icon">check_circle</mat-icon>
+      <div class="user-card-info">
+        <span class="user-name">{{ validatedUser.fullName || validatedUser.username }}</span>
+        <span class="user-meta">@{{ validatedUser.username }} · {{ validatedUser.email }}</span>
+        <span class="role-tag">ROLE_ASSOCIATE ✓</span>
+      </div>
+    </div>
+
+    <!-- Validation result: error -->
+    <div class="user-card error" *ngIf="validationError">
+      <mat-icon class="error-icon">error</mat-icon>
+      <span>{{ validationError }}</span>
+    </div>
+
+    <!-- Step 2: Experience Level -->
+    <p class="step-label" style="margin-top: 20px;">Step 2 — Experience Level</p>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Experience Level (xp)</mat-label>
+      <mat-icon matPrefix>star</mat-icon>
+      <mat-select formControlName="xp">
+        <mat-option [value]="0">Junior &nbsp;<span class="xp-hint">(xp = 0)</span></mat-option>
+        <mat-option [value]="1">Mid &nbsp;<span class="xp-hint">(xp = 1)</span></mat-option>
+        <mat-option [value]="2">Senior &nbsp;<span class="xp-hint">(xp = 2)</span></mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Info: batch assigned via enrollment -->
+    <div class="info-box">
+      <mat-icon>info</mat-icon>
+      <span>Batch ID will be <strong>0</strong> (unassigned) on creation. Assign a batch by enrolling the associate via the <strong>Enrollments</strong> page.</span>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!canSubmit">
+    <mat-icon>{{ saving ? 'hourglass_empty' : 'person_add' }}</mat-icon>
+    {{ saving ? 'Adding...' : 'Add Associate' }}
+  </button>
+</mat-dialog-actions>

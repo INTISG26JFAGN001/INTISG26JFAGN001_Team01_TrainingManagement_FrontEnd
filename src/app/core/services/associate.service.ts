@@ -13,8 +13,13 @@ export class AssociateService {
   getAll(): Observable<Associate[]> { return this.http.get<Associate[]>(`${this.base}/associates`); }
   getById(userId: number): Observable<Associate> { return this.http.get<Associate>(`${this.base}/associates/${userId}`); }
   getByBatch(batchId: number): Observable<Associate[]> { return this.http.get<Associate[]>(`${this.base}/associates/batch`, { params: { id: batchId } }); }
-  create(p: Partial<Associate>): Observable<Associate> { return this.http.post<Associate>(`${this.base}/associates/create`, p); }
+  // Backend returns plain text "Associate created successfully" on 201
+  create(p: { userId: number; batchid: number; xp: number }): Observable<string> {
+    return this.http.post(`${this.base}/associates/create`, p, { responseType: 'text' });
+  }
   update(p: Partial<Associate>): Observable<Associate> { return this.http.put<Associate>(`${this.base}/associates/update`, p); }
+  // DELETE /associates/{id}  — uses associate primary-key id, not userId
+  delete(id: number): Observable<string> { return this.http.delete(`${this.base}/associates/${id}`, { responseType: 'text' }); }
 
   // Enrollments
   getAllEnrollments(): Observable<Enrollment[]> { return this.http.get<Enrollment[]>(`${this.base}/enrollment`); }

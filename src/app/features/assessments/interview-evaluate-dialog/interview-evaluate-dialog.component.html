@@ -54,15 +54,15 @@
       <div formArrayName="rubricScores">
         <div *ngFor="let score of rubricScores.controls; let i = index" [formGroupName]="i" class="rubric-score-row">
           <div class="rubric-label">
-            <span class="criteria-name">{{ rubrics[i]?.criteria }}</span>
-            <span class="weight-tag">max {{ rubrics[i]?.weight }}</span>
+            <span class="criteria-name">{{ rubrics[i].criteria }}</span>
+            <span class="weight-tag">max {{ rubrics[i].weight }}</span>
           </div>
           <mat-form-field appearance="outline" class="score-field">
             <mat-label>Score</mat-label>
             <input matInput type="number" formControlName="scoreAwarded"
-                   min="0" [attr.max]="rubrics[i]?.weight" placeholder="0"/>
-            <mat-hint>0 – {{ rubrics[i]?.weight }}</mat-hint>
-            <mat-error>Score must be 0–{{ rubrics[i]?.weight }}</mat-error>
+                   min="0" [attr.max]="rubrics[i].weight" placeholder="0"/>
+            <mat-hint>0 – {{ rubrics[i].weight }}</mat-hint>
+            <mat-error>Score must be 0–{{ rubrics[i].weight }}</mat-error>
           </mat-form-field>
           <mat-form-field appearance="outline" class="remarks-field">
             <mat-label>Remarks</mat-label>

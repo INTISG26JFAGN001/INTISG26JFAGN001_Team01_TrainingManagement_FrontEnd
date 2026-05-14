@@ -1,0 +1,74 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>supervisor_account</mat-icon> Add Trainer
+</h2>
+
+<mat-dialog-content class="dialog-body">
+  <form [formGroup]="form">
+
+    <!-- Step 1: User ID + Verify -->
+    <p class="step-label">Step 1 — Verify User</p>
+
+    <div class="user-id-row">
+      <mat-form-field appearance="outline" class="userid-field">
+        <mat-label>User ID</mat-label>
+        <mat-icon matPrefix>badge</mat-icon>
+        <input matInput type="number" formControlName="userId" min="1"
+               placeholder="Enter the user's ID"
+               (input)="onUserIdChange()"
+               (blur)="verifyUser()"/>
+        <mat-hint>Find the ID in User Management</mat-hint>
+        <mat-error>User ID is required</mat-error>
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" class="verify-btn"
+              (click)="verifyUser()"
+              [disabled]="!form.value.userId || validating">
+        <mat-icon>{{ validating ? 'hourglass_empty' : 'search' }}</mat-icon>
+        {{ validating ? 'Checking...' : 'Verify' }}
+      </button>
+    </div>
+
+    <!-- Verification success card -->
+    <div class="user-card valid" *ngIf="validatedUser">
+      <mat-icon class="check-icon">check_circle</mat-icon>
+      <div class="user-card-info">
+        <span class="user-name">{{ validatedUser.fullName || validatedUser.username }}</span>
+        <span class="user-meta">@{{ validatedUser.username }} · {{ validatedUser.email }}</span>
+        <span class="role-tag">ROLE_TRAINER ✓</span>
+      </div>
+    </div>
+
+    <!-- Verification error card -->
+    <div class="user-card error" *ngIf="validationError">
+      <mat-icon class="error-icon">error</mat-icon>
+      <span>{{ validationError }}</span>
+    </div>
+
+    <!-- Step 2: Technology Selection -->
+    <p class="step-label" style="margin-top: 20px;">Step 2 — Technologies</p>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Technologies (optional)</mat-label>
+      <mat-icon matPrefix>code</mat-icon>
+      <mat-select formControlName="technologyIds" multiple>
+        <mat-option *ngFor="let t of technologies" [value]="t.id">{{ t.name }}</mat-option>
+      </mat-select>
+      <mat-hint>Select one or more technologies this trainer specializes in</mat-hint>
+    </mat-form-field>
+
+    <!-- Info box -->
+    <div class="info-box">
+      <mat-icon>info</mat-icon>
+      <span>Only users with <strong>ROLE_TRAINER</strong> can be added as trainers. Removing a trainer only deletes the trainer profile — the user account is <strong>not</strong> deleted.</span>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!canSubmit">
+    <mat-icon>{{ saving ? 'hourglass_empty' : 'supervisor_account' }}</mat-icon>
+    {{ saving ? 'Adding...' : 'Add Trainer' }}
+  </button>
+</mat-dialog-actions>
