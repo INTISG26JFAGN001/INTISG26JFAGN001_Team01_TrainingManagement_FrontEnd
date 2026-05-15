@@ -73,4 +73,7 @@ export class AssessmentService {
   getEvaluationByAssociate(assessmentId: number, associateId: number): Observable<InterviewEvaluationResponse> {
     return this.http.get<InterviewEvaluationResponse>(`${this.evalBase}/assessment/${assessmentId}/associate/${associateId}`);
   }
+  getInterviewEvaluationsByAssociate(associateId: number): Observable<InterviewEvaluationResponse[]> {
+    return this.http.get<InterviewEvaluationResponse[]>(`${this.evalBase}/associate/${associateId}`);
+  }
 }

@@ -1,0 +1,63 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Quizzes</h2>
+      <p>View and attempt quizzes assigned to your batch</p>
+    </div>
+  </div>
+
+  <div *ngIf="!loading; else loadingTpl">
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You are not currently enrolled in an active batch. Quizzes will appear here once you are assigned to a batch.</p>
+    </div>
+
+    <div *ngIf="batchId && quizzes.length === 0" class="empty-state">
+      <mat-icon>fact_check</mat-icon>
+      <h3>No Quizzes Yet</h3>
+      <p>Your trainer has not published any quizzes for your batch yet. Check back later.</p>
+    </div>
+
+    <div class="quiz-grid" *ngIf="quizzes.length > 0">
+      <mat-card class="quiz-card" *ngFor="let q of quizzes">
+        <mat-card-header>
+          <div mat-card-avatar class="quiz-avatar">
+            <mat-icon>{{ q.attempted ? 'check_circle' : 'fact_check' }}</mat-icon>
+          </div>
+          <mat-card-title>{{ q.title }}</mat-card-title>
+          <mat-card-subtitle>
+            Due: {{ q.dueDate ? (q.dueDate | date:'mediumDate') : 'No deadline' }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="quiz-meta-row">
+            <span class="quiz-chip"><mat-icon>timer</mat-icon> {{ q.durationMinutes ?? 30 }} min</span>
+            <span class="quiz-chip"><mat-icon>help_outline</mat-icon> {{ q.questions ? q.questions.length : '?' }} Qs</span>
+            <span class="quiz-chip"><mat-icon>flag</mat-icon> Pass: {{ q.passingMarks ?? q.passingScore }}</span>
+          </div>
+
+          <div class="result-row" *ngIf="q.attempted">
+            <mat-icon [ngClass]="q.resultStatus === 'PASSED' ? 'icon-pass' : 'icon-fail'">
+              {{ q.resultStatus === 'PASSED' ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+            <span>Score: <strong>{{ q.score }}</strong></span>
+            <span class="status-chip" [ngClass]="getStatusColor(q.resultStatus ?? '')">{{ q.resultStatus }}</span>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-flat-button color="primary" (click)="openQuiz(q)" [disabled]="q.attempted">
+            <mat-icon>{{ q.attempted ? 'done_all' : 'play_arrow' }}</mat-icon>
+            {{ q.attempted ? 'Attempted' : 'Take Quiz' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center"><mat-spinner diameter="48"></mat-spinner><p>Loading quizzes...</p></div>
+</ng-template>

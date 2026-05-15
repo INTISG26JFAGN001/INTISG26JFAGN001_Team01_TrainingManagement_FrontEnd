@@ -26,6 +26,7 @@ export class AssociateService {
   getEnrollmentById(id: number): Observable<Enrollment> { return this.http.get<Enrollment>(`${this.base}/enrollment/${id}`); }
   getEnrollmentsByBatch(batchId: number): Observable<Enrollment[]> { return this.http.get<Enrollment[]>(`${this.base}/enrollment/batch`, { params: { id: batchId } }); }
   getEnrollmentsByAssociate(associateId: number): Observable<Enrollment[]> { return this.http.get<Enrollment[]>(`${this.base}/enrollment/associate`, { params: { id: associateId } }); }
+  getMyEnrollment(associateId: number): Observable<Enrollment> { return this.http.get<Enrollment>(`${this.base}/enrollment/associate`, { params: { id: associateId } }); }
   createEnrollment(p: Partial<Enrollment>): Observable<Enrollment> { return this.http.post<Enrollment>(`${this.base}/enrollment`, p); }
   updateEnrollmentStatus(id: number, val: EnrollmentStatus): Observable<Enrollment> {
     return this.http.put<Enrollment>(`${this.base}/enrollment/${id}/status`, null, { params: { val } });

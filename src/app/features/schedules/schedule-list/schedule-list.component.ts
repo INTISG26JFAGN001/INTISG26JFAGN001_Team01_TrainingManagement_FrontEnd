@@ -5,7 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, catchError, map } from 'rxjs/operators';
 import { ScheduleService } from '../../../core/services/schedule.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { AssociateService } from '../../../core/services/associate.service';
@@ -58,29 +58,26 @@ export class ScheduleListComponent implements OnInit {
   private loadAssociateView(): void {
     const userId = this.auth.getUserId();
     this.loading = true;
-    this.associateSvc.getAll().pipe(
-      switchMap(associates => {
-        const me = associates.find(a => a.userId === userId);
-        if (!me) return of(null);
-        return this.associateSvc.getEnrollmentsByAssociate(me.id);
+    this.associateSvc.getById(userId).pipe(
+      catchError(() => of(null)),
+      switchMap((me: any) => {
+        if (!me) return of({ me: null, enrollment: null });
+        return this.associateSvc.getMyEnrollment(me.id).pipe(
+          catchError(() => of(null)),
+          map((enrollment: any) => ({ me, enrollment }))
+        );
       })
     ).subscribe({
-      next: enrollments => {
-        if (!enrollments) { this.loading = false; return; }
-        const active = enrollments.find(e => e.status === 'ACTIVE');
-        if (active) {
-          this.selectedBatchId = active.batchId;
-          this.batchSvc.getAll().subscribe(b => {
-            this.batches = b;
-            this.loadSchedules();
-          });
-        } else {
-          this.batchSvc.getAll().subscribe(b => { this.batches = b; this.loading = false; });
-        }
+      next: ({ me, enrollment }: any) => {
+        const batchId: number | null = enrollment?.batchId ?? me?.batchId ?? null;
+        if (!batchId) { this.loading = false; return; }
+        this.selectedBatchId = batchId;
+        this.batchSvc.getById(batchId).pipe(catchError(() => of(null))).subscribe(b => {
+          if (b) this.batches = [b];
+          this.loadSchedules();
+        });
       },
-      error: () => {
-        this.batchSvc.getAll().subscribe(b => { this.batches = b; this.loading = false; });
-      }
+      error: () => { this.loading = false; }
     });
   }
 

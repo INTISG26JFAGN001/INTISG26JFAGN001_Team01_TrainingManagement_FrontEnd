@@ -15,6 +15,7 @@ export class ProjectListComponent implements OnInit {
   dataSource = new MatTableDataSource<Project>();
   loading = true;
   canDelete = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
+  canSubmit = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD', 'ROLE_ASSOCIATE');
   displayedColumns = ['title', 'submissionDate', 'repoUrl', 'actions'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;

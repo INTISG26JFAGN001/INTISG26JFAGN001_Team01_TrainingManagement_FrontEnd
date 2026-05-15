@@ -198,16 +198,57 @@
         <div class="stat-info"><span class="stat-value">—</span><span class="stat-label">Not Enrolled in a Batch</span></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fff3e0"><mat-icon style="color:#e65100">work</mat-icon></div>
-        <div class="stat-info"><span class="stat-value small">{{ associateStats.projectStatus }}</span><span class="stat-label">Project Status</span></div>
+        <div class="stat-icon" style="background:#e8f5e9"><mat-icon style="color:#2e7d32">fact_check</mat-icon></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ associateStats.quizzesPassed }} / {{ associateStats.quizzesTotal }}</span>
+          <span class="stat-label">Quizzes Passed</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fff3e0"><mat-icon style="color:#e65100">calendar_today</mat-icon></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ associateStats.upcomingSessions }}</span>
+          <span class="stat-label">Upcoming Sessions</span>
+        </div>
       </div>
     </div>
 
-    <mat-card class="quick-actions-card">
+    <div class="dashboard-row" *ngIf="upcomingSchedules.length > 0">
+      <mat-card class="table-card">
+        <mat-card-header>
+          <mat-card-title><mat-icon>calendar_today</mat-icon> Upcoming Sessions</mat-card-title>
+          <button mat-button color="primary" routerLink="/schedules">View All</button>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="batch-item" *ngFor="let s of upcomingSchedules">
+            <div class="batch-avatar"><mat-icon>event</mat-icon></div>
+            <div class="batch-info">
+              <span class="batch-name">Session — Batch #{{ s.batchId }}</span>
+              <span class="batch-meta">{{ s.sessionDate | date:'fullDate' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="quick-actions-card side-actions">
+        <mat-card-header><mat-card-title><mat-icon>flash_on</mat-icon> Quick Actions</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="actions-list">
+            <button mat-stroked-button routerLink="/my-portal/quizzes" class="action-btn full"><mat-icon>fact_check</mat-icon><span>My Quizzes</span></button>
+            <button mat-stroked-button routerLink="/my-portal/results" class="action-btn full"><mat-icon>leaderboard</mat-icon><span>My Results</span></button>
+            <button mat-stroked-button routerLink="/projects" class="action-btn full"><mat-icon>work</mat-icon><span>Submit Project</span></button>
+            <button mat-stroked-button routerLink="/associates" class="action-btn full"><mat-icon>person</mat-icon><span>My Profile</span></button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="quick-actions-card" *ngIf="upcomingSchedules.length === 0">
       <mat-card-header><mat-card-title><mat-icon>flash_on</mat-icon> Quick Actions</mat-card-title></mat-card-header>
       <mat-card-content>
         <div class="actions-grid">
-          <button mat-stroked-button routerLink="/batches" class="action-btn"><mat-icon>groups</mat-icon><span>View My Batch</span></button>
+          <button mat-stroked-button routerLink="/my-portal/quizzes" class="action-btn"><mat-icon>fact_check</mat-icon><span>My Quizzes</span></button>
+          <button mat-stroked-button routerLink="/my-portal/results" class="action-btn"><mat-icon>leaderboard</mat-icon><span>My Results</span></button>
           <button mat-stroked-button routerLink="/projects" class="action-btn"><mat-icon>work</mat-icon><span>Submit Project</span></button>
           <button mat-stroked-button routerLink="/associates" class="action-btn"><mat-icon>person</mat-icon><span>My Profile</span></button>
         </div>

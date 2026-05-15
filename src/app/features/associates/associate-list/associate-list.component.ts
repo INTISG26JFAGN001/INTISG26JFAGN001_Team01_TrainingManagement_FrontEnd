@@ -5,7 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap, map } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { UserService } from '../../../core/services/user.service';
@@ -46,6 +46,10 @@ export class AssociateListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
+    if (this.isAssociate) {
+      this.loadMyProfile();
+      return;
+    }
     forkJoin({
       associates:  this.svc.getAll(),
       batches:     this.batchSvc.getAll(),
@@ -54,49 +58,69 @@ export class AssociateListComponent implements OnInit {
     }).subscribe({
       next: ({ associates, batches, users, enrollments }) => {
         this.batches = batches;
-
-        // userId → User lookup
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
-
-        // Build associateId (PK) → batchId map from live enrollment records.
-        // Priority: ACTIVE > ENROLLED > COMPLETED so the "current" batch
-        // reflects the most meaningful enrollment and updates whenever one is
-        // added or removed via the Enrollments tab.
         const STATUS_PRIORITY: Record<string, number> = { ACTIVE: 0, ENROLLED: 1, COMPLETED: 2 };
         const grouped = new Map<number, Enrollment[]>();
         for (const e of enrollments) {
           if (!grouped.has(e.associateId)) grouped.set(e.associateId, []);
           grouped.get(e.associateId)!.push(e);
         }
-        const enrollmentBatchMap = new Map<number, number>(); // associateId → batchId
+        const enrollmentBatchMap = new Map<number, number>();
         grouped.forEach((list, associateId) => {
           list.sort((a, b) => (STATUS_PRIORITY[a.status] ?? 9) - (STATUS_PRIORITY[b.status] ?? 9));
           enrollmentBatchMap.set(associateId, list[0].batchId);
         });
-
-        // Enrich each associate with fullName/email from users and batchId from enrollments
         const enriched: Associate[] = associates.map((a: Associate) => {
           const u = userMap.get(a.userId);
           const enrolledBatchId = enrollmentBatchMap.get(a.id) ?? 0;
-          return {
-            ...a,
-            ...(u ? { fullName: u.fullName || u.username, email: u.email } : {}),
-            batchId: enrolledBatchId   // always reflects current enrollment state
-          };
+          return { ...a, ...(u ? { fullName: u.fullName || u.username, email: u.email } : {}), batchId: enrolledBatchId };
         });
-
-        if (this.isAssociate) {
-          const userId = this.auth.getUserId();
-          this.myProfile = enriched.find(a => a.userId === userId) ?? enriched[0] ?? null;
-          this.dataSource.data = this.myProfile ? [this.myProfile] : [];
-        } else {
-          this.dataSource.data = enriched;
-        }
+        this.dataSource.data = enriched;
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
         this.loading = false;
       },
       error: () => { this.snack.open('Failed to load associates', 'Close', { duration: 3000 }); this.loading = false; }
+    });
+  }
+
+  private loadMyProfile(): void {
+    const userId = this.auth.getUserId();
+    this.svc.getById(userId).pipe(
+      catchError(() => of(null)),
+      switchMap((associate: any) => {
+        if (!associate) return of({ associate: null, user: null, enrollment: null, batch: null });
+        return forkJoin({
+          user:       this.userSvc.getById(userId).pipe(catchError(() => of(null))),
+          enrollment: this.svc.getMyEnrollment(associate.id).pipe(catchError(() => of(null)))
+        }).pipe(
+          switchMap(({ user, enrollment }: any) => {
+            const batchId: number | null = enrollment?.batchId ?? associate.batchId ?? null;
+            if (!batchId) return of({ associate, user, enrollment, batch: null });
+            return this.batchSvc.getById(batchId).pipe(
+              catchError(() => of(null)),
+              map((batch: any) => ({ associate, user, enrollment, batch }))
+            );
+          })
+        );
+      })
+    ).subscribe({
+      next: ({ associate, user, enrollment, batch }: any) => {
+        if (!associate) { this.loading = false; return; }
+        const batchId = enrollment?.batchId ?? associate.batchId ?? 0;
+        this.myProfile = {
+          ...associate,
+          fullName: user?.fullName || user?.username || '',
+          email: user?.email || '',
+          batchId
+        };
+        if (batch) this.batches = [batch];
+        this.dataSource.data = [this.myProfile!];
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+        this.loading = false;
+      },
+      error: () => { this.snack.open('Failed to load profile', 'Close', { duration: 3000 }); this.loading = false; }
     });
   }
 
