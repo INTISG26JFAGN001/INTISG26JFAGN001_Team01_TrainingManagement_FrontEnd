@@ -11,8 +11,7 @@ export class AssessmentsLayoutComponent {
   tabs = [
     { label: 'Quizzes',    icon: 'fact_check',        route: '/assessments/quizzes' },
     { label: 'Interviews', icon: 'record_voice_over',  route: '/assessments/interviews' },
-    { label: 'Projects',   icon: 'work',               route: '/projects' },
-    { label: 'Evaluation', icon: 'bar_chart',           route: '/evaluations' },
+    { label: 'Projects',   icon: 'work',               route: '/assessments/projects' },
   ];
 
   activeRoute = '';

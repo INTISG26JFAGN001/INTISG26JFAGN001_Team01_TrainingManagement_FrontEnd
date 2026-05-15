@@ -1,0 +1,88 @@
+<div class="list-page">
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-fields">
+      <div class="filter-field">
+        <label>Batch</label>
+        <input type="text" [(ngModel)]="filter.batchId" list="batch-list-project"
+               class="field-input" placeholder="Search batch…" autocomplete="off" />
+        <datalist id="batch-list-project">
+          <option *ngFor="let b of batches"
+                  [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
+          </option>
+        </datalist>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-search" (click)="applyFilter()"><mat-icon>search</mat-icon> Search</button>
+      <button class="btn-reset" (click)="resetFilter()"><mat-icon>refresh</mat-icon> Reset</button>
+      <button class="btn-add" (click)="openForm()" *ngIf="canCreate"><mat-icon>add</mat-icon> Add Project</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card" *ngIf="!loading; else loadingTpl">
+    <table mat-table [dataSource]="dataSource" matSort class="data-table">
+
+      <!-- Title -->
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Project Title</th>
+        <td mat-cell *matCellDef="let p">
+          <div class="cell-with-icon">
+            <mat-icon class="row-icon green">work</mat-icon>
+            <span>{{ p.title }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Batch -->
+      <ng-container matColumnDef="batch">
+        <th mat-header-cell *matHeaderCellDef>Batch</th>
+        <td mat-cell *matCellDef="let p">
+          <span class="id-chip" style="margin-right:6px">#{{ p.batchId }}</span>
+          {{ getBatchName(p.batchId) }}
+        </td>
+      </ng-container>
+
+      <!-- Repository URL -->
+      <ng-container matColumnDef="repoUrl">
+        <th mat-header-cell *matHeaderCellDef>Repository</th>
+        <td mat-cell *matCellDef="let p" (click)="$event.stopPropagation()">
+          <a *ngIf="p.repoUrl" [href]="p.repoUrl" target="_blank" class="repo-link">
+            <mat-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle">open_in_new</mat-icon>
+            View
+          </a>
+          <span *ngIf="!p.repoUrl" style="color:var(--text-muted)">—</span>
+        </td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let p" (click)="$event.stopPropagation()">
+          <button mat-icon-button (click)="openForm(p)" matTooltip="Edit" *ngIf="canCreate">
+            <mat-icon class="action-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="delete(p)" matTooltip="Delete" *ngIf="canCreate">
+            <mat-icon class="action-del">delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="clickable-row" (click)="openDetail(row)"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td [attr.colspan]="displayedColumns.length" class="no-data">
+          No projects found. <span *ngIf="canCreate">Click "+ Add Project" to create one.</span>
+        </td>
+      </tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+</ng-template>

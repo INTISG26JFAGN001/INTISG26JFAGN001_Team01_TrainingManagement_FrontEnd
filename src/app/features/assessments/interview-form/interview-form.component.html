@@ -1,103 +1,219 @@
 <h2 mat-dialog-title class="dialog-title">
-  <mat-icon>record_voice_over</mat-icon>
-  {{ data ? 'Edit Interview' : 'Create Interview' }}
+  <mat-icon>{{ isEditing ? 'edit' : 'record_voice_over' }}</mat-icon>
+  {{ isEditing ? 'Edit Interview' : 'Create Interview' }}
 </h2>
 
 <mat-dialog-content class="dialog-body">
   <form [formGroup]="form">
 
-    <p class="section-label">Basic Info</p>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Interview Title</mat-label>
-      <mat-icon matPrefix>record_voice_over</mat-icon>
-      <input matInput formControlName="title" placeholder="e.g. Technical Interview — Round 1"/>
-      <mat-error>Title is required</mat-error>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Batch</mat-label>
-      <mat-icon matPrefix>groups</mat-icon>
-      <mat-select formControlName="batchId">
-        <mat-option *ngFor="let b of batches" [value]="b.id">
-          {{ b.courseNames?.join(', ') || ('Batch #' + b.id) }} — {{ b.status }}
-        </mat-option>
-      </mat-select>
-      <mat-error>Batch is required</mat-error>
-    </mat-form-field>
-
-    <div class="row-fields">
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Category</mat-label>
-        <mat-select formControlName="interviewCategory">
-          <mat-option value="INTERIM">Interim</mat-option>
-          <mat-option value="FINAL">Final</mat-option>
-        </mat-select>
-        <mat-error>Required</mat-error>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status">
-          <mat-option value="DRAFT">Draft</mat-option>
-          <mat-option value="PUBLISHED">Published</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <!-- ── Creator banner ── -->
+    <div class="creator-banner">
+      <mat-icon>account_circle</mat-icon>
+      <span>{{ isEditing ? 'Editing as' : 'Creating as' }}: <strong>{{ creatorUsername }}</strong></span>
+      <span class="role-pill"
+            [class.admin]="creatorRole === 'ROLE_ADMIN'"
+            [class.trainer]="creatorRole === 'ROLE_TRAINER'"
+            [class.techlead]="creatorRole === 'ROLE_TECH_LEAD'">
+        {{ roleLabel }}
+      </span>
     </div>
 
-    <p class="section-label">Schedule</p>
+    <!-- ════════════════════════════════════════
+         EDIT MODE
+         Backend PATCH /assessments/{id} accepts:
+           title, dueDate, maxScore, status,
+           scheduledDateTime, evaluatorRole (interview-specific)
+         batchId and interviewCategory are fixed after creation.
+    ════════════════════════════════════════ -->
+    <ng-container *ngIf="isEditing">
 
-    <div class="row-fields">
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Due Date</mat-label>
-        <mat-icon matPrefix>event</mat-icon>
-        <input matInput type="date" formControlName="dueDate"/>
-        <mat-error>Due date is required</mat-error>
+      <!-- Read-only context panel -->
+      <p class="section-label">Interview Info</p>
+      <div class="readonly-panel">
+        <div class="readonly-item">
+          <span class="readonly-label">Interview ID</span>
+          <span class="id-chip">#{{ data!.id }}</span>
+        </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Batch</span>
+          <span class="readonly-value">{{ batchLabel }}</span>
+        </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Category</span>
+          <span class="readonly-value">{{ categoryLabel }}</span>
+        </div>
+      </div>
+      <p class="readonly-note">
+        <mat-icon>info</mat-icon>
+        Batch and category cannot be changed after creation.
+      </p>
+
+      <!-- Editable fields -->
+      <p class="section-label">Editable Fields</p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Interview Title</mat-label>
+        <mat-icon matPrefix>record_voice_over</mat-icon>
+        <input matInput formControlName="title" />
+        <mat-error>Title is required (max 200 characters)</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Scheduled Date &amp; Time</mat-label>
-        <mat-icon matPrefix>schedule</mat-icon>
-        <input matInput type="datetime-local" formControlName="scheduledDateTime"/>
-        <mat-hint>Optional</mat-hint>
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Due Date</mat-label>
+          <mat-icon matPrefix>event</mat-icon>
+          <input matInput type="date" formControlName="dueDate" />
+          <mat-error>Due date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Max Score</mat-label>
+          <mat-icon matPrefix>grade</mat-icon>
+          <input matInput type="number" formControlName="maxScore" min="1" />
+          <mat-hint>Default 100</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="CLOSED">Closed</mat-option>
+            <mat-option value="ARCHIVED">Archived</mat-option>
+          </mat-select>
+          <mat-hint>Use "Manage Rubrics" to publish</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Scheduled Date &amp; Time</mat-label>
+          <mat-icon matPrefix>schedule</mat-icon>
+          <input matInput type="datetime-local" formControlName="scheduledDateTime" />
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Evaluator Role</mat-label>
+          <mat-icon matPrefix>supervisor_account</mat-icon>
+          <mat-select formControlName="evaluatorRole">
+            <mat-option value="">— Any —</mat-option>
+            <mat-option value="ROLE_TRAINER">Trainer</mat-option>
+            <mat-option value="ROLE_TECH_LEAD">Tech Lead</mat-option>
+            <mat-option value="ROLE_ADMIN">Admin</mat-option>
+          </mat-select>
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+      </div>
+
+    </ng-container>
+
+    <!-- ════════════════════════════════════════
+         CREATE MODE — full form
+    ════════════════════════════════════════ -->
+    <ng-container *ngIf="!isEditing">
+
+      <p class="section-label">Basic Info</p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Interview Title</mat-label>
+        <mat-icon matPrefix>record_voice_over</mat-icon>
+        <input matInput formControlName="title" />
+        <mat-error>Title is required (max 200 characters)</mat-error>
       </mat-form-field>
-    </div>
 
-    <p class="section-label">Evaluation</p>
-
-    <div class="row-fields">
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Evaluator Role</mat-label>
-        <mat-icon matPrefix>supervisor_account</mat-icon>
-        <mat-select formControlName="evaluatorRole">
-          <mat-option value="">— Any —</mat-option>
-          <mat-option value="ROLE_TRAINER">Trainer</mat-option>
-          <mat-option value="ROLE_TECH_LEAD">Tech Lead</mat-option>
-          <mat-option value="ROLE_ADMIN">Admin</mat-option>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Batch</mat-label>
+        <mat-icon matPrefix>groups</mat-icon>
+        <mat-select formControlName="batchId">
+          <mat-option *ngFor="let b of batches" [value]="b.id">
+            #{{ b.id }} — {{ b.courseNames?.join(', ') || 'No course' }} ({{ b.status }})
+          </mat-option>
         </mat-select>
-        <mat-hint>Optional</mat-hint>
+        <mat-error>Batch is required</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Max Score</mat-label>
-        <mat-icon matPrefix>grade</mat-icon>
-        <input matInput type="number" formControlName="maxScore" min="1"/>
-        <mat-hint>Default 100</mat-hint>
-      </mat-form-field>
-    </div>
+      <!-- Row 1: Category + Status -->
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Category</mat-label>
+          <mat-icon matPrefix>category</mat-icon>
+          <mat-select formControlName="interviewCategory">
+            <mat-option value="INTERIM">Interim</mat-option>
+            <mat-option value="FINAL">Final</mat-option>
+          </mat-select>
+          <mat-error>Required</mat-error>
+        </mat-form-field>
 
-    <mat-card class="info-card">
-      <mat-icon class="info-icon">info</mat-icon>
-      <span>After creating the interview, add <strong>rubrics</strong> with weights summing to 100 before publishing.</span>
-    </mat-card>
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="CLOSED">Closed</mat-option>
+            <mat-option value="ARCHIVED">Archived</mat-option>
+          </mat-select>
+          <mat-hint>Use "Manage Rubrics" to publish</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <p class="section-label">Schedule</p>
+
+      <!-- Row 2: Due Date + Scheduled DateTime -->
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Due Date</mat-label>
+          <mat-icon matPrefix>event</mat-icon>
+          <input matInput type="date" formControlName="dueDate" />
+          <mat-hint>Future date — interview closes automatically</mat-hint>
+          <mat-error *ngIf="form.get('dueDate')?.hasError('required')">Due date is required</mat-error>
+          <mat-error *ngIf="form.get('dueDate')?.hasError('pastDate')">Must be a future date</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Scheduled Date &amp; Time</mat-label>
+          <mat-icon matPrefix>schedule</mat-icon>
+          <input matInput type="datetime-local" formControlName="scheduledDateTime" />
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <p class="section-label">Evaluation</p>
+
+      <!-- Row 3: Evaluator Role + Max Score -->
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Evaluator Role</mat-label>
+          <mat-icon matPrefix>supervisor_account</mat-icon>
+          <mat-select formControlName="evaluatorRole">
+            <mat-option value="">— Any —</mat-option>
+            <mat-option value="ROLE_TRAINER">Trainer</mat-option>
+            <mat-option value="ROLE_TECH_LEAD">Tech Lead</mat-option>
+            <mat-option value="ROLE_ADMIN">Admin</mat-option>
+          </mat-select>
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Max Score</mat-label>
+          <mat-icon matPrefix>grade</mat-icon>
+          <input matInput type="number" formControlName="maxScore" min="1" />
+          <mat-hint>Default 100</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="info-note">
+        <mat-icon>info</mat-icon>
+        <span>After creating, add <strong>rubrics</strong> with weights summing to 100 before publishing.</span>
+      </div>
+
+    </ng-container>
 
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions align="end" class="dialog-actions">
   <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
   <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
     <mat-icon>{{ saving ? 'hourglass_empty' : 'save' }}</mat-icon>
-    {{ saving ? 'Saving...' : (data ? 'Update' : 'Create Interview') }}
+    {{ saving ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Interview') }}
   </button>
 </mat-dialog-actions>

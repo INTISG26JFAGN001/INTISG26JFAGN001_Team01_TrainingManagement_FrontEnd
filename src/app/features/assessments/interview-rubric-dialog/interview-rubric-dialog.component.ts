@@ -20,8 +20,7 @@ export class InterviewRubricDialogComponent implements OnInit {
 
   form = this.fb.group({
     criteria: ['', Validators.required],
-    weight: [null as number | null, [Validators.required, Validators.min(1), Validators.max(100)]],
-    description: ['']
+    weight: [null as number | null, [Validators.required, Validators.min(1), Validators.max(100)]]
   });
 
   constructor(
@@ -55,7 +54,7 @@ export class InterviewRubricDialogComponent implements OnInit {
     }
     this.saving = true;
     const v = this.form.value;
-    this.svc.createRubric(this.data.interviewId, { criteria: v.criteria!, weight: v.weight!, description: v.description || '' }).subscribe({
+    this.svc.createRubric(this.data.interviewId, { criteria: v.criteria!, weight: v.weight! }).subscribe({
       next: () => {
         this.snack.open('Rubric added', 'Close', { duration: 2000 });
         this.form.reset();
@@ -85,7 +84,14 @@ export class InterviewRubricDialogComponent implements OnInit {
         this.dialogRef.close(true);
       },
       error: e => {
-        this.snack.open(e.error?.message || 'Failed to publish', 'Close', { duration: 4000 });
+        const err = e.error;
+        let msg = err?.message || 'Failed to publish interview';
+        if (err?.fieldErrors && typeof err.fieldErrors === 'object') {
+          const fields = Object.entries(err.fieldErrors as Record<string, string>)
+            .map(([f, m]) => `${f}: ${m}`).join(' | ');
+          msg = `${msg} — ${fields}`;
+        }
+        this.snack.open(msg, 'Close', { duration: 6000 });
         this.publishing = false;
       }
     });

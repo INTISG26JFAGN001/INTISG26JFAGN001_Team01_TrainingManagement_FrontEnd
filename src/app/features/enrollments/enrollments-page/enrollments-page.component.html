@@ -18,27 +18,52 @@
     </mat-card-header>
     <mat-card-content>
       <form [formGroup]="form" class="enroll-form">
+
+        <!-- Associate — searchable autocomplete -->
         <mat-form-field appearance="outline" class="field">
           <mat-label>Associate</mat-label>
-          <mat-select formControlName="associateId">
-            <mat-option *ngFor="let a of associates" [value]="a.id">
-              {{ a.fullName || ('User #' + a.userId) }}
+          <mat-icon matPrefix>person_search</mat-icon>
+          <input matInput
+                 [formControl]="assocSearchCtrl"
+                 [matAutocomplete]="assocAuto"
+                 placeholder="Type name or user ID…"/>
+          <mat-autocomplete #assocAuto="matAutocomplete"
+                            [displayWith]="displayAssoc"
+                            (optionSelected)="onAssocSelected($event.option.value)">
+            <mat-option *ngFor="let a of filteredAssociates$ | async" [value]="a">
+              <div class="option-row">
+                <div class="option-avatar">{{ (a.fullName || ('U' + a.userId)).charAt(0).toUpperCase() }}</div>
+                <span class="option-name">{{ a.fullName || ('User #' + a.userId) }}</span>
+                <span class="option-hint">ID: {{ a.userId }}</span>
+              </div>
             </mat-option>
-          </mat-select>
-          <mat-error>Associate is required</mat-error>
+          </mat-autocomplete>
+          <mat-error *ngIf="form.get('associateId')?.hasError('required')">Select an associate from the list</mat-error>
         </mat-form-field>
 
+        <!-- Batch — searchable autocomplete -->
         <mat-form-field appearance="outline" class="field">
           <mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId">
-            <mat-option *ngFor="let b of batches" [value]="b.id">
-              {{ b.courseNames?.join(', ') || ('Batch #' + b.id) }}
-              <span class="batch-status"> — {{ b.status }}</span>
+          <mat-icon matPrefix>school</mat-icon>
+          <input matInput
+                 [formControl]="batchSearchCtrl"
+                 [matAutocomplete]="batchAuto"
+                 placeholder="Type batch ID or course name…"/>
+          <mat-autocomplete #batchAuto="matAutocomplete"
+                            [displayWith]="displayBatch"
+                            (optionSelected)="onBatchSelected($event.option.value)">
+            <mat-option *ngFor="let b of filteredBatches$ | async" [value]="b">
+              <div class="option-row">
+                <span class="option-id">#{{ b.id }}</span>
+                <span class="option-name">{{ b.courseNames?.join(', ') || 'No courses assigned' }}</span>
+                <span class="option-hint batch-status-hint" [ngClass]="getStatusClass(b.status)">{{ b.status }}</span>
+              </div>
             </mat-option>
-          </mat-select>
-          <mat-error>Batch is required</mat-error>
+          </mat-autocomplete>
+          <mat-error *ngIf="form.get('batchId')?.hasError('required')">Select a batch from the list</mat-error>
         </mat-form-field>
 
+        <!-- Status -->
         <mat-form-field appearance="outline" class="field">
           <mat-label>Initial Status</mat-label>
           <mat-select formControlName="status">
@@ -49,14 +74,14 @@
         <div class="form-actions">
           <button mat-stroked-button type="button" (click)="closeForm()">Cancel</button>
           <button mat-flat-button color="primary" (click)="enroll()" [disabled]="form.invalid || saving">
-            {{ saving ? 'Enrolling...' : 'Enroll' }}
+            {{ saving ? 'Enrolling…' : 'Enroll' }}
           </button>
         </div>
       </form>
     </mat-card-content>
   </mat-card>
 
-  <!-- Search -->
+  <!-- Search + Table -->
   <mat-card class="content-card">
     <div class="table-toolbar">
       <mat-form-field appearance="outline" class="search-field">
@@ -90,9 +115,11 @@
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef>Status</th>
           <td mat-cell *matCellDef="let e">
-            <mat-select class="status-select" [value]="e.status" (selectionChange)="updateStatus(e, $event.value)" *ngIf="canManage; else statusChip">
-              <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s }}</mat-option>
-            </mat-select>
+            <select class="status-select" [ngClass]="getStatusClass(e.status)"
+                    (change)="updateStatus(e, $any($event.target).value)"
+                    *ngIf="canManage; else statusChip">
+              <option *ngFor="let s of statusOptions" [value]="s" [selected]="s === e.status">{{ s }}</option>
+            </select>
             <ng-template #statusChip>
               <span class="status-chip" [ngClass]="getStatusClass(e.status)">{{ e.status }}</span>
             </ng-template>

@@ -13,13 +13,19 @@ export class JwtInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService, private router: Router) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.authService.getToken();
+    const token  = this.authService.getToken();
     const userId = this.authService.getUserId();
+    // X-User-Role is read by microservices (e.g. asm-service QuizController) to
+    // make role-aware decisions — e.g. skip trainer-record validation for ROLE_ADMIN.
+    // AuthService.getRole() reads 'tms_role' from localStorage, stored at login time.
+    const role   = this.authService.getRole();
+
     const authReq = token
       ? req.clone({
           setHeaders: {
             Authorization: `Bearer ${token}`,
-            ...(userId ? { 'X-User-Id': String(userId) } : {})
+            ...(userId ? { 'X-User-Id':   String(userId) } : {}),
+            ...(role   ? { 'X-User-Role': role            } : {})
           }
         })
       : req;
@@ -43,8 +49,15 @@ export class JwtInterceptor implements HttpInterceptor {
         switchMap((res) => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(res.accessToken);
-          const uid = this.authService.getUserId();
-          return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}`, ...(uid ? { 'X-User-Id': String(uid) } : {}) } }));
+          const uid  = this.authService.getUserId();
+          const role = this.authService.getRole();
+          return next.handle(req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${res.accessToken}`,
+              ...(uid  ? { 'X-User-Id':   String(uid) } : {}),
+              ...(role ? { 'X-User-Role': role         } : {})
+            }
+          }));
         }),
         catchError(() => {
           this.isRefreshing = false;

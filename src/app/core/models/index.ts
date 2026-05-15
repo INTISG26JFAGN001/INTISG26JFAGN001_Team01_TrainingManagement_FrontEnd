@@ -21,8 +21,8 @@ export interface Course {
 }
 export interface CourseRequest { code: string; title: string; technologyId: number; durationDays: number; }
 
-// Stage
-export interface Stage { id: number; name: string; description: string; courseId: number; order: number; }
+// Stage — matches StageResponseDTO { id, name, ord, type, courseTitle } / StageRequestDTO { name, ord, type, courseId }
+export interface Stage { id: number; name: string; ord: number; type: string; courseId?: number; courseTitle?: string; }
 
 // Trainer — matches TrainerDTO { trainerId, userId, technologyIds, technologyNames }
 export interface Trainer {
@@ -48,7 +48,8 @@ export interface Batch {
 export interface BatchDetails extends Batch { associates: Associate[]; }
 
 // Enrollment — matches EnrollmentDTO { enrollmentId, batchId, associateId, status, joinDate }
-export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'DROPPED' | 'PENDING';
+// Backend EnrollmentStatus enum: ENROLLED | ACTIVE | COMPLETED  (no PENDING, no DROPPED)
+export type EnrollmentStatus = 'ENROLLED' | 'ACTIVE' | 'COMPLETED';
 export interface Enrollment {
   id?: number; enrollmentId?: number;
   associateId: number; batchId: number; status: EnrollmentStatus;
@@ -63,10 +64,11 @@ export interface Schedule {
 
 // Assessment
 export type AssessmentType = 'QUIZ' | 'INTERVIEW';
-export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
+export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'ARCHIVED';
 export interface Assessment {
   id: number; title: string; type: AssessmentType; status: AssessmentStatus;
-  batchId: number; batchName?: string; createdAt: string;
+  batchId: number; batchName?: string; createdAt: string; dueDate?: string;
+  interviewCategory?: string;
 }
 
 // Matches QuizQuestionResponse { id, questionText, optionA-D, marks }
@@ -78,7 +80,7 @@ export interface QuizQuestion {
   marks?: number;
 }
 // Matches QuizDetailResponse; passingMarks (NOT passingScore)
-export interface Quiz extends Assessment { questions: QuizQuestion[]; durationMinutes?: number; passingMarks?: number; }
+export interface Quiz extends Assessment { questions: QuizQuestion[]; durationMinutes?: number; passingMarks?: number; passingScore?: number; dueDate?: string; maxScore?: number; }
 // Matches InterviewDetailResponse
 export type InterviewCategory = 'INTERIM' | 'FINAL';
 export interface Interview extends Assessment {
@@ -89,24 +91,22 @@ export interface Interview extends Assessment {
   maxScore?: number;
   rubrics?: Rubric[];
 }
-export interface Rubric { id: number; assessmentId: number; criteria: string; weight: number; description: string; }
+export interface Rubric { id: number; assessmentId: number; criteria: string; weight: number; }
 
-// Project
+// Project — matches ProjectResponseDTO { id, batchId, title, repoUrl, submissionDate }
 export interface Project {
-  id: number; title: string; description: string; batchId: number; associateId: number;
-  submissionDate: string; repositoryUrl: string; associateName?: string;
+  id: number; batchId: number; title: string; repoUrl: string; submissionDate?: string;
 }
 
-// Review
+// Review — matches ReviewResponseDTO { reviewerId, score, comments, type }
 export interface Review {
-  id: number; projectId: number; reviewerId: number; reviewerName?: string;
-  score: number; comments: string; reviewDate: string;
+  reviewerId: number; score: number; comments: string; type: string;
 }
 
-// Evaluation
+// Evaluation — matches EvaluationResponseDTO { id, batchId, associateId, interimScore, finalScore, overallStatus }
 export interface Evaluation {
-  id: number; batchId: number; associateId: number; associateName?: string;
-  totalScore: number; quizScore: number; interviewScore: number; projectScore: number;
+  id: number; batchId: number; associateId: number;
+  interimScore: number; finalScore: number; overallStatus: string;
 }
 
 // Pagination

@@ -1,27 +1,156 @@
-.dialog-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; }
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
 
 .dialog-body {
   max-height: 75vh;
   overflow-y: auto;
-  padding: 8px 24px 4px;
-  min-width: 600px;
+  padding: 4px 24px 20px;
+  min-width: 620px;
+  box-sizing: border-box;
 }
 
+/* ── Creator banner ── */
+.creator-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-input, #f5f5f5);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  margin: 4px 0 12px;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--text-muted, #9e9e9e); }
+  strong   { color: var(--text-primary, #1a1a1a); }
+
+  .role-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: auto;
+    &.admin   { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    &.trainer { background: rgba(99,102,241,0.12); color: #818cf8; }
+  }
+}
+
+/* ── Read-only context panel (edit mode) ── */
+.readonly-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.readonly-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 16px;
+  flex: 1;
+  min-width: 110px;
+  border-right: 1px solid var(--border, #e0e0e0);
+  background: var(--bg-input, #fafafa);
+
+  &:last-child { border-right: none; }
+}
+
+.readonly-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted, #9e9e9e);
+}
+
+.readonly-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.id-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: monospace;
+  background: rgba(0,198,255,0.08);
+  color: var(--accent, #00c6ff);
+  border: 1px solid rgba(0,198,255,0.2);
+}
+
+.readonly-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin: 0 0 4px;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: #fbbf24; }
+}
+
+/* ── Section labels ── */
 .section-label {
-  font-size: 12px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.8px; color: #5c6bc0; margin: 16px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #5c6bc0;
+  margin: 16px 0 4px;
 }
 
-.full-width { width: 100%; }
+/* ── Full-width fields (title, batch) ──
+   margin-bottom pushes next element below the hint/error subscript zone.
+   Angular Material reserves ~1.25em at the bottom for subscript text by default
+   (subscriptSizing="fixed"). We add a further margin so that the next sibling
+   never touches or overlaps that zone. ── */
+.full-width {
+  width: 100%;
+  display: block;
+  margin-bottom: 8px;
+}
 
-.row-fields { display: flex; gap: 12px; flex-wrap: wrap; }
-.flex-field { flex: 1; min-width: 140px; }
+/* ── Two-column rows ── */
+.field-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;  /* each field sized independently */
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
 
-/* ── Questions ──────────────────────────────── */
-.questions-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
-.questions-header .section-label { margin: 16px 0 0; }
-.q-count { font-size: 13px; color: #78909c; text-transform: none; letter-spacing: 0; }
-.total-marks-label { font-size: 13px; color: #546e7a; }
+.flex-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Date field needs extra width so the full date value is always visible */
+.date-field { min-width: 240px; }
+
+/* ── Questions section ── */
+.questions-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 8px 0 8px;
+}
+.q-count            { font-size: 13px; color: #78909c; text-transform: none; letter-spacing: 0; }
+.total-marks-label  { font-size: 13px; color: #546e7a; }
 .total-marks-label strong { color: #1a237e; }
 
 .question-block {
@@ -36,28 +165,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-}
-.q-num {
-  font-weight: 700; font-size: 14px;
-  background: #5c6bc0; color: #fff;
-  padding: 2px 10px; border-radius: 12px;
-}
-
-.options-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
   margin-bottom: 8px;
 }
 
-.bottom-row { display: flex; gap: 12px; align-items: flex-start; }
+.q-num {
+  font-weight: 700;
+  font-size: 14px;
+  background: #5c6bc0;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+/* Options grid — gap handles spacing; subscript zone handles the bottom */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  margin-bottom: 4px;
+}
+
+.bottom-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
 .correct-field { flex: 2; }
-.marks-field { flex: 1; min-width: 100px; }
+.marks-field   { flex: 1; min-width: 100px; }
 
 .add-question-btn {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 8px;
   border-style: dashed !important;
   color: #5c6bc0;
 }

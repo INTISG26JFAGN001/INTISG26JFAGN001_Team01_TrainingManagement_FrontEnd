@@ -4,13 +4,15 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { UserService } from '../../../core/services/user.service';
-import { Associate, Batch, User } from '../../../core/models';
+import { Associate, Batch, Enrollment, User } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { AssociateFormComponent } from '../associate-form/associate-form.component';
+import { AssociateEditFormComponent } from '../associate-edit-form/associate-edit-form.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({ selector: 'app-associate-list', templateUrl: './associate-list.component.html', styleUrls: ['./associate-list.component.scss'] })
@@ -45,20 +47,42 @@ export class AssociateListComponent implements OnInit {
   load(): void {
     this.loading = true;
     forkJoin({
-      associates: this.svc.getAll(),
-      batches: this.batchSvc.getAll(),
-      users: this.userSvc.getAll()
+      associates:  this.svc.getAll(),
+      batches:     this.batchSvc.getAll(),
+      users:       this.userSvc.getAll().pipe(catchError(() => of([] as User[]))),
+      enrollments: this.svc.getAllEnrollments().pipe(catchError(() => of([] as Enrollment[])))
     }).subscribe({
-      next: ({ associates, batches, users }) => {
+      next: ({ associates, batches, users, enrollments }) => {
         this.batches = batches;
 
-        // Build a quick userId → User lookup map
+        // userId → User lookup
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
 
-        // Enrich each associate with fullName and email from the users list
+        // Build associateId (PK) → batchId map from live enrollment records.
+        // Priority: ACTIVE > ENROLLED > COMPLETED so the "current" batch
+        // reflects the most meaningful enrollment and updates whenever one is
+        // added or removed via the Enrollments tab.
+        const STATUS_PRIORITY: Record<string, number> = { ACTIVE: 0, ENROLLED: 1, COMPLETED: 2 };
+        const grouped = new Map<number, Enrollment[]>();
+        for (const e of enrollments) {
+          if (!grouped.has(e.associateId)) grouped.set(e.associateId, []);
+          grouped.get(e.associateId)!.push(e);
+        }
+        const enrollmentBatchMap = new Map<number, number>(); // associateId → batchId
+        grouped.forEach((list, associateId) => {
+          list.sort((a, b) => (STATUS_PRIORITY[a.status] ?? 9) - (STATUS_PRIORITY[b.status] ?? 9));
+          enrollmentBatchMap.set(associateId, list[0].batchId);
+        });
+
+        // Enrich each associate with fullName/email from users and batchId from enrollments
         const enriched: Associate[] = associates.map((a: Associate) => {
           const u = userMap.get(a.userId);
-          return u ? { ...a, fullName: u.fullName || u.username, email: u.email } : a;
+          const enrolledBatchId = enrollmentBatchMap.get(a.id) ?? 0;
+          return {
+            ...a,
+            ...(u ? { fullName: u.fullName || u.username, email: u.email } : {}),
+            batchId: enrolledBatchId   // always reflects current enrollment state
+          };
         });
 
         if (this.isAssociate) {
@@ -80,6 +104,10 @@ export class AssociateListComponent implements OnInit {
 
   openAddForm(): void {
     this.dialog.open(AssociateFormComponent, { width: '480px' }).afterClosed().subscribe(r => { if (r) this.load(); });
+  }
+
+  openEdit(a: Associate): void {
+    this.dialog.open(AssociateEditFormComponent, { width: '420px', data: a }).afterClosed().subscribe(r => { if (r) this.load(); });
   }
 
   delete(a: Associate): void {
@@ -120,8 +148,7 @@ export class AssociateListComponent implements OnInit {
   getBatchLabel(a: Associate): string {
     const id = a.batchId ?? a.currentBatchId ?? 0;
     if (!id || id === 0) return '—';
-    const b = this.batches.find(b => b.id === id);
-    return b ? (b.courseNames?.join(', ') || `Batch #${id}`) : `Batch #${id}`;
+    return `#${id}`;
   }
 
   isBatchAssigned(a: Associate): boolean {

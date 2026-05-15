@@ -1,14 +1,17 @@
 <div class="list-page">
 
-  <!-- Filter Bar -->
+  <!-- Filter Card -->
   <div class="filter-card">
     <div class="filter-fields">
       <div class="filter-field">
         <label>Batch</label>
-        <select [(ngModel)]="filter.batchId" class="field-input">
-          <option value="">All Batches</option>
-          <option *ngFor="let b of batches" [value]="b.id">{{ b.courseNames?.join(', ') || ('Batch #' + b.id) }}</option>
-        </select>
+        <input type="text" [(ngModel)]="filter.batchId" list="batch-list-interview"
+               class="field-input" placeholder="Search batch…" autocomplete="off" />
+        <datalist id="batch-list-interview">
+          <option *ngFor="let b of batches"
+                  [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
+          </option>
+        </datalist>
       </div>
       <div class="filter-field">
         <label>Category</label>
@@ -25,11 +28,20 @@
           <option value="DRAFT">Draft</option>
           <option value="PUBLISHED">Published</option>
           <option value="CLOSED">Closed</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
+      </div>
+      <div class="filter-field">
+        <label>Due From</label>
+        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" />
+      </div>
+      <div class="filter-field">
+        <label>Due To</label>
+        <input type="date" [(ngModel)]="filter.toDate" class="field-input" />
       </div>
     </div>
     <div class="filter-actions">
-      <button class="btn-search" (click)="applyFilter()"><mat-icon>search</mat-icon> Filter</button>
+      <button class="btn-search" (click)="applyFilter()"><mat-icon>search</mat-icon> Search</button>
       <button class="btn-reset" (click)="resetFilter()"><mat-icon>refresh</mat-icon> Reset</button>
       <button class="btn-add" (click)="openForm()" *ngIf="canCreate"><mat-icon>add</mat-icon> Add Interview</button>
     </div>
@@ -53,7 +65,10 @@
       <!-- Batch -->
       <ng-container matColumnDef="batch">
         <th mat-header-cell *matHeaderCellDef>Batch</th>
-        <td mat-cell *matCellDef="let i">{{ getBatchName(i.batchId) }}</td>
+        <td mat-cell *matCellDef="let i">
+          <span class="id-chip" style="margin-right:6px">#{{ i.batchId }}</span>
+          {{ getBatchName(i.batchId) }}
+        </td>
       </ng-container>
 
       <!-- Category -->
@@ -83,37 +98,41 @@
       <!-- Actions -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let i">
-          <!-- Edit (only DRAFT) -->
+        <td mat-cell *matCellDef="let i" (click)="$event.stopPropagation()">
+
+          <!-- Edit — hidden only when PUBLISHED -->
           <button mat-icon-button (click)="openForm(i)" matTooltip="Edit"
-                  *ngIf="i.status === 'DRAFT'">
+                  *ngIf="i.status !== 'PUBLISHED'">
             <mat-icon class="action-edit">edit</mat-icon>
           </button>
 
-          <!-- Manage Rubrics (only DRAFT) -->
-          <button mat-icon-button color="primary" (click)="openRubrics(i)"
+          <!-- Manage Rubrics & Publish — only DRAFT (rubrics are locked after publish) -->
+          <button mat-icon-button (click)="openRubrics(i)"
                   matTooltip="Manage Rubrics &amp; Publish"
+                  style="color:#818cf8"
                   *ngIf="i.status === 'DRAFT'">
             <mat-icon>list_alt</mat-icon>
           </button>
 
-          <!-- Evaluate (only PUBLISHED) -->
-          <button mat-icon-button color="accent" (click)="openEvaluate(i)"
-                  matTooltip="Evaluate Associate"
-                  *ngIf="i.status === 'PUBLISHED' && canEvaluate">
-            <mat-icon>star_rate</mat-icon>
+          <!-- View Results — PUBLISHED or CLOSED -->
+          <button mat-icon-button (click)="viewResults(i)"
+                  matTooltip="View Results"
+                  style="color:#34d399"
+                  *ngIf="i.status === 'PUBLISHED' || i.status === 'CLOSED'">
+            <mat-icon>bar_chart</mat-icon>
           </button>
 
-          <!-- Delete -->
-          <button mat-icon-button color="warn" (click)="delete(i)" matTooltip="Delete"
-                  *ngIf="i.status !== 'PUBLISHED'">
-            <mat-icon>delete</mat-icon>
+          <!-- Delete — always available -->
+          <button mat-icon-button (click)="delete(i)" matTooltip="Delete">
+            <mat-icon class="action-del">delete</mat-icon>
           </button>
+
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="clickable-row" (click)="openDetail(row)"></tr>
       <tr class="mat-row" *matNoDataRow>
         <td [attr.colspan]="displayedColumns.length" class="no-data">
           No interviews found. <span *ngIf="canCreate">Click "+ Add Interview" to create one.</span>

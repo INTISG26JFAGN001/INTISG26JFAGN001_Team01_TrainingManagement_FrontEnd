@@ -31,12 +31,7 @@
         <!-- Batch ID -->
         <ng-container matColumnDef="batchId">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Batch ID</th>
-          <td mat-cell *matCellDef="let b">
-            <div class="batch-id-cell">
-              <div class="batch-avatar">{{ b.id }}</div>
-              <span class="batch-id-text">Batch #{{ b.id }}</span>
-            </div>
-          </td>
+          <td mat-cell *matCellDef="let b"><span class="id-chip">{{ b.id }}</span></td>
         </ng-container>
 
         <!-- Status -->

@@ -51,7 +51,7 @@
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let u">
             <button mat-icon-button color="primary" (click)="openForm(u)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
-            <button mat-icon-button color="warn" (click)="delete(u)" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="delete(u)" matTooltip="Delete user account"><mat-icon>person_remove</mat-icon></button>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

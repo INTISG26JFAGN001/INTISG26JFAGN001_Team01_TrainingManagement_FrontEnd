@@ -38,8 +38,22 @@ export class UserListComponent implements OnInit {
   }
 
   delete(user: User): void {
-    this.dialog.open(ConfirmDialogComponent, { data: { title: 'Delete User', message: `Remove ${user.fullName}?`, danger: true, confirmText: 'Delete' } })
-      .afterClosed().subscribe(c => { if (c) this.svc.delete(user.id).subscribe({ next: () => { this.snack.open('User deleted', 'Close', { duration: 3000 }); this.load(); }, error: () => this.snack.open('Failed to delete', 'Close', { duration: 3000 }) }); });
+    const displayName = user.fullName || user.username;
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete User Account',
+        message: `Permanently delete "${displayName}"?\n\nThis removes the user account and all login access. This action cannot be undone.`,
+        danger: true,
+        confirmText: 'Delete'
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.svc.delete(user.id).subscribe({
+          next: () => { this.snack.open('User account deleted.', 'Close', { duration: 3000 }); this.load(); },
+          error: (e) => this.snack.open(e.error?.message || 'Failed to delete user', 'Close', { duration: 3000 })
+        });
+      }
+    });
   }
 
   /** Extracts the primary role from the roles array */

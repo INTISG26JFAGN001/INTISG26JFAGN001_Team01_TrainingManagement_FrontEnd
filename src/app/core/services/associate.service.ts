@@ -17,7 +17,7 @@ export class AssociateService {
   create(p: { userId: number; batchid: number; xp: number }): Observable<string> {
     return this.http.post(`${this.base}/associates/create`, p, { responseType: 'text' });
   }
-  update(p: Partial<Associate>): Observable<Associate> { return this.http.put<Associate>(`${this.base}/associates/update`, p); }
+  update(p: Partial<Associate>): Observable<string> { return this.http.put(`${this.base}/associates/update`, p, { responseType: 'text' }); }
   // DELETE /associates/{id}  — uses associate primary-key id, not userId
   delete(id: number): Observable<string> { return this.http.delete(`${this.base}/associates/${id}`, { responseType: 'text' }); }
 

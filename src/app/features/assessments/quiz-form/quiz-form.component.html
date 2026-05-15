@@ -1,135 +1,239 @@
 <h2 mat-dialog-title class="dialog-title">
-  <mat-icon>{{ data ? 'edit' : 'fact_check' }}</mat-icon>
-  {{ data ? 'Edit Quiz' : 'Create Quiz' }}
+  <mat-icon>{{ isEditing ? 'edit' : 'fact_check' }}</mat-icon>
+  {{ isEditing ? 'Edit Quiz' : 'Create Quiz' }}
 </h2>
 
 <mat-dialog-content class="dialog-body">
   <form [formGroup]="form">
 
-    <!-- ── Basic Info ──────────────────────────── -->
-    <p class="section-label">Basic Info</p>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Quiz Title</mat-label>
-      <mat-icon matPrefix>fact_check</mat-icon>
-      <input matInput formControlName="title" placeholder="e.g. Java Fundamentals Quiz"/>
-      <mat-error>Title is required (max 200 chars)</mat-error>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Batch</mat-label>
-      <mat-icon matPrefix>groups</mat-icon>
-      <mat-select formControlName="batchId">
-        <mat-option *ngFor="let b of batches" [value]="b.id">
-          {{ b.courseNames?.join(', ') || ('Batch #' + b.id) }} — {{ b.status }}
-        </mat-option>
-      </mat-select>
-      <mat-error>Batch is required</mat-error>
-    </mat-form-field>
-
-    <div class="row-fields">
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Duration (minutes)</mat-label>
-        <mat-icon matPrefix>timer</mat-icon>
-        <input matInput type="number" formControlName="durationMinutes" min="1" placeholder="30"/>
-        <mat-hint>Optional</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Passing Marks</mat-label>
-        <mat-icon matPrefix>grade</mat-icon>
-        <input matInput type="number" formControlName="passingMarks" min="0" placeholder="0"/>
-        <mat-hint>Optional</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Due Date</mat-label>
-        <mat-icon matPrefix>event</mat-icon>
-        <input matInput type="date" formControlName="dueDate"/>
-        <mat-hint>Optional</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="flex-field">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status">
-          <mat-option value="DRAFT">Draft</mat-option>
-          <mat-option value="PUBLISHED">Published</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <!-- ── Creator banner ── -->
+    <div class="creator-banner">
+      <mat-icon>account_circle</mat-icon>
+      <span>{{ isEditing ? 'Editing as' : 'Creating as' }}: <strong>{{ creatorUsername }}</strong></span>
+      <span class="role-pill"
+            [class.admin]="creatorRole === 'ROLE_ADMIN'"
+            [class.trainer]="creatorRole === 'ROLE_TRAINER'">
+        {{ roleLabel }}
+      </span>
     </div>
 
-    <!-- ── Questions ──────────────────────────── -->
-    <div class="questions-header">
-      <p class="section-label">Questions <span class="q-count">({{ questions.length }})</span></p>
-      <span class="total-marks-label">Total marks: <strong>{{ totalMarks }}</strong></span>
-    </div>
+    <!-- ════════════════════════════════════════
+         EDIT MODE
+         Backend PATCH /assessments/{id} only accepts:
+           title, dueDate, maxScore, status
+         All other fields are shown read-only for context.
+    ════════════════════════════════════════ -->
+    <ng-container *ngIf="isEditing">
 
-    <div formArrayName="questions">
-      <mat-card class="question-block" *ngFor="let q of questions.controls; let i = index" [formGroupName]="i">
-
-        <div class="question-header">
-          <span class="q-num">Q{{ i + 1 }}</span>
-          <button mat-icon-button type="button" color="warn" (click)="removeQuestion(i)"
-                  [disabled]="questions.length === 1" matTooltip="Remove question">
-            <mat-icon>delete_outline</mat-icon>
-          </button>
+      <!-- Read-only context panel -->
+      <p class="section-label">Quiz Info</p>
+      <div class="readonly-panel">
+        <div class="readonly-item">
+          <span class="readonly-label">Quiz ID</span>
+          <span class="id-chip">#{{ data!.id }}</span>
         </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Batch</span>
+          <span class="readonly-value">{{ batchLabel }}</span>
+        </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Duration</span>
+          <span class="readonly-value">{{ data!.durationMinutes ? data!.durationMinutes + ' mins' : '—' }}</span>
+        </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Passing Marks</span>
+          <span class="readonly-value">{{ data!.passingMarks ?? '—' }}</span>
+        </div>
+        <div class="readonly-item">
+          <span class="readonly-label">Questions</span>
+          <span class="readonly-value">{{ data!.questions ? data!.questions.length : 0 }}</span>
+        </div>
+      </div>
+      <p class="readonly-note">
+        <mat-icon>info</mat-icon>
+        Batch, duration, passing marks and questions cannot be changed after creation.
+      </p>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Question Text</mat-label>
-          <textarea matInput formControlName="questionText" rows="2"
-                    placeholder="Type your question here..."></textarea>
-          <mat-error>Question text is required</mat-error>
+      <!-- Editable fields -->
+      <p class="section-label">Editable Fields</p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Quiz Title</mat-label>
+        <mat-icon matPrefix>fact_check</mat-icon>
+        <input matInput formControlName="title" />
+        <mat-error>Title is required (max 200 characters)</mat-error>
+      </mat-form-field>
+
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Due Date</mat-label>
+          <mat-icon matPrefix>event</mat-icon>
+          <input matInput type="date" formControlName="dueDate" />
+          <mat-error>Due date is required</mat-error>
         </mat-form-field>
 
-        <div class="options-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Option A</mat-label>
-            <input matInput formControlName="optionA" placeholder="Option A"/>
-            <mat-error>Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Option B</mat-label>
-            <input matInput formControlName="optionB" placeholder="Option B"/>
-            <mat-error>Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Option C</mat-label>
-            <input matInput formControlName="optionC" placeholder="Option C"/>
-            <mat-error>Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Option D</mat-label>
-            <input matInput formControlName="optionD" placeholder="Option D"/>
-            <mat-error>Required</mat-error>
-          </mat-form-field>
-        </div>
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Max Score</mat-label>
+          <mat-icon matPrefix>score</mat-icon>
+          <input matInput type="number" formControlName="maxScore" min="1" />
+          <mat-hint>Auto-calculated if left blank on create</mat-hint>
+        </mat-form-field>
 
-        <div class="bottom-row">
-          <mat-form-field appearance="outline" class="correct-field">
-            <mat-label>Correct Answer</mat-label>
-            <mat-icon matPrefix>check_circle</mat-icon>
-            <mat-select formControlName="correctOption">
-              <mat-option *ngFor="let opt of answerOptions" [value]="opt">
-                {{ opt }} — {{ getOptionValue(q, opt) }}
-              </mat-option>
-            </mat-select>
-            <mat-error>Required</mat-error>
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="PUBLISHED">Published</mat-option>
+            <mat-option value="CLOSED">Closed</mat-option>
+            <mat-option value="ARCHIVED">Archived</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+    </ng-container>
+
+    <!-- ════════════════════════════════════════
+         CREATE MODE — full form
+    ════════════════════════════════════════ -->
+    <ng-container *ngIf="!isEditing">
+
+      <p class="section-label">Basic Info</p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Quiz Title</mat-label>
+        <mat-icon matPrefix>fact_check</mat-icon>
+        <input matInput formControlName="title" />
+        <mat-error>Title is required (max 200 characters)</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Batch</mat-label>
+        <mat-icon matPrefix>groups</mat-icon>
+        <mat-select formControlName="batchId">
+          <mat-option *ngFor="let b of batches" [value]="b.id">
+            #{{ b.id }} — {{ b.courseNames?.join(', ') || 'No course' }} ({{ b.status }})
+          </mat-option>
+        </mat-select>
+        <mat-error>Batch is required</mat-error>
+      </mat-form-field>
+
+      <!-- Row 1: Duration + Passing Marks -->
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Duration (mins)</mat-label>
+          <mat-icon matPrefix>timer</mat-icon>
+          <input matInput type="number" formControlName="durationMinutes" min="1" />
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Passing Marks</mat-label>
+          <mat-icon matPrefix>grade</mat-icon>
+          <input matInput type="number" formControlName="passingMarks" min="1" />
+          <mat-hint>Needed for auto-grading</mat-hint>
+          <mat-error>Required (min 1)</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Row 2: Due Date + Status -->
+      <div class="field-row">
+        <mat-form-field appearance="outline" class="flex-field date-field">
+          <mat-label>Due Date</mat-label>
+          <mat-icon matPrefix>event</mat-icon>
+          <input matInput type="date" formControlName="dueDate" />
+          <mat-hint>Future date — quiz closes automatically</mat-hint>
+          <mat-error *ngIf="form.get('dueDate')?.hasError('required')">Due date is required</mat-error>
+          <mat-error *ngIf="form.get('dueDate')?.hasError('pastDate')">Must be a future date</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="PUBLISHED">Published</mat-option>
+            <mat-option value="CLOSED">Closed</mat-option>
+            <mat-option value="ARCHIVED">Archived</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Questions -->
+      <div class="questions-header">
+        <p class="section-label">Questions <span class="q-count">({{ questions.length }})</span></p>
+        <span class="total-marks-label">Total marks: <strong>{{ totalMarks }}</strong></span>
+      </div>
+
+      <div formArrayName="questions">
+        <mat-card class="question-block"
+                  *ngFor="let q of questions.controls; let i = index"
+                  [formGroupName]="i">
+
+          <div class="question-header">
+            <span class="q-num">Q{{ i + 1 }}</span>
+            <button mat-icon-button type="button" color="warn"
+                    (click)="removeQuestion(i)"
+                    [disabled]="questions.length === 1"
+                    matTooltip="Remove question">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Question Text</mat-label>
+            <textarea matInput formControlName="questionText" rows="2"></textarea>
+            <mat-error>Question text is required</mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="marks-field">
-            <mat-label>Marks</mat-label>
-            <input matInput type="number" formControlName="marks" min="1"/>
-            <mat-error>Min 1</mat-error>
-          </mat-form-field>
-        </div>
+          <div class="options-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Option A</mat-label>
+              <input matInput formControlName="optionA" />
+              <mat-error>Required</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Option B</mat-label>
+              <input matInput formControlName="optionB" />
+              <mat-error>Required</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Option C</mat-label>
+              <input matInput formControlName="optionC" />
+              <mat-error>Required</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Option D</mat-label>
+              <input matInput formControlName="optionD" />
+              <mat-error>Required</mat-error>
+            </mat-form-field>
+          </div>
 
-      </mat-card>
-    </div>
+          <div class="bottom-row">
+            <mat-form-field appearance="outline" class="correct-field">
+              <mat-label>Correct Answer</mat-label>
+              <mat-icon matPrefix>check_circle</mat-icon>
+              <mat-select formControlName="correctOption">
+                <mat-option *ngFor="let opt of answerOptions" [value]="opt">
+                  {{ opt }} — {{ getOptionValue(q, opt) }}
+                </mat-option>
+              </mat-select>
+              <mat-error>Required</mat-error>
+            </mat-form-field>
 
-    <button mat-stroked-button type="button" class="add-question-btn" (click)="addQuestion()">
-      <mat-icon>add_circle_outline</mat-icon> Add Another Question
-    </button>
+            <mat-form-field appearance="outline" class="marks-field">
+              <mat-label>Marks</mat-label>
+              <input matInput type="number" formControlName="marks" min="1" />
+              <mat-error>Min 1</mat-error>
+            </mat-form-field>
+          </div>
+
+        </mat-card>
+      </div>
+
+      <button mat-stroked-button type="button" class="add-question-btn" (click)="addQuestion()">
+        <mat-icon>add_circle_outline</mat-icon> Add Another Question
+      </button>
+
+    </ng-container>
 
   </form>
 </mat-dialog-content>
@@ -138,6 +242,6 @@
   <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
   <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
     <mat-icon>{{ saving ? 'hourglass_empty' : 'save' }}</mat-icon>
-    {{ saving ? 'Saving...' : (data ? 'Update Quiz' : 'Create Quiz') }}
+    {{ saving ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Quiz') }}
   </button>
 </mat-dialog-actions>

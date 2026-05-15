@@ -1,0 +1,160 @@
+.list-page { display: flex; flex-direction: column; gap: 16px; }
+
+.id-chip {
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; font-family: monospace;
+  background: rgba(0,198,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,198,255,0.2);
+}
+
+/* ── Filter Card ── */
+.filter-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-fields {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+  flex: 1;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.field-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &::placeholder { color: var(--text-muted); }
+  &:focus { border-color: var(--accent); }
+  option { background: var(--bg-card); color: var(--text-primary); }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.btn-search, .btn-reset, .btn-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.btn-search { background: #22c55e; color: #fff; &:hover { background: #16a34a; } }
+.btn-reset  { background: #ef4444; color: #fff; &:hover { background: #dc2626; } }
+.btn-add    { background: var(--accent-btn); color: #fff; &:hover { opacity: 0.88; } }
+
+/* ── Table Card ── */
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  background: transparent;
+
+  th { background: var(--bg-card); color: var(--text-secondary); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  td { color: var(--text-primary); font-size: 13px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-card-hover); }
+}
+
+.cell-with-icon { display: flex; align-items: center; gap: 8px; }
+
+.row-icon {
+  font-size: 18px; width: 18px; height: 18px;
+  &.green { color: #34d399; }
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.pass    { background: rgba(52,211,153,.15);  color: #34d399; }
+  &.fail    { background: rgba(239,68,68,.12);   color: #ef4444; }
+  &.pending { background: rgba(251,191,36,.15);  color: #fbbf24; }
+}
+
+.action-edit { color: var(--accent) !important; }
+.action-del  { color: #ef4444 !important; }
+
+.clickable-row { cursor: pointer; }
+
+.no-data { text-align: center; padding: 40px !important; color: var(--text-muted); }
+.loading-center { display: flex; justify-content: center; padding: 60px; }
+
+/* ── Repo link ── */
+.repo-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover { text-decoration: underline; }
+}
+
+/* ── Empty states ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px;
+  color: var(--text-secondary); gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+
+  mat-icon { font-size: 48px; width: 48px; height: 48px; opacity: .3; }
+  p { margin: 0; font-size: 14px; }
+}

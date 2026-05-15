@@ -36,7 +36,7 @@ import { Associate, Enrollment } from '../../../core/models';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.dialog-form{min-width:420px}.full-width{width:100%}.enrollments-list{margin-bottom:12px}h4{font-size:13px;color:#546e7a;margin:0 0 8px}.enrollment-item{display:flex;align-items:center;gap:8px;padding:6px 0}.batch-name{flex:1;font-size:13px}.status-chip{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}.status-chip.status-active{background:#e8f5e9;color:#2e7d32}.status-chip.status-completed{background:#e3f2fd;color:#1565c0}.status-chip.status-dropped{background:#ffebee;color:#c62828}`]
+  styles: [`.dialog-form{min-width:420px}.full-width{width:100%}.enrollments-list{margin-bottom:12px}h4{font-size:13px;color:#546e7a;margin:0 0 8px}.enrollment-item{display:flex;align-items:center;gap:8px;padding:6px 0}.batch-name{flex:1;font-size:13px}.status-chip{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}.status-chip.status-enrolled{background:#fff8e1;color:#f57f17}.status-chip.status-active{background:#e8f5e9;color:#2e7d32}.status-chip.status-completed{background:#e3f2fd;color:#1565c0}`]
 })
 export class EnrollmentComponent implements OnInit {
   form = this.fb.group({ batchId: [null, Validators.required] });
@@ -56,7 +56,7 @@ export class EnrollmentComponent implements OnInit {
   enroll(): void {
     if (this.form.invalid) return;
     this.saving = true;
-    this.svc.createEnrollment({ associateId: this.data.id, batchId: this.form.value.batchId! }).subscribe({
+    this.svc.createEnrollment({ associateId: this.data.id, batchId: this.form.value.batchId!, status: 'ENROLLED' }).subscribe({
       next: () => { this.snack.open('Enrolled successfully', 'Close', { duration: 3000 }); this.saving = false; this.form.reset(); this.loadEnrollments(); },
       error: (e) => { this.snack.open(e.error?.message || 'Error', 'Close', { duration: 3000 }); this.saving = false; }
     });

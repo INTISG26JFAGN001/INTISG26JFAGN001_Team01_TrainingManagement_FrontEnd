@@ -43,10 +43,10 @@ export class SidebarComponent {
     },
     { label: 'Assessments', icon: 'quiz', route: '/assessments', roles: this.STAFF },
     {
-      label: 'Evaluation', icon: 'leaderboard', expanded: false, roles: this.ALL,
+      label: 'Evaluations', icon: 'leaderboard', expanded: false, roles: this.STAFF,
       children: [
-        { label: 'Projects', icon: 'work', route: '/projects', roles: this.ALL },
-        { label: 'Evaluations', icon: 'bar_chart', route: '/evaluations', roles: this.STAFF },
+        { label: 'Interview',      icon: 'record_voice_over', route: '/evaluations/interview', roles: this.STAFF },
+        { label: 'Project Review', icon: 'rate_review',       route: '/evaluations/project',   roles: this.STAFF },
       ]
     },
   ];

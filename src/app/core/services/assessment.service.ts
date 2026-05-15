@@ -45,6 +45,7 @@ export class AssessmentService {
   createQuiz(p: Partial<Quiz>): Observable<Quiz> { return this.http.post<Quiz>(`${this.base}/quiz`, p); }
   submitQuizAttempt(quizId: number, p: any): Observable<any> { return this.http.post(`${this.base}/quiz/${quizId}/attempt`, p); }
   getQuizResult(quizId: number, associateId: number): Observable<any> { return this.http.get(`${this.base}/quiz/${quizId}/attempts/${associateId}/result`); }
+  getQuizAttempts(quizId: number): Observable<any[]> { return this.http.get<any[]>(`${this.base}/quiz/${quizId}/attempts`); }
 
   // Interview
   getInterviewsByBatch(batchId: number): Observable<Interview[]> { return this.http.get<Interview[]>(`${this.base}/interview/batch/${batchId}`); }

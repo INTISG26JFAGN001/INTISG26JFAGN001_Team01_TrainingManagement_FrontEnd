@@ -14,12 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ProjectListComponent implements OnInit {
   dataSource = new MatTableDataSource<Project>();
   loading = true;
-  isAssociate = this.auth.isAssociate();
   canDelete = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
-  get displayedColumns(): string[] {
-    if (this.isAssociate) return ['title', 'submissionDate', 'repositoryUrl', 'actions'];
-    return ['title', 'associateName', 'submissionDate', 'repositoryUrl', 'actions'];
-  }
+  displayedColumns = ['title', 'submissionDate', 'repoUrl', 'actions'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -30,7 +26,10 @@ export class ProjectListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.getProjects().subscribe({ next: d => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; }, error: () => this.loading = false });
+    this.svc.getProjects().subscribe({
+      next: d => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; },
+      error: () => this.loading = false
+    });
   }
 
   applyFilter(e: Event): void { this.dataSource.filter = (e.target as HTMLInputElement).value.trim().toLowerCase(); }

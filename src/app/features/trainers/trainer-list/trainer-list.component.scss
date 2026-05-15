@@ -7,9 +7,10 @@
 }
 
 .id-chip {
-  font-family: monospace; font-size: 12px; font-weight: 600;
-  background: #e3f2fd; color: #1565c0;
-  padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; font-family: monospace;
+  background: rgba(0,198,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,198,255,0.2); white-space: nowrap;
 }
 
 .tech-chips { display: flex; flex-wrap: wrap; gap: 4px; }

@@ -34,7 +34,6 @@
       <div class="rubric-item" *ngFor="let r of rubrics">
         <div class="rubric-info">
           <span class="rubric-criteria">{{ r.criteria }}</span>
-          <span class="rubric-desc" *ngIf="r.description">{{ r.description }}</span>
         </div>
         <div class="rubric-right">
           <span class="weight-chip">{{ r.weight }}%</span>
@@ -61,11 +60,6 @@
           <input matInput type="number" formControlName="weight" min="1" max="100"
                  [placeholder]="weightLeft + ' left'"/>
           <mat-error>1–100 required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="desc-field">
-          <mat-label>Description</mat-label>
-          <input matInput formControlName="description" placeholder="Optional"/>
         </mat-form-field>
 
         <button mat-flat-button color="primary" type="button" (click)="addRubric()"

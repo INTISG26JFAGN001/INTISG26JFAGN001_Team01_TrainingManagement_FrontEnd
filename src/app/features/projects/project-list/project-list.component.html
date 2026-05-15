@@ -2,9 +2,9 @@
   <div class="page-header">
     <div class="header-info">
       <h2>Projects</h2>
-      <p>{{ isAssociate ? 'Submit and track your project' : 'View and manage associate project submissions' }}</p>
+      <p>View and manage project submissions</p>
     </div>
-    <button mat-flat-button color="primary" (click)="openForm()" *ngIf="isAssociate">
+    <button mat-flat-button color="primary" (click)="openForm()" *ngIf="canDelete">
       <mat-icon>add</mat-icon> Submit Project
     </button>
   </div>
@@ -23,27 +23,23 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Project Title</th>
           <td mat-cell *matCellDef="let p"><div class="proj-cell"><mat-icon class="proj-icon">work</mat-icon>{{ p.title }}</div></td>
         </ng-container>
-        <ng-container matColumnDef="associateName">
-          <th mat-header-cell *matHeaderCellDef>Associate</th>
-          <td mat-cell *matCellDef="let p">{{ p.associateName || 'N/A' }}</td>
-        </ng-container>
         <ng-container matColumnDef="submissionDate">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Submitted</th>
-          <td mat-cell *matCellDef="let p">{{ p.submissionDate | date:'mediumDate' }}</td>
+          <td mat-cell *matCellDef="let p">{{ p.submissionDate ? (p.submissionDate | date:'mediumDate') : '—' }}</td>
         </ng-container>
-        <ng-container matColumnDef="repositoryUrl">
+        <ng-container matColumnDef="repoUrl">
           <th mat-header-cell *matHeaderCellDef>Repository</th>
           <td mat-cell *matCellDef="let p">
-            <a *ngIf="p.repositoryUrl" [href]="p.repositoryUrl" target="_blank" class="repo-link">
+            <a *ngIf="p.repoUrl" [href]="p.repoUrl" target="_blank" class="repo-link">
               <mat-icon>open_in_new</mat-icon> View
             </a>
-            <span *ngIf="!p.repositoryUrl">—</span>
+            <span *ngIf="!p.repoUrl">—</span>
           </td>
         </ng-container>
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let p">
-            <button mat-icon-button color="primary" (click)="openForm(p)" matTooltip="Edit" *ngIf="isAssociate || canDelete">
+            <button mat-icon-button color="primary" (click)="openForm(p)" matTooltip="Edit" *ngIf="canDelete">
               <mat-icon>edit</mat-icon>
             </button>
             <button mat-icon-button color="warn" (click)="delete(p)" matTooltip="Delete" *ngIf="canDelete">
@@ -54,9 +50,7 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         <tr class="mat-row" *matNoDataRow>
-          <td [attr.colspan]="displayedColumns.length" class="no-data">
-            {{ isAssociate ? 'No project submitted yet. Click "Submit Project" to get started.' : 'No projects found.' }}
-          </td>
+          <td [attr.colspan]="displayedColumns.length" class="no-data">No projects found.</td>
         </tr>
       </table>
       <mat-paginator [pageSizeOptions]="[10,25,50]" showFirstLastButtons></mat-paginator>
