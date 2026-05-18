@@ -6,6 +6,7 @@ import { AssociateService } from '../../core/services/associate.service';
 import { TrainerService } from '../../core/services/trainer.service';
 import { AssessmentService } from '../../core/services/assessment.service';
 import { ScheduleService } from '../../core/services/schedule.service';
+import { ProjectService } from '../../core/services/project.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -33,7 +34,7 @@ export class DashboardComponent implements OnInit {
   trainerStats = { myBatches: 0, myAssociates: 0, quizzes: 0, interviews: 0 };
 
   // Associate stats
-  associateStats = { myBatch: '', batchStatus: '', upcomingSessions: 0, projectStatus: 'Not Submitted', quizzesTotal: 0, quizzesPassed: 0 };
+  associateStats = { myBatch: '', batchStatus: '', upcomingSessions: 0, projectsSubmitted: 0, quizzesTotal: 0, quizzesPassed: 0 };
 
   recentBatches: any[] = [];
   ongoingBatches: any[] = [];
@@ -46,6 +47,7 @@ export class DashboardComponent implements OnInit {
     private trainerSvc: TrainerService,
     private assessmentSvc: AssessmentService,
     private scheduleSvc: ScheduleService,
+    private projectSvc: ProjectService,
     private auth: AuthService
   ) {}
 
@@ -86,22 +88,24 @@ export class DashboardComponent implements OnInit {
 
   private loadTrainerDashboard(): void {
     const userId = this.auth.getUserId();
-    this.trainerSvc.getAll().pipe(
-      switchMap(trainers => {
-        const me = trainers.find(t => t.userId === userId);
-        const trainerId = me ? (me.trainerId ?? me.id) : null;
-        const batchObs = trainerId != null
-          ? this.batchSvc.filterByTrainer(trainerId)
-          : this.batchSvc.getAll();
-        return forkJoin({ batches: batchObs, assessments: this.assessmentSvc.getAll() });
-      })
-    ).subscribe({
-      next: (res) => {
-        this.myBatches = res.batches.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
+    forkJoin({
+      trainers:    this.trainerSvc.getAll().pipe(catchError(() => of([]))),
+      batches:     this.batchSvc.getAll().pipe(catchError(() => of([]))),
+      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([])))
+    }).subscribe({
+      next: ({ trainers, batches, assessments }) => {
+        const me = (trainers as any[]).find(t => Number(t.userId) === Number(userId));
+        const myIds = new Set<number>(
+          [me?.trainerId, me?.id, me?.userId].filter((v): v is number => v != null)
+        );
+        const trainerBatches = myIds.size > 0
+          ? (batches as any[]).filter(b => myIds.has(Number(b.trainerId)))
+          : [];
+        this.myBatches = trainerBatches.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
         this.trainerStats.myBatches = this.myBatches.length;
         this.trainerStats.myAssociates = this.myBatches.reduce((sum: number, b: any) => sum + (b.associates?.length ?? 0), 0);
-        this.trainerStats.quizzes = res.assessments.filter((a: any) => a.type === 'QUIZ').length;
-        this.trainerStats.interviews = res.assessments.filter((a: any) => a.type !== 'QUIZ').length;
+        this.trainerStats.quizzes = (assessments as any[]).filter((a: any) => a.type === 'QUIZ').length;
+        this.trainerStats.interviews = (assessments as any[]).filter((a: any) => a.type !== 'QUIZ').length;
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -128,7 +132,8 @@ export class DashboardComponent implements OnInit {
             return forkJoin({
               batch:     this.batchSvc.getById(batchId).pipe(catchError(() => of(null))),
               quizzes:   this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
-              schedules: this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([])))
+              schedules: this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([]))),
+              projects:  this.projectSvc.getProjects().pipe(catchError(() => of([])))
             }).pipe(map(extra => ({ me, batchId, ...extra })));
           })
         );
@@ -161,6 +166,7 @@ export class DashboardComponent implements OnInit {
         this.associateStats.upcomingSessions = this.upcomingSchedules.length;
         this.associateStats.quizzesTotal = (res.quizResults ?? []).length;
         this.associateStats.quizzesPassed = (res.quizResults ?? []).filter((r: any) => r.resultStatus === 'PASSED').length;
+        this.associateStats.projectsSubmitted = (res.projects ?? []).filter((p: any) => p.batchId === res.batchId).length;
         this.loading = false;
       },
       error: () => { this.loading = false; }

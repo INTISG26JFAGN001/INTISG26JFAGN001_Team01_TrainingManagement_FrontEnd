@@ -1,0 +1,131 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2><mat-icon>emoji_events</mat-icon> Batch Leaderboard</h2>
+      <p>See how you rank against your batchmates based on quiz and interview performance</p>
+    </div>
+  </div>
+
+  <div *ngIf="!loading; else loadingTpl">
+
+    <!-- Not enrolled -->
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You need to be enrolled in a batch to view the leaderboard.</p>
+    </div>
+
+    <ng-container *ngIf="batchId">
+
+      <!-- No data yet -->
+      <div *ngIf="entries.length === 0" class="empty-state">
+        <mat-icon>hourglass_empty</mat-icon>
+        <h3>No Data Yet</h3>
+        <p>XP points will appear once quizzes and interviews are evaluated in your batch.</p>
+      </div>
+
+      <!-- Podium top 3 -->
+      <div class="podium" *ngIf="entries.length >= 3">
+        <!-- 2nd place -->
+        <div class="podium-slot silver" *ngIf="entries[1]">
+          <div class="podium-avatar" [class.me]="entries[1].isCurrentUser">
+            {{ getInitials(entries[1].fullName) }}
+          </div>
+          <p class="podium-name">{{ entries[1].fullName }}</p>
+          <p class="podium-xp">{{ entries[1].totalXp }} XP</p>
+          <div class="podium-block silver-block">2</div>
+        </div>
+        <!-- 1st place -->
+        <div class="podium-slot gold" *ngIf="entries[0]">
+          <mat-icon class="crown">emoji_events</mat-icon>
+          <div class="podium-avatar large" [class.me]="entries[0].isCurrentUser">
+            {{ getInitials(entries[0].fullName) }}
+          </div>
+          <p class="podium-name">{{ entries[0].fullName }}</p>
+          <p class="podium-xp">{{ entries[0].totalXp }} XP</p>
+          <div class="podium-block gold-block">1</div>
+        </div>
+        <!-- 3rd place -->
+        <div class="podium-slot bronze" *ngIf="entries[2]">
+          <div class="podium-avatar" [class.me]="entries[2].isCurrentUser">
+            {{ getInitials(entries[2].fullName) }}
+          </div>
+          <p class="podium-name">{{ entries[2].fullName }}</p>
+          <p class="podium-xp">{{ entries[2].totalXp }} XP</p>
+          <div class="podium-block bronze-block">3</div>
+        </div>
+      </div>
+
+      <!-- Full rankings table -->
+      <mat-card class="rankings-card" *ngIf="entries.length > 0">
+        <mat-card-header>
+          <mat-card-title><mat-icon>format_list_numbered</mat-icon> Full Rankings</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="entries" class="leaderboard-table">
+
+            <!-- Rank -->
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef class="col-rank">#</th>
+              <td mat-cell *matCellDef="let e" class="col-rank">
+                <mat-icon *ngIf="getMedalIcon(e.rank)" [class]="getMedalClass(e.rank)">{{ getMedalIcon(e.rank) }}</mat-icon>
+                <span *ngIf="!getMedalIcon(e.rank)" class="rank-num">{{ e.rank }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Name -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Associate</th>
+              <td mat-cell *matCellDef="let e">
+                <div class="associate-cell">
+                  <div class="avatar-sm" [class.avatar-me]="e.isCurrentUser">{{ getInitials(e.fullName) }}</div>
+                  <div class="associate-info">
+                    <span class="associate-name">{{ e.fullName }}</span>
+                    <span class="associate-email">{{ e.email }}</span>
+                  </div>
+                  <span class="you-badge" *ngIf="e.isCurrentUser">You</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Quiz XP -->
+            <ng-container matColumnDef="quizXp">
+              <th mat-header-cell *matHeaderCellDef class="col-score">Quiz XP</th>
+              <td mat-cell *matCellDef="let e" class="col-score">
+                <span class="xp-pill pill-blue">{{ e.quizXp }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Interview XP -->
+            <ng-container matColumnDef="interviewXp">
+              <th mat-header-cell *matHeaderCellDef class="col-score">Interview XP</th>
+              <td mat-cell *matCellDef="let e" class="col-score">
+                <span class="xp-pill pill-purple">{{ e.interviewXp }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Total XP -->
+            <ng-container matColumnDef="totalXp">
+              <th mat-header-cell *matHeaderCellDef class="col-score">Total XP</th>
+              <td mat-cell *matCellDef="let e" class="col-score">
+                <span class="total-xp">{{ e.totalXp }}</span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                [class.highlight-row]="row.isCurrentUser"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+
+    </ng-container>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading leaderboard...</p>
+  </div>
+</ng-template>

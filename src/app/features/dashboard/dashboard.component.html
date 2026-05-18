@@ -211,6 +211,13 @@
           <span class="stat-label">Upcoming Sessions</span>
         </div>
       </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fce4ec"><mat-icon style="color:#880e4f">rocket_launch</mat-icon></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ associateStats.projectsSubmitted }}</span>
+          <span class="stat-label">Projects Submitted</span>
+        </div>
+      </div>
     </div>
 
     <div class="dashboard-row" *ngIf="upcomingSchedules.length > 0">
@@ -236,8 +243,9 @@
           <div class="actions-list">
             <button mat-stroked-button routerLink="/my-portal/quizzes" class="action-btn full"><mat-icon>fact_check</mat-icon><span>My Quizzes</span></button>
             <button mat-stroked-button routerLink="/my-portal/results" class="action-btn full"><mat-icon>leaderboard</mat-icon><span>My Results</span></button>
-            <button mat-stroked-button routerLink="/projects" class="action-btn full"><mat-icon>work</mat-icon><span>Submit Project</span></button>
-            <button mat-stroked-button routerLink="/associates" class="action-btn full"><mat-icon>person</mat-icon><span>My Profile</span></button>
+            <button mat-stroked-button routerLink="/my-portal/schedules" class="action-btn full"><mat-icon>calendar_month</mat-icon><span>My Schedules</span></button>
+            <button mat-stroked-button routerLink="/my-portal/projects" class="action-btn full"><mat-icon>rocket_launch</mat-icon><span>My Projects</span></button>
+            <button mat-stroked-button routerLink="/my-portal/profile" class="action-btn full"><mat-icon>manage_accounts</mat-icon><span>My Profile</span></button>
           </div>
         </mat-card-content>
       </mat-card>
@@ -249,8 +257,10 @@
         <div class="actions-grid">
           <button mat-stroked-button routerLink="/my-portal/quizzes" class="action-btn"><mat-icon>fact_check</mat-icon><span>My Quizzes</span></button>
           <button mat-stroked-button routerLink="/my-portal/results" class="action-btn"><mat-icon>leaderboard</mat-icon><span>My Results</span></button>
-          <button mat-stroked-button routerLink="/projects" class="action-btn"><mat-icon>work</mat-icon><span>Submit Project</span></button>
-          <button mat-stroked-button routerLink="/associates" class="action-btn"><mat-icon>person</mat-icon><span>My Profile</span></button>
+          <button mat-stroked-button routerLink="/my-portal/schedules" class="action-btn"><mat-icon>calendar_month</mat-icon><span>My Schedules</span></button>
+          <button mat-stroked-button routerLink="/my-portal/projects" class="action-btn"><mat-icon>rocket_launch</mat-icon><span>My Projects</span></button>
+          <button mat-stroked-button routerLink="/my-portal/profile" class="action-btn"><mat-icon>manage_accounts</mat-icon><span>My Profile</span></button>
+          <button mat-stroked-button routerLink="/my-portal/leaderboard" class="action-btn"><mat-icon>emoji_events</mat-icon><span>Leaderboard</span></button>
         </div>
       </mat-card-content>
     </mat-card>

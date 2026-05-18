@@ -1,0 +1,89 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Schedules</h2>
+      <p>Session schedule for your current batch</p>
+    </div>
+    <div class="header-stat" *ngIf="upcoming.length > 0">
+      <mat-icon>event</mat-icon>
+      <span>{{ upcoming.length }} upcoming session{{ upcoming.length !== 1 ? 's' : '' }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading; else loadingTpl">
+
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>calendar_today</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>Your session schedule will appear here once you are enrolled in an active batch.</p>
+    </div>
+
+    <div *ngIf="batchId && schedules.length === 0" class="empty-state">
+      <mat-icon>event_busy</mat-icon>
+      <h3>No Sessions Scheduled</h3>
+      <p>Your trainer hasn't added any sessions yet. Check back later.</p>
+    </div>
+
+    <ng-container *ngIf="schedules.length > 0">
+
+      <!-- Upcoming sessions -->
+      <div class="section-title" *ngIf="upcoming.length > 0">
+        <mat-icon>upcoming</mat-icon> Upcoming Sessions
+      </div>
+
+      <div class="schedule-list" *ngIf="upcoming.length > 0">
+        <div class="schedule-item upcoming" *ngFor="let s of upcoming">
+          <div class="date-block" [class.today]="isToday(s.sessionDate)">
+            <span class="date-day">{{ s.sessionDate | date:'d' }}</span>
+            <span class="date-month">{{ s.sessionDate | date:'MMM' }}</span>
+            <span class="date-year">{{ s.sessionDate | date:'yyyy' }}</span>
+          </div>
+          <div class="session-info">
+            <p class="session-label">
+              <mat-icon>school</mat-icon>
+              Training Session
+            </p>
+            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }}</p>
+            <span class="today-badge" *ngIf="isToday(s.sessionDate)">Today</span>
+          </div>
+          <mat-icon class="session-arrow">chevron_right</mat-icon>
+        </div>
+      </div>
+
+      <!-- Past sessions -->
+      <div class="section-title past-title" *ngIf="past.length > 0">
+        <mat-icon>history</mat-icon> Past Sessions
+        <span class="past-count">({{ past.length }})</span>
+      </div>
+
+      <div class="schedule-list" *ngIf="past.length > 0">
+        <div class="schedule-item past" *ngFor="let s of past | slice:0:5">
+          <div class="date-block past-date">
+            <span class="date-day">{{ s.sessionDate | date:'d' }}</span>
+            <span class="date-month">{{ s.sessionDate | date:'MMM' }}</span>
+            <span class="date-year">{{ s.sessionDate | date:'yyyy' }}</span>
+          </div>
+          <div class="session-info">
+            <p class="session-label past-label">
+              <mat-icon>check_circle</mat-icon>
+              Training Session
+            </p>
+            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }}</p>
+          </div>
+          <mat-icon class="session-arrow past-arrow">check</mat-icon>
+        </div>
+        <p class="more-label" *ngIf="past.length > 5">
+          + {{ past.length - 5 }} more past sessions
+        </p>
+      </div>
+
+    </ng-container>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading schedule...</p>
+  </div>
+</ng-template>

@@ -5,7 +5,10 @@ import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { BatchService } from '../../../core/services/batch.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { Batch, BatchStatus } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { BatchFormComponent } from '../batch-form/batch-form.component';
@@ -23,8 +26,11 @@ export class BatchListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
+  isTrainer = this.auth.isTrainer();
+
   constructor(
     private svc: BatchService,
+    private trainerSvc: TrainerService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private router: Router,
@@ -35,16 +41,47 @@ export class BatchListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    const obs = this.statusFilter ? this.svc.filterByStatus(this.statusFilter as BatchStatus) : this.svc.getAll();
-    obs.subscribe({
-      next: (d) => {
-        this.dataSource.data = d;
+    const userId = this.auth.getUserId();
+
+    if (!this.isTrainer) {
+      const obs = this.statusFilter ? this.svc.filterByStatus(this.statusFilter as BatchStatus) : this.svc.getAll();
+      obs.subscribe({
+        next: (d) => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; },
+        error: () => this.loading = false
+      });
+      return;
+    }
+
+    // Find the trainer record to get their primary key, then fetch their batches
+    this.trainerSvc.getAll().pipe(
+      catchError(() => of([])),
+      switchMap((trainers: any[]) => {
+        const me = trainers.find(t => Number(t.userId) === Number(userId));
+        // Candidate IDs to try with filterByTrainer: trainer PK first, then userId as fallback
+        const candidates = [...new Set(
+          [me?.trainerId, me?.id, userId].filter((v): v is number => v != null)
+        )];
+        return this.tryFilterByTrainer(candidates);
+      })
+    ).subscribe({
+      next: (batches: Batch[]) => {
+        const filtered = this.statusFilter ? batches.filter(b => b.status === this.statusFilter as BatchStatus) : batches;
+        this.dataSource.data = filtered;
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
         this.loading = false;
       },
       error: () => this.loading = false
     });
+  }
+
+  private tryFilterByTrainer(ids: number[]): Observable<Batch[]> {
+    if (!ids.length) return of([]);
+    const [head, ...tail] = ids;
+    return this.svc.filterByTrainer(head).pipe(
+      catchError(() => of([])),
+      switchMap((result: Batch[]) => result.length > 0 ? of(result) : this.tryFilterByTrainer(tail))
+    );
   }
 
   applyFilter(e: Event): void {

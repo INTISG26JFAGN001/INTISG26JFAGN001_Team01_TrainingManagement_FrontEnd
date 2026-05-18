@@ -55,11 +55,12 @@ export class SidebarComponent {
     {
       label: 'My Learning', icon: 'school', expanded: false, roles: this.ASSOCIATE,
       children: [
-        { label: 'My Quizzes',  icon: 'fact_check',        route: '/my-portal/quizzes',  roles: this.ASSOCIATE },
-        { label: 'My Results',  icon: 'leaderboard',       route: '/my-portal/results',  roles: this.ASSOCIATE },
-        { label: 'Projects',    icon: 'work',              route: '/projects',            roles: this.ASSOCIATE },
-        { label: 'Schedules',   icon: 'calendar_today',    route: '/schedules',           roles: this.ASSOCIATE },
-        { label: 'My Profile',  icon: 'person',            route: '/associates',          roles: this.ASSOCIATE },
+        { label: 'My Quizzes',   icon: 'fact_check',        route: '/my-portal/quizzes',      roles: this.ASSOCIATE },
+        { label: 'My Results',   icon: 'bar_chart',         route: '/my-portal/results',      roles: this.ASSOCIATE },
+        { label: 'My Schedules', icon: 'calendar_month',    route: '/my-portal/schedules',    roles: this.ASSOCIATE },
+        { label: 'My Projects',  icon: 'rocket_launch',     route: '/my-portal/projects',     roles: this.ASSOCIATE },
+        { label: 'Leaderboard',  icon: 'emoji_events',      route: '/my-portal/leaderboard',  roles: this.ASSOCIATE },
+        { label: 'My Profile',   icon: 'manage_accounts',   route: '/my-portal/profile',      roles: this.ASSOCIATE },
       ]
     },
   ];

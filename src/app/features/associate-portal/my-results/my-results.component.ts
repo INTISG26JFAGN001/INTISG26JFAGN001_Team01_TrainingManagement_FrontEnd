@@ -40,7 +40,8 @@ export class MyResultsComponent implements OnInit {
         this.associateId = me.id;
         return this.associateSvc.getMyEnrollment(me.id).pipe(
           catchError(() => of(null)),
-          switchMap((enrollment: any) => {
+          switchMap((raw: any) => {
+            const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
             this.batchId = enrollment?.batchId ?? me.batchId ?? null;
             return forkJoin({
               interviewEvals: this.assessmentSvc.getInterviewEvaluationsByAssociate(me.id).pipe(catchError(() => of([]))),

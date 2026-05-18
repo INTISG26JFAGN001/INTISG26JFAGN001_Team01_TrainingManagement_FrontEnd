@@ -1,0 +1,97 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Projects</h2>
+      <p>View and submit projects assigned to your batch</p>
+    </div>
+    <button mat-flat-button color="primary" *ngIf="batchId && !showForm" (click)="showForm = true">
+      <mat-icon>add</mat-icon> Submit Project
+    </button>
+  </div>
+
+  <!-- Submission form -->
+  <mat-card class="form-card" *ngIf="showForm">
+    <mat-card-header>
+      <mat-card-title><mat-icon>upload</mat-icon> New Project Submission</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" class="submit-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Project Title</mat-label>
+          <input matInput formControlName="title" placeholder="e.g. E-Commerce REST API" />
+          <mat-error *ngIf="form.get('title')?.hasError('required')">Title is required</mat-error>
+          <mat-error *ngIf="form.get('title')?.hasError('minlength')">Minimum 3 characters</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Repository URL</mat-label>
+          <input matInput formControlName="repoUrl" placeholder="https://github.com/username/repo" />
+          <mat-icon matSuffix>link</mat-icon>
+          <mat-error *ngIf="form.get('repoUrl')?.hasError('required')">Repository URL is required</mat-error>
+          <mat-error *ngIf="form.get('repoUrl')?.hasError('pattern')">Must be a valid URL starting with http:// or https://</mat-error>
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-stroked-button (click)="cancelForm()" [disabled]="submitting">Cancel</button>
+      <button mat-flat-button color="primary" (click)="submitProject()" [disabled]="form.invalid || submitting">
+        <mat-icon>{{ submitting ? 'hourglass_empty' : 'check' }}</mat-icon>
+        {{ submitting ? 'Submitting...' : 'Submit' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div *ngIf="!loading; else loadingTpl">
+
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You are not enrolled in an active batch. Projects will appear here once you are assigned to a batch.</p>
+    </div>
+
+    <div *ngIf="batchId && projects.length === 0 && !showForm" class="empty-state">
+      <mat-icon>folder_open</mat-icon>
+      <h3>No Projects Yet</h3>
+      <p>You haven't submitted any projects for this batch. Click "Submit Project" to add one.</p>
+    </div>
+
+    <div class="project-grid" *ngIf="projects.length > 0">
+      <mat-card class="project-card" *ngFor="let p of projects">
+        <mat-card-content>
+          <div class="project-header">
+            <div class="project-icon-wrap">
+              <mat-icon>folder</mat-icon>
+            </div>
+            <div class="project-info">
+              <h4 class="project-title">{{ p.title }}</h4>
+              <p class="project-meta" *ngIf="p.submissionDate">
+                <mat-icon>schedule</mat-icon>
+                Submitted: {{ p.submissionDate | date:'mediumDate' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="repo-row" *ngIf="p.repoUrl">
+            <mat-icon>code</mat-icon>
+            <a [href]="p.repoUrl" target="_blank" class="repo-link" matTooltip="Open repository">
+              {{ p.repoUrl }}
+            </a>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <a [href]="p.repoUrl" target="_blank" mat-stroked-button *ngIf="p.repoUrl">
+            <mat-icon>open_in_new</mat-icon> View Repo
+          </a>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading projects...</p>
+  </div>
+</ng-template>
