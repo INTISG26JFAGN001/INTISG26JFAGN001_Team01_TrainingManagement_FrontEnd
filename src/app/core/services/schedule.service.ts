@@ -17,4 +17,7 @@ export class ScheduleService {
   updateSessionDate(id: number, sessionDate: string): Observable<Schedule> {
     return this.http.put<Schedule>(`${this.base}/${id}/session-date`, null, { params: { sessionDate } });
   }
+  deleteSchedule(id:number):Observable<Schedule>{
+    return this.http.delete<Schedule>(`${this.base}/${id}`);
+  }
 }

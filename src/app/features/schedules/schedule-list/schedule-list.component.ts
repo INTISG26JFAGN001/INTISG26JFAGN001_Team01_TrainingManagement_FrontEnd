@@ -13,6 +13,7 @@ import { Schedule, Batch } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ScheduleFormDialog } from './schedule-form-dialog.component';
+import { ConfirmDialogComponent } from 'src/app/shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-schedule-list',
@@ -187,16 +188,18 @@ export class ScheduleListComponent implements OnInit {
       }
     );
   }
-  deleteForm(s:Schedule){
+  deleteForm(s: Schedule): void {
     console.log(s);
-
-  }
-  editSchedule(s:Schedule){
-    console.log(s);
-    
-  }
-
-  deleteSchedule(s:Schedule){
-    console.log(s);
-  }
+      this.dialog.open(ConfirmDialogComponent, {
+        data: { title: 'Delete Technology', message: `Delete session for Batch ${s.batchId} on ${s.sessionDate}?`, danger: true, confirmText: 'Delete' }
+      }).afterClosed().subscribe(c => {
+        console.log(c);
+        console.log(s.scheduleId);
+        if (c && s.scheduleId) 
+          this.svc.deleteSchedule(s.scheduleId).subscribe({
+            next: (res) => { console.log(res);this.snack.open('Schedule deleted', 'Close', { duration: 3000 }); this.loadSchedules(); },
+            error: (res) => { console.log(res);this.snack.open('Failed to delete', 'Close', { duration: 3000 });}
+          });
+      });
+    }
 }
