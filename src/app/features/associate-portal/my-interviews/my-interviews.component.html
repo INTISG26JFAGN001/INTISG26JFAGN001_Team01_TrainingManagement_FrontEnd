@@ -1,0 +1,129 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Interviews</h2>
+      <p>Track your scheduled and completed interviews</p>
+    </div>
+    <div class="header-stat" *ngIf="upcoming.length > 0">
+      <mat-icon>event</mat-icon>
+      <span>{{ upcoming.length }} upcoming</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <ng-container *ngIf="loading">
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading interviews...</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- Not enrolled -->
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>record_voice_over</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>Your interviews will appear here once you are enrolled in an active batch.</p>
+    </div>
+
+    <!-- No interviews at all -->
+    <div *ngIf="batchId && interviews.length === 0" class="empty-state">
+      <mat-icon>mic_off</mat-icon>
+      <h3>No Interviews Yet</h3>
+      <p>Your trainer hasn't scheduled any interviews yet. Check back later.</p>
+    </div>
+
+    <!-- Tabs + content -->
+    <ng-container *ngIf="batchId && interviews.length > 0">
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="selectTab('upcoming')">
+          <mat-icon>upcoming</mat-icon> Upcoming
+          <span class="tab-count" *ngIf="upcoming.length">{{ upcoming.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="selectTab('completed')">
+          <mat-icon>check_circle</mat-icon> Completed
+          <span class="tab-count" *ngIf="completed.length">{{ completed.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'missed'" (click)="selectTab('missed')">
+          <mat-icon>cancel</mat-icon> Missed
+          <span class="tab-count warn" *ngIf="missed.length">{{ missed.length }}</span>
+        </button>
+      </div>
+
+      <!-- Empty tab state -->
+      <div class="empty-tab" *ngIf="filteredInterviews.length === 0">
+        <mat-icon>{{ activeTab === 'upcoming' ? 'hourglass_empty' : activeTab === 'completed' ? 'done_all' : 'event_busy' }}</mat-icon>
+        <p *ngIf="activeTab === 'upcoming'">No upcoming interviews. Stay tuned!</p>
+        <p *ngIf="activeTab === 'completed'">You haven't been evaluated yet.</p>
+        <p *ngIf="activeTab === 'missed'">Great — no missed interviews.</p>
+      </div>
+
+      <!-- Interview cards -->
+      <div class="interview-list" *ngIf="filteredInterviews.length > 0">
+        <div class="interview-card" *ngFor="let iv of filteredInterviews"
+             [class.card-completed]="iv.evaluated"
+             [class.card-missed]="!iv.evaluated && iv.status === 'CLOSED'">
+
+          <div class="card-left">
+            <div class="category-badge" [ngClass]="getCategoryClass(iv.category)">
+              {{ getCategoryLabel(iv.category) }}
+            </div>
+            <h3 class="iv-title">{{ iv.title }}</h3>
+            <div class="iv-meta">
+              <span class="meta-chip">
+                <mat-icon>event</mat-icon>{{ iv.dueDate ? (iv.dueDate | date:'MMM d, y, h:mm a') : 'No deadline' }}
+              </span>
+              <span class="meta-chip">
+                <mat-icon>record_voice_over</mat-icon>Interview
+              </span>
+            </div>
+          </div>
+
+          <div class="card-right">
+
+            <!-- Upcoming state -->
+            <ng-container *ngIf="!iv.evaluated && iv.status !== 'CLOSED'">
+              <div class="state-badge state-upcoming">
+                <mat-icon>schedule</mat-icon> Upcoming
+              </div>
+            </ng-container>
+
+            <!-- Missed state -->
+            <ng-container *ngIf="!iv.evaluated && iv.status === 'CLOSED'">
+              <div class="state-badge state-missed">
+                <mat-icon>cancel</mat-icon> Not Evaluated
+              </div>
+            </ng-container>
+
+            <!-- Completed state -->
+            <ng-container *ngIf="iv.evaluated">
+              <div class="score-section">
+                <div class="score-numbers">
+                  <span class="score-val">{{ iv.totalScore ?? 0 }}</span>
+                  <span class="score-max">/ {{ iv.maxScore ?? '?' }}</span>
+                </div>
+                <div class="score-bar-bg" *ngIf="iv.scorePercent !== null">
+                  <div class="score-bar-fill"
+                       [style.width.%]="iv.scorePercent"
+                       [style.background]="getScoreBarColor(iv.scorePercent ?? 0)"></div>
+                </div>
+                <span class="result-chip" [ngClass]="getResultClass(iv.resultStatus ?? '')"
+                      *ngIf="iv.resultStatus">
+                  {{ iv.resultStatus }}
+                </span>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </ng-container>
+
+</div>

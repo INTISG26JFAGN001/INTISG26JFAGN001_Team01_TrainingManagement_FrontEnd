@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
-import { switchMap, catchError, map } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
@@ -9,9 +9,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Quiz } from '../../../core/models';
 import { QuizAttemptDialogComponent } from './quiz-attempt-dialog.component';
 
-interface QuizRow extends Quiz { attempted?: boolean; score?: number; resultStatus?: string; }
+interface QuizRow extends Quiz { attempted?: boolean; score?: number; resultStatus?: string; scorePercent?: number | null; }
 
-type TabKey = 'upcoming' | 'past' | 'attempted';
+type TabKey = 'upcoming' | 'completed' | 'missed';
 
 @Component({
   selector: 'app-my-quizzes',
@@ -30,15 +30,17 @@ export class MyQuizzesComponent implements OnInit {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return this.quizzes.filter(q => !q.attempted && q.status !== 'CLOSED' && (!q.dueDate || new Date(q.dueDate) >= today));
   }
-  get past(): QuizRow[] {
+  get completed(): QuizRow[] {
+    return this.quizzes.filter(q => q.attempted);
+  }
+  get missed(): QuizRow[] {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return this.quizzes.filter(q => !q.attempted && (q.status === 'CLOSED' || (q.dueDate && new Date(q.dueDate) < today)));
   }
-  get attempted(): QuizRow[] {
-    return this.quizzes.filter(q => q.attempted);
-  }
   get filteredQuizzes(): QuizRow[] {
-    return this[this.activeTab];
+    if (this.activeTab === 'completed') return this.completed;
+    if (this.activeTab === 'missed') return this.missed;
+    return this.upcoming;
   }
 
   selectTab(tab: TabKey): void { this.activeTab = tab; }
@@ -53,16 +55,24 @@ export class MyQuizzesComponent implements OnInit {
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
-    this.associateSvc.getAll().pipe(
-      map((list: any[]) => list.find((a: any) => a.userId === userId) ?? null),
+    this.associateSvc.getById(userId).pipe(
       catchError(() => of(null)),
       switchMap((me: any) => {
         if (!me) return of({ quizzes: [] as Quiz[], associateId: 0, batchId: null as number | null });
         this.associateId = me.id;
-        return this.associateSvc.getMyEnrollment(me.id).pipe(
-          catchError(() => of(null)),
-          switchMap((enrollment: any) => {
-            const batchId: number | null = enrollment?.batchId ?? me.batchId ?? null;
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
+        const batchId$ = directBatchId
+          ? of(directBatchId)
+          : this.associateSvc.getMyEnrollment(me.id).pipe(
+              catchError(() => of(null)),
+              switchMap((raw: any) => {
+                const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+                const bid = enrollment?.batchId ?? null;
+                return of(bid && bid > 0 ? Number(bid) : null);
+              })
+            );
+        return batchId$.pipe(
+          switchMap((batchId: number | null) => {
             if (!batchId) return of({ quizzes: [] as Quiz[], associateId: me.id, batchId: null as number | null });
             this.batchId = batchId;
             return this.assessmentSvc.getQuizzesByBatch(batchId).pipe(
@@ -93,6 +103,9 @@ export class MyQuizzesComponent implements OnInit {
                 rows[i].attempted = true;
                 rows[i].score = r.score;
                 rows[i].resultStatus = r.resultStatus;
+                const max = rows[i].maxScore ?? null;
+                const sc  = r.score ?? null;
+                rows[i].scorePercent = (max && sc !== null) ? Math.min(100, Math.round((sc / max) * 100)) : null;
               }
             });
             this.quizzes = rows;
@@ -127,5 +140,11 @@ export class MyQuizzesComponent implements OnInit {
   getStatusColor(status: string): string {
     const map: Record<string, string> = { PASS: 'chip-pass', FAIL: 'chip-fail' };
     return map[status] ?? '';
+  }
+
+  getScoreBarColor(pct: number): string {
+    if (pct >= 70) return '#34d399';
+    if (pct >= 50) return '#fbbf24';
+    return '#ef4444';
   }
 }

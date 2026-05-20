@@ -8,6 +8,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ProjectService } from '../../../core/services/project.service';
 import { BatchService } from '../../../core/services/batch.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Batch, Project } from '../../../core/models';
 import { ProjectReviewDialogComponent } from './project-review-dialog.component';
 
@@ -21,9 +22,14 @@ export class ProjectReviewComponent implements OnInit {
   allProjects: Project[] = [];
   batchSearch = '';
   loading = false;
+  loadingReviews = false;
+
+  /** projectId → true when the current logged-in user has already submitted a review */
+  reviewedByMeSet = new Set<number>();
+  currentUserId = 0;
 
   dataSource = new MatTableDataSource<Project>();
-  displayedColumns = ['title', 'repoUrl', 'action'];
+  displayedColumns = ['title', 'repoUrl', 'status', 'action'];
 
   @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
   @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
@@ -31,14 +37,16 @@ export class ProjectReviewComponent implements OnInit {
   constructor(
     private svc: ProjectService,
     private batchSvc: BatchService,
+    private auth: AuthService,
     private dialog: MatDialog,
     private snack: MatSnackBar
   ) {}
 
   ngOnInit(): void {
+    this.currentUserId = this.auth.getUserId();
     this.loading = true;
     forkJoin({
-      batches: this.batchSvc.getAll().pipe(catchError(() => of([]))),
+      batches:  this.batchSvc.getAll().pipe(catchError(() => of([]))),
       projects: this.svc.getProjects().pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ batches, projects }) => {
@@ -59,13 +67,30 @@ export class ProjectReviewComponent implements OnInit {
 
   onBatchInput(): void {
     const batchId = this.getBatchId();
-    if (!batchId) {
-      this.dataSource.data = [];
-      return;
-    }
+    if (!batchId) { this.dataSource.data = []; this.reviewedByMeSet.clear(); return; }
+
     const filtered = this.allProjects.filter(p => p.batchId === batchId);
     this.dataSource.data = filtered;
+
+    if (!filtered.length) { this.reviewedByMeSet.clear(); return; }
+
+    // Load reviews for all visible projects; mark those where the current user already reviewed
+    this.loadingReviews = true;
+    this.reviewedByMeSet.clear();
+    const reviewObs = filtered.map(p => this.svc.getReviews(p.id).pipe(catchError(() => of([]))));
+    forkJoin(reviewObs).subscribe({
+      next: (reviewLists: any[][]) => {
+        reviewLists.forEach((reviews, i) => {
+          const alreadyMine = reviews.some((r: any) => Number(r.reviewerId) === this.currentUserId);
+          if (alreadyMine) this.reviewedByMeSet.add(filtered[i].id);
+        });
+        this.loadingReviews = false;
+      },
+      error: () => { this.loadingReviews = false; }
+    });
   }
+
+  isReviewedByMe(project: Project): boolean { return this.reviewedByMeSet.has(project.id); }
 
   openReviewDialog(project: Project): void {
     this.dialog.open(ProjectReviewDialogComponent, {
