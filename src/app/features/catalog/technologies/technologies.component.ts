@@ -59,7 +59,7 @@ export class TechnologiesComponent implements OnInit {
     }).afterClosed().subscribe(c => {
       if (c) this.svc.deleteTechnology(t.id).subscribe({
         next: () => { this.snack.open('Technology deleted', 'Close', { duration: 3000 }); this.load(); },
-        error: () => this.snack.open('Failed to delete', 'Close', { duration: 3000 })
+        error: (e) => this.snack.open(e.error?.message || 'Failed to delete technology', 'Close', { duration: 5000 })
       });
     });
   }
