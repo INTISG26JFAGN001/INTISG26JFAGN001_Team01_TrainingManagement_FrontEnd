@@ -39,7 +39,7 @@ import { Course, Technology } from '../../../core/models';
           <mat-form-field appearance="outline" class="field-tech">
             <mat-label>Technology</mat-label>
             <mat-select formControlName="technologyId">
-              <mat-option *ngFor="let t of technologies" [value]="t.id">{{ t.name }}</mat-option>
+              <mat-option *ngFor="let t of technologies" [value]="t.id" >{{ t.name }}</mat-option>
             </mat-select>
             <mat-error>Technology is required</mat-error>
           </mat-form-field>
@@ -97,15 +97,20 @@ export class CourseFormDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.svc.getTechnologies().subscribe(t => this.technologies = t);
-    if (this.data) {
-      this.form.patchValue({
-        code:         this.data.code,
-        title:        this.data.title,
-        technologyId: this.data.technologyId ?? null,
-        durationDays: this.data.durationDays
-      });
-    }
+    this.svc.getTechnologies().subscribe(t => {
+      this.technologies = t;
+
+      if (this.data) {
+        const matched = t.find(tech => tech.name === this.data!.technologyName);
+
+        this.form.patchValue({
+          code:         this.data.code,
+          title:        this.data.title,
+          technologyId: matched?.id ?? null,
+          durationDays: this.data.durationDays
+        });
+      }
+    });
   }
 
   save(): void {

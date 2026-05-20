@@ -62,8 +62,8 @@ export class CoursesComponent implements OnInit {
       data: { title: 'Delete Course', message: `Delete "${c.title}"?`, danger: true, confirmText: 'Delete' }
     }).afterClosed().subscribe(conf => {
       if (conf) this.svc.deleteCourse(c.id).subscribe({
-        next: () => { this.snack.open('Course deleted', 'Close', { duration: 3000 }); this.load(); },
-        error: () => this.snack.open('Failed to delete', 'Close', { duration: 3000 })
+        next: (res) => { console.log(res);this.snack.open('Course deleted', 'Close', { duration: 3000 }); this.load(); },
+        error: (res) => {console.log(res);this.snack.open('Failed to delete', 'Close', { duration: 3000 })}
       });
     });
   }
