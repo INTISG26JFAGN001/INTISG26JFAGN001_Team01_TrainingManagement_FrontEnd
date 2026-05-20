@@ -96,13 +96,6 @@
   .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
 
   .stat-trend mat-icon { font-size: 18px; opacity: 0.4; }
-
-  /* three-dot menu placeholder */
-  .stat-more {
-    position: absolute; top: 12px; right: 12px;
-    font-size: 18px; color: var(--text-muted); cursor: pointer;
-    &:hover { color: var(--text-secondary); }
-  }
 }
 
 /* Card icon colour variants */

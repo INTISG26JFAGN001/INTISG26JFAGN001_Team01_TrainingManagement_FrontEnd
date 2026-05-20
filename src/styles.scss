@@ -399,6 +399,16 @@ mat-chip-listbox { display: flex; flex-wrap: wrap; gap: 4px; }
 .mat-mdc-raised-button.mat-primary,
 .mat-mdc-unelevated-button.mat-primary { color: #fff !important; }
 
+/* ── Radio button ── */
+.mat-mdc-radio-button .mdc-label              { color: var(--text-primary)   !important; }
+.mat-mdc-radio-button .mdc-radio__outer-circle { border-color: var(--border-active) !important; }
+.mat-mdc-radio-button.mat-mdc-radio-checked .mdc-radio__outer-circle,
+.mat-mdc-radio-button.mat-mdc-radio-checked .mdc-radio__inner-circle { border-color: var(--accent) !important; }
+[data-theme="light"] .mat-mdc-radio-button .mdc-label { color: var(--text-primary) !important; }
+
+/* ── Checkbox ── */
+.mat-mdc-checkbox .mdc-label { color: var(--text-primary) !important; }
+
 /* ── Progress bar / Spinner ── */
 .mat-mdc-progress-bar .mdc-linear-progress__buffer-bar { background: rgba(255,255,255,0.08) !important; }
 .mat-mdc-progress-bar .mdc-linear-progress__primary-bar { background: var(--accent) !important; }
@@ -413,6 +423,29 @@ mat-chip-listbox { display: flex; flex-wrap: wrap; gap: 4px; }
 /* ── Light-mode scrollbar ── */
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* ── Native date / datetime-local picker ── */
+/* Dark theme: invert the calendar icon so it's visible on dark inputs */
+input[type="date"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+    filter: invert(0.8) brightness(1.2);
+    &:hover { opacity: 1; }
+  }
+}
+/* Light theme: use default browser colours */
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="datetime-local"] {
+  color-scheme: light;
+  &::-webkit-calendar-picker-indicator {
+    filter: none;
+    opacity: 0.6;
+    &:hover { opacity: 1; }
+  }
+}
 
 /* ── Light mode — restore black text on Material components ── */
 [data-theme="light"] .mat-mdc-card,

@@ -6,7 +6,8 @@
       <div class="filter-field">
         <label>Batch</label>
         <input type="text" [(ngModel)]="filter.batchId" list="batch-list-project"
-               class="field-input" placeholder="Search batch…" autocomplete="off" />
+               class="field-input" placeholder="Search batch…" autocomplete="off"
+               (keydown.enter)="applyFilter()" />
         <datalist id="batch-list-project">
           <option *ngFor="let b of batches"
                   [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">

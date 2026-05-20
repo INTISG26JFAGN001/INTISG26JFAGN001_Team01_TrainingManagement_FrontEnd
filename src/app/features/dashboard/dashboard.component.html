@@ -21,22 +21,18 @@
   <ng-container *ngIf="isAdmin || isTechLead">
     <div class="stats-grid">
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.batches }}</span><span class="stat-label">Total Batches</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-blue"><mat-icon>person</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.associates }}</span><span class="stat-label">Total Associates</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-green"><mat-icon>supervisor_account</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.trainers }}</span><span class="stat-label">Total Trainers</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-orange"><mat-icon>quiz</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.assessments }}</span><span class="stat-label">Assessments</span></div>
       </div>
@@ -116,22 +112,18 @@
   <ng-container *ngIf="isTrainer">
     <div class="stats-grid">
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ trainerStats.myBatches }}</span><span class="stat-label">My Batches</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-blue"><mat-icon>person</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ trainerStats.myAssociates }}</span><span class="stat-label">My Associates</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-orange"><mat-icon>fact_check</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ trainerStats.quizzes }}</span><span class="stat-label">Quizzes Created</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-purple"><mat-icon>record_voice_over</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ trainerStats.interviews }}</span><span class="stat-label">Interviews</span></div>
       </div>
@@ -189,30 +181,30 @@
 
     <div class="stats-grid associate-stats">
       <div class="stat-card" *ngIf="associateStats.myBatch">
-        <div class="stat-icon" style="background:#e8eaf6"><mat-icon style="color:#1a237e">groups</mat-icon></div>
+        <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value small">{{ associateStats.myBatch }}</span><span class="stat-label">My Batch</span></div>
         <span class="status-chip" [ngClass]="getStatusColor(associateStats.batchStatus)">{{ associateStats.batchStatus }}</span>
       </div>
       <div class="stat-card" *ngIf="!associateStats.myBatch">
-        <div class="stat-icon" style="background:#e8eaf6"><mat-icon style="color:#1a237e">groups</mat-icon></div>
+        <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value">—</span><span class="stat-label">Not Enrolled in a Batch</span></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#e8f5e9"><mat-icon style="color:#2e7d32">fact_check</mat-icon></div>
+        <div class="stat-icon icon-green"><mat-icon>fact_check</mat-icon></div>
         <div class="stat-info">
           <span class="stat-value">{{ associateStats.quizzesPassed }} / {{ associateStats.quizzesTotal }}</span>
           <span class="stat-label">Quizzes Passed</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fff3e0"><mat-icon style="color:#e65100">calendar_today</mat-icon></div>
+        <div class="stat-icon icon-orange"><mat-icon>calendar_today</mat-icon></div>
         <div class="stat-info">
           <span class="stat-value">{{ associateStats.upcomingSessions }}</span>
           <span class="stat-label">Upcoming Sessions</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fce4ec"><mat-icon style="color:#880e4f">rocket_launch</mat-icon></div>
+        <div class="stat-icon icon-purple"><mat-icon>rocket_launch</mat-icon></div>
         <div class="stat-info">
           <span class="stat-value">{{ associateStats.projectsSubmitted }}</span>
           <span class="stat-label">Projects Submitted</span>
@@ -270,22 +262,18 @@
   <ng-container *ngIf="isCoach || isScrumLead">
     <div class="stats-grid">
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.batches }}</span><span class="stat-label">Total Batches</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-green"><mat-icon>play_circle</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.ongoing }}</span><span class="stat-label">Ongoing</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-orange"><mat-icon>schedule</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.upcoming }}</span><span class="stat-label">Upcoming</span></div>
       </div>
       <div class="stat-card">
-        <mat-icon class="stat-more">more_horiz</mat-icon>
         <div class="stat-icon icon-purple"><mat-icon>quiz</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.assessments }}</span><span class="stat-label">Assessments</span></div>
       </div>

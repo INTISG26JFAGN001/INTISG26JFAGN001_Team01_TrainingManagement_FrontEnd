@@ -41,7 +41,7 @@ import { Trainer, Technology } from '../../../core/models';
     .edit-form { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; min-width: 400px; }
     .full-width { width: 100%; }
     .info-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; font-size: 13px; }
-    .info-label { color: #78909c; min-width: 70px; flex-shrink: 0; }
+    .info-label { color: var(--text-secondary); min-width: 70px; flex-shrink: 0; }
     .info-value { font-weight: 500; }
     .id-chip {
       display: inline-block; padding: 2px 8px; border-radius: 6px;
