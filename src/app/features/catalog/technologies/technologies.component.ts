@@ -57,9 +57,10 @@ export class TechnologiesComponent implements OnInit {
     this.dialog.open(ConfirmDialogComponent, {
       data: { title: 'Delete Technology', message: `Delete "${t.name}"?`, danger: true, confirmText: 'Delete' }
     }).afterClosed().subscribe(c => {
+      console.log(c);
       if (c) this.svc.deleteTechnology(t.id).subscribe({
-        next: () => { this.snack.open('Technology deleted', 'Close', { duration: 3000 }); this.load(); },
-        error: () => this.snack.open('Failed to delete', 'Close', { duration: 3000 })
+        next: (res) => { this.snack.open('Technology deleted', 'Close', { duration: 3000 }); this.load(); },
+        error: (res) => { this.snack.open('Failed to delete', 'Close', { duration: 3000 });}
       });
     });
   }
