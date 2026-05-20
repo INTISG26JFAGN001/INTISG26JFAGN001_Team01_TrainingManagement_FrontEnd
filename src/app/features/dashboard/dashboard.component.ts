@@ -65,10 +65,10 @@ export class DashboardComponent implements OnInit {
 
   private loadAdminDashboard(): void {
     forkJoin({
-      batches: this.batchSvc.getAll(),
-      associates: this.associateSvc.getAll(),
-      trainers: this.trainerSvc.getAll(),
-      assessments: this.assessmentSvc.getAll()
+      batches: this.batchSvc.getAll().pipe(catchError(() => of([]))),
+      associates: this.associateSvc.getAll().pipe(catchError(() => of([]))),
+      trainers: this.trainerSvc.getAll().pipe(catchError(() => of([]))),
+      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([])))
     }).subscribe({
       next: (res) => {
         this.stats.batches = res.batches.length;
@@ -189,8 +189,8 @@ export class DashboardComponent implements OnInit {
 
   private loadStaffDashboard(): void {
     forkJoin({
-      batches: this.batchSvc.getAll(),
-      assessments: this.assessmentSvc.getAll()
+      batches: this.batchSvc.getAll().pipe(catchError(() => of([]))),
+      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([])))
     }).subscribe({
       next: (res) => {
         this.stats.batches = res.batches.length;

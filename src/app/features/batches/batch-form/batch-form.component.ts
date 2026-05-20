@@ -89,6 +89,12 @@ export class BatchFormComponent implements OnInit {
     this.catalogSvc.getCourses().subscribe(c => this.courses = c);
   }
 
+  private formatLocalDateTime(date: any): string {
+    const d = new Date(date);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
   save(): void {
     if (this.form.invalid) return;
     const courseIds: number[] = this.form.value.courseIds ?? [];
@@ -101,8 +107,8 @@ export class BatchFormComponent implements OnInit {
     const payload: any = {
       trainerId: val.trainerId,
       status: val.status,
-      startDate: val.startDate ? new Date(val.startDate).toISOString() : undefined,
-      endDate: val.endDate ? new Date(val.endDate).toISOString() : undefined,
+      startDate: val.startDate ? this.formatLocalDateTime(val.startDate) : undefined,
+      endDate: val.endDate ? this.formatLocalDateTime(val.endDate) : undefined,
       courseIds
     };
     this.svc.create(payload).subscribe({
