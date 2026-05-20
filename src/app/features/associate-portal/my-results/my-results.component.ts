@@ -92,13 +92,13 @@ export class MyResultsComponent implements OnInit {
               projects:       this.projectSvc.getProjects().pipe(catchError(() => of([])))
             }).pipe(
               switchMap((res: any) => {
-                const attempted = (res.quizzes as any[]).filter((q: any) =>
+                const publishedQuizzes = (res.quizzes as any[]).filter((q: any) =>
                   q.status === 'PUBLISHED' || q.status === 'CLOSED'
                 );
 
                 const myProjects = (res.projects as any[]).filter((p: any) => p.batchId === batchId);
 
-                const quizResultObs: Observable<any>[] = attempted.map((q: any) =>
+                const quizResultObs: Observable<any>[] = publishedQuizzes.map((q: any) =>
                   this.assessmentSvc.getQuizResult(q.id, userId).pipe(catchError(() => of(null)))
                 );
                 const reviewObs: Observable<any>[] = myProjects.map((p: any) =>
@@ -106,11 +106,11 @@ export class MyResultsComponent implements OnInit {
                 );
 
                 return forkJoin([
-                  attempted.length  ? forkJoin(quizResultObs) : of([]),
-                  myProjects.length ? forkJoin(reviewObs)     : of([])
+                  publishedQuizzes.length ? forkJoin(quizResultObs) : of([]),
+                  myProjects.length       ? forkJoin(reviewObs)     : of([])
                 ]).pipe(
                   switchMap(([quizResultsList, reviewsList]: [any[], any[]]) =>
-                    of({ ...res, attempted, quizResultsList, myProjects, reviewsList })
+                    of({ ...res, publishedQuizzes, quizResultsList, myProjects, reviewsList })
                   )
                 );
               })
@@ -126,7 +126,7 @@ export class MyResultsComponent implements OnInit {
         this.quizResults = (res.quizResultsList as any[])
           .map((r: any, i: number): QuizResultRow | null => {
             if (!r) return null;
-            const q = res.attempted[i];
+            const q = res.publishedQuizzes[i];
             const max = q.maxScore ?? null;
             const sc  = r.score ?? 0;
             return {

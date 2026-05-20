@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
+import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 interface LeaderboardEntry {
@@ -27,6 +28,7 @@ export class MyLeaderboardComponent implements OnInit {
 
   constructor(
     private associateSvc: AssociateService,
+    private userSvc: UserService,
     private auth: AuthService
   ) {}
 
@@ -56,7 +58,25 @@ export class MyLeaderboardComponent implements OnInit {
           switchMap((batchId: number | null) => {
             if (!batchId) return of(null);
             this.batchId = batchId;
-            return this.associateSvc.getByBatch(batchId).pipe(catchError(() => of([])));
+            return this.associateSvc.getByBatch(batchId).pipe(
+              catchError(() => of([])),
+              switchMap((associates: any[]) => {
+                if (!associates.length) return of([]);
+                // Fetch user record for each associate to get fullName / email
+                const userObs = associates.map((a: any) =>
+                  this.userSvc.getById(a.userId).pipe(catchError(() => of(null)))
+                );
+                return forkJoin(userObs).pipe(
+                  switchMap(users => of(
+                    associates.map((a: any, i: number) => ({
+                      ...a,
+                      fullName: a.fullName || users[i]?.fullName || users[i]?.username || `Associate #${a.id}`,
+                      email:    a.email    || users[i]?.email    || ''
+                    }))
+                  ))
+                );
+              })
+            );
           })
         );
       })

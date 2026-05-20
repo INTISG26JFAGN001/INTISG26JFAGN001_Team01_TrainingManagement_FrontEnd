@@ -234,9 +234,9 @@
         </div>
       </ng-container>
 
-      <!-- All empty fallback -->
+      <!-- Global empty state — only shown before tab selection reveals a per-tab message -->
       <div class="empty-state"
-           *ngIf="quizResults.length === 0 && interviewResults.length === 0 && projectResults.length === 0">
+           *ngIf="quizResults.length === 0 && interviewResults.length === 0 && projectResults.length === 0 && activeTab === 'quizzes'">
         <mat-icon>hourglass_empty</mat-icon>
         <h3>No Results Yet</h3>
         <p>Your quiz scores, interview evaluations, and project reviews will appear here as they become available.</p>

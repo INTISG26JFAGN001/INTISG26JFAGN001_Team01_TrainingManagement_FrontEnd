@@ -19,7 +19,6 @@ export class MyBatchComponent implements OnInit {
   batch: any = null;
   batchId: number | null = null;
   associateId = 0;
-  associateUserId = 0;
 
   batchStartDate: string | null = null;
   batchEndDate: string | null = null;
@@ -53,8 +52,7 @@ export class MyBatchComponent implements OnInit {
       catchError(() => of(null)),
       switchMap((me: any) => {
         if (!me) return of(null);
-        this.associateId     = me.id     ?? 0;
-        this.associateUserId = me.userId ?? 0;
+        this.associateId = me.id ?? 0;
 
         const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
 

@@ -79,7 +79,7 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
   result: any = null;
   remaining = 0;
   private timer: any;
-  private associateId = 0;
+  private userId = 0;
 
   constructor(
     private svc: AssessmentService,
@@ -93,7 +93,7 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.associateId = this.auth.getUserId();
+    this.userId = this.auth.getUserId();
     this.startTimer();
   }
 
@@ -120,7 +120,7 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
       questionId: q.id,
       selectedOption: this.answers[q.id!] ?? null
     }));
-    const payload = { associateId: this.associateId, answers };
+    const payload = { associateId: this.userId, answers };
     this.svc.submitQuizAttempt(this.quiz.id, payload).subscribe({
       next: (res) => {
         this.result = res;

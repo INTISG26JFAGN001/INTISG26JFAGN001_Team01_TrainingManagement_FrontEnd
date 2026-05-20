@@ -1,7 +1,7 @@
 <div class="dashboard" *ngIf="!loading; else loadingTpl">
 
   <!-- Greeting Banner -->
-  <div class="greeting-banner" [ngClass]="'role-' + role.toLowerCase().replace('role_','')">
+  <div class="greeting-banner" [ngClass]="roleCssClass">
     <div class="greeting-text">
       <h2>{{ getRoleGreeting() }}, {{ username }}!</h2>
       <p class="role-badge-line"><span class="role-badge">{{ getRoleLabel() }}</span></p>

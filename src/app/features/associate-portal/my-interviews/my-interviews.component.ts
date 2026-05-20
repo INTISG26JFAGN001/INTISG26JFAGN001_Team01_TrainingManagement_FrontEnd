@@ -75,7 +75,7 @@ export class MyInterviewsComponent implements OnInit {
         if (!me) return of(null);
         this.associateId = me.id;
 
-        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? me.batchId : null;
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
 
         const batchId$ = directBatchId
           ? of(directBatchId)
@@ -84,7 +84,7 @@ export class MyInterviewsComponent implements OnInit {
               switchMap((raw: any) => {
                 const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
                 const bid = enrollment?.batchId ?? null;
-                return of(bid && bid > 0 ? bid : null);
+                return of(bid && bid > 0 ? Number(bid) : null);
               })
             );
 

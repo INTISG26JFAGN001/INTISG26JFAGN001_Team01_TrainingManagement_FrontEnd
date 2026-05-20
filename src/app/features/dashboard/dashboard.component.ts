@@ -177,7 +177,7 @@ export class DashboardComponent implements OnInit {
       }),
       switchMap((res: any) => {
         if (!res.me || !res.batchId) return of({ ...res, quizResults: [] });
-        const published = (res.quizzes ?? []).filter((q: any) => q.status === 'PUBLISHED');
+        const published = (res.quizzes ?? []).filter((q: any) => q.status === 'PUBLISHED' || q.status === 'CLOSED');
         if (!published.length) return of({ ...res, quizResults: [], quizzesTotal: 0 });
         const resultObs: Observable<any>[] = published.map((q: any) =>
           this.assessmentSvc.getQuizResult(q.id, userId).pipe(catchError(() => of(null)))
@@ -244,5 +244,9 @@ export class DashboardComponent implements OnInit {
       ROLE_TECH_LEAD: 'Tech Lead', ROLE_SCRUM_LEAD: 'Scrum Lead'
     };
     return map[this.role] ?? this.role;
+  }
+
+  get roleCssClass(): string {
+    return 'role-' + this.role.toLowerCase().replace('role_', '');
   }
 }
