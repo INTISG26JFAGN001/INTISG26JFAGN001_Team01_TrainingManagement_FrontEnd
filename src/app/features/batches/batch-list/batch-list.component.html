@@ -58,8 +58,8 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let b">
-            <button mat-icon-button (click)="viewDetail(b.id)" matTooltip="View Details"><mat-icon>visibility</mat-icon></button>
-            <button mat-icon-button color="warn" (click)="delete(b)" *ngIf="isAdmin" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
+            <button mat-icon-button (click)="viewDetail(b.id); $event.stopPropagation()" matTooltip="View Details"><mat-icon>visibility</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="delete(b); $event.stopPropagation()" *ngIf="isAdmin" matTooltip="Delete"><mat-icon>delete</mat-icon></button>
           </td>
         </ng-container>
 
