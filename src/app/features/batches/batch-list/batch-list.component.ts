@@ -23,8 +23,8 @@ export class BatchListComponent implements OnInit {
   statusFilter = '';
   statuses: BatchStatus[] = ['UPCOMING', 'ACTIVE', 'COMPLETED'];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   isTrainer = this.auth.isTrainer();
 
@@ -46,7 +46,7 @@ export class BatchListComponent implements OnInit {
     if (!this.isTrainer) {
       const obs = this.statusFilter ? this.svc.filterByStatus(this.statusFilter as BatchStatus) : this.svc.getAll();
       obs.subscribe({
-        next: (d) => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; },
+        next: (d) => { this.dataSource.data = d; this.loading = false; },
         error: () => this.loading = false
       });
       return;
@@ -67,8 +67,6 @@ export class BatchListComponent implements OnInit {
       next: (batches: Batch[]) => {
         const filtered = this.statusFilter ? batches.filter(b => b.status === this.statusFilter as BatchStatus) : batches;
         this.dataSource.data = filtered;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
         this.loading = false;
       },
       error: () => this.loading = false

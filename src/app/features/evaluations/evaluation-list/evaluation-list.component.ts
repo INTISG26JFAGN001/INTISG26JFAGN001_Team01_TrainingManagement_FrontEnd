@@ -19,8 +19,8 @@ export class EvaluationListComponent implements OnInit {
   canCalculate = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
   isAssociate = this.auth.isAssociate();
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(private svc: ProjectService, private batchSvc: BatchService, private snack: MatSnackBar, private auth: AuthService) {}
 
@@ -29,7 +29,7 @@ export class EvaluationListComponent implements OnInit {
   loadEvaluations(): void {
     if (!this.selectedBatch) return;
     this.loading = true;
-    this.svc.getEvaluationsByBatch(this.selectedBatch).subscribe({ next: d => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; }, error: () => this.loading = false });
+    this.svc.getEvaluationsByBatch(this.selectedBatch).subscribe({ next: d => { this.dataSource.data = d; this.loading = false; }, error: () => this.loading = false });
   }
 
   calculate(): void {

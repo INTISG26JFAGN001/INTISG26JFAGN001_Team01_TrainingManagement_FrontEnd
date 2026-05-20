@@ -19,8 +19,8 @@ export class UserListComponent implements OnInit {
   dataSource = new MatTableDataSource<User>();
   loading = true;
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(private svc: UserService, private dialog: MatDialog, private snack: MatSnackBar) {}
 
@@ -28,7 +28,7 @@ export class UserListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.getAll().subscribe({ next: (data) => { this.dataSource.data = data; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; }, error: () => this.loading = false });
+    this.svc.getAll().subscribe({ next: (data) => { this.dataSource.data = data; this.loading = false; }, error: () => this.loading = false });
   }
 
   applyFilter(e: Event): void { this.dataSource.filter = (e.target as HTMLInputElement).value.trim().toLowerCase(); }

@@ -296,8 +296,41 @@ body {
 /* ── Paginator ── */
 .mat-mdc-paginator             { background: transparent !important; color: var(--text-secondary) !important; }
 .mat-mdc-paginator-range-label { color: var(--text-secondary) !important; }
-.mat-mdc-icon-button           { color: var(--text-secondary) !important; }
 .mat-mdc-paginator-container   { color: var(--text-secondary) !important; }
+
+/* Paginator page-size label & select */
+.mat-mdc-paginator .mat-mdc-select-value,
+.mat-mdc-paginator .mat-mdc-select-arrow { color: var(--text-secondary) !important; }
+
+/* Navigation arrow icons — SVG fill must match theme text color */
+.mat-mdc-paginator-navigation-first .mat-mdc-button-persistent-ripple,
+.mat-mdc-paginator-navigation-previous .mat-mdc-button-persistent-ripple,
+.mat-mdc-paginator-navigation-next .mat-mdc-button-persistent-ripple,
+.mat-mdc-paginator-navigation-last .mat-mdc-button-persistent-ripple { display: none; }
+
+.mat-mdc-paginator-navigation-first svg,
+.mat-mdc-paginator-navigation-previous svg,
+.mat-mdc-paginator-navigation-next svg,
+.mat-mdc-paginator-navigation-last svg { fill: var(--text-secondary) !important; }
+
+/* Disabled nav arrows — dimmer */
+.mat-mdc-paginator-navigation-first[disabled] svg,
+.mat-mdc-paginator-navigation-previous[disabled] svg,
+.mat-mdc-paginator-navigation-next[disabled] svg,
+.mat-mdc-paginator-navigation-last[disabled] svg { fill: var(--text-muted) !important; opacity: 0.45; }
+
+/* General icon-button within paginator (ripple colour) */
+.mat-mdc-paginator .mat-mdc-icon-button { color: var(--text-secondary) !important; }
+
+/* Light-mode: restore dark arrows */
+[data-theme="light"] .mat-mdc-paginator-navigation-first svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-previous svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-next svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-last svg { fill: var(--text-secondary) !important; }
+[data-theme="light"] .mat-mdc-paginator-navigation-first[disabled] svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-previous[disabled] svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-next[disabled] svg,
+[data-theme="light"] .mat-mdc-paginator-navigation-last[disabled] svg { fill: var(--text-muted) !important; }
 
 /* ── Snackbar ── */
 .snack-error .mdc-snackbar__surface { background: var(--danger) !important; }

@@ -18,8 +18,8 @@ export class ProjectListComponent implements OnInit {
   canSubmit = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD', 'ROLE_ASSOCIATE');
   displayedColumns = ['title', 'submissionDate', 'repoUrl', 'actions'];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(private svc: ProjectService, private dialog: MatDialog, private snack: MatSnackBar, private auth: AuthService) {}
 
@@ -28,7 +28,7 @@ export class ProjectListComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.svc.getProjects().subscribe({
-      next: d => { this.dataSource.data = d; this.dataSource.paginator = this.paginator; this.dataSource.sort = this.sort; this.loading = false; },
+      next: d => { this.dataSource.data = d; this.loading = false; },
       error: () => this.loading = false
     });
   }
