@@ -11,6 +11,8 @@ import { BatchService } from '../../../core/services/batch.service';
 import { AssociateService } from '../../../core/services/associate.service';
 import { Schedule, Batch } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ScheduleFormDialog } from './schedule-form-dialog.component';
 
 @Component({
   selector: 'app-schedule-list',
@@ -33,7 +35,7 @@ export class ScheduleListComponent implements OnInit {
     sessionDate: ['', Validators.required]
   });
 
-  displayedColumns = ['sessionDate', 'batch'];
+  displayedColumns = ['sessionDate', 'batch', 'actions'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -41,6 +43,7 @@ export class ScheduleListComponent implements OnInit {
   constructor(
     private svc: ScheduleService,
     private batchSvc: BatchService,
+    private dialog: MatDialog,
     private associateSvc: AssociateService,
     private fb: FormBuilder,
     private snack: MatSnackBar,
@@ -146,6 +149,7 @@ export class ScheduleListComponent implements OnInit {
     if (this.form.invalid || this.saving) return;
     this.saving = true;
     const { batchId, sessionDate } = this.form.value;
+    console.log(batchId+" "+sessionDate);
     this.svc.create({ batchId: batchId!, sessionDate: sessionDate! }).subscribe({
       next: () => {
         this.snack.open('Session scheduled', 'Close', { duration: 3000 });
@@ -161,11 +165,38 @@ export class ScheduleListComponent implements OnInit {
       }
     });
   }
-
+  
   getBatchLabel(id: number): string {
     const b = this.batches.find(b => b.id === id);
     return b?.courseNames?.join(', ') || `Batch #${id}`;
   }
 
   isUpcoming(date: string): boolean { return new Date(date) >= new Date(); }
+
+  openForm(s:Schedule){
+    console.log(s);
+    this.dialog.open(ScheduleFormDialog,{
+      width: '560px',
+      data: s ?? null
+    }).afterClosed().subscribe(
+      conf=>{
+        console.log(conf);
+        if(conf){
+          this.loadSchedules();
+        }
+      }
+    );
+  }
+  deleteForm(s:Schedule){
+    console.log(s);
+
+  }
+  editSchedule(s:Schedule){
+    console.log(s);
+    
+  }
+
+  deleteSchedule(s:Schedule){
+    console.log(s);
+  }
 }
