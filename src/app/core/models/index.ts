@@ -11,74 +11,102 @@ export interface SignupRequest { username: string; password: string; email: stri
 // User
 export interface User { id: number; username: string; email: string; fullName: string; roles: string[]; }
 
-// Technology
-export interface Technology { id: number; name: string; description: string; }
+// Technology — matches TechnologyResponseDTO { id, name }
+export interface Technology { id: number; name: string; }
 
-// Course
-export interface Course { id: number; name: string; description: string; technologyId: number; durationInDays: number; }
+// Course — matches CourseResponseDTO { id, code, title, technologyName, durationDays }
+export interface Course {
+  id: number; code: string; title: string;
+  technologyId?: number; technologyName?: string; durationDays: number;
+}
+export interface CourseRequest { code: string; title: string; technologyId: number; durationDays: number; }
 
-// Stage
-export interface Stage { id: number; name: string; description: string; courseId: number; order: number; }
+// Stage — matches StageResponseDTO { id, name, ord, type, courseTitle } / StageRequestDTO { name, ord, type, courseId }
+export interface Stage { id: number; name: string; ord: number; type: string; courseId?: number; courseTitle?: string; }
 
-// Trainer
-export interface Trainer { id: number; userId: number; fullName: string; email: string; technologies?: Technology[]; }
+// Trainer — matches TrainerDTO { trainerId, userId, technologyIds, technologyNames }
+export interface Trainer {
+  id?: number; trainerId?: number; userId: number;
+  fullName?: string; email?: string;
+  technologyIds?: number[]; technologyNames?: string[];
+  technologies?: Technology[];
+}
 
-// Associate
+// Associate — matches AssociateDTO { id, userId, batchId, xp }; fullName/email may come from enriched response
 export interface Associate {
-  id: number; userId: number; fullName: string; email: string;
-  experienceLevel: string; currentBatchId?: number;
+  id: number; userId: number; fullName?: string; email?: string;
+  xp?: number; experienceLevel?: string; batchId?: number; currentBatchId?: number;
 }
 
-// Batch
-export type BatchStatus = 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+// Batch — matches BatchDetailsDTO { id, trainerId, status, startDate, endDate, courseIds, courseNames }
+export type BatchStatus = 'UPCOMING' | 'ACTIVE' | 'COMPLETED';
 export interface Batch {
-  id: number; name: string; description: string; status: BatchStatus;
-  startDate: string; endDate: string; trainerId: number; trainerName?: string;
-  capacity: number; enrollmentCount?: number;
+  id: number; trainerId: number; status: BatchStatus;
+  startDate: string; endDate: string;
+  courseIds?: number[]; courseNames?: string[];
 }
-export interface BatchDetails extends Batch { courses: Course[]; associates: Associate[]; }
+export interface BatchDetails extends Batch { associates: Associate[]; }
 
-// Enrollment
-export type EnrollmentStatus = 'ACTIVE' | 'COMPLETED' | 'DROPPED' | 'PENDING';
+// Enrollment — matches EnrollmentDTO { enrollmentId, batchId, associateId, status, joinDate }
+// Backend EnrollmentStatus enum: ENROLLED | ACTIVE | COMPLETED  (no PENDING, no DROPPED)
+export type EnrollmentStatus = 'ENROLLED' | 'ACTIVE' | 'COMPLETED';
 export interface Enrollment {
-  id: number; associateId: number; batchId: number; status: EnrollmentStatus;
-  enrollmentDate: string; associateName?: string; batchName?: string;
+  id?: number; enrollmentId?: number;
+  associateId: number; batchId: number; status: EnrollmentStatus;
+  joinDate?: string; enrollmentDate?: string;
+  associateName?: string; batchName?: string;
 }
 
-// Schedule
+// Schedule — matches ScheduleDTO { scheduleId, batchId, sessionDate }
 export interface Schedule {
-  id: number; batchId: number; sessionDate: string; topic: string; batchName?: string;
+  id?: number; scheduleId?: number; batchId: number; sessionDate: string;
 }
 
 // Assessment
 export type AssessmentType = 'QUIZ' | 'INTERVIEW';
-export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
+export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'ARCHIVED';
 export interface Assessment {
   id: number; title: string; type: AssessmentType; status: AssessmentStatus;
-  batchId: number; batchName?: string; createdAt: string;
+  batchId: number; batchName?: string; createdAt: string; dueDate?: string;
+  interviewCategory?: string;
 }
 
-export interface QuizQuestion { id: number; question: string; optionA: string; optionB: string; optionC: string; optionD: string; correctAnswer: string; }
-export interface Quiz extends Assessment { questions: QuizQuestion[]; durationMinutes: number; passingScore: number; }
-export interface Interview extends Assessment { category: string; interviewDate: string; }
-export interface Rubric { id: number; assessmentId: number; criteria: string; weight: number; description: string; }
+// Matches QuizQuestionResponse { id, questionText, optionA-D, marks }
+export interface QuizQuestion {
+  id?: number;
+  questionText: string;
+  optionA: string; optionB: string; optionC: string; optionD: string;
+  correctOption?: 'A' | 'B' | 'C' | 'D';
+  marks?: number;
+}
+// Matches QuizDetailResponse; passingMarks (NOT passingScore)
+export interface Quiz extends Assessment { questions: QuizQuestion[]; durationMinutes?: number; passingMarks?: number; passingScore?: number; dueDate?: string; maxScore?: number; }
+// Matches InterviewDetailResponse
+export type InterviewCategory = 'INTERIM' | 'FINAL';
+export interface Interview extends Assessment {
+  interviewCategory?: InterviewCategory;
+  scheduledDateTime?: string;
+  dueDate?: string;
+  evaluatorRole?: string;
+  maxScore?: number;
+  rubrics?: Rubric[];
+}
+export interface Rubric { id: number; assessmentId: number; criteria: string; weight: number; }
 
-// Project
+// Project — matches ProjectResponseDTO { id, batchId, title, repoUrl, submissionDate }
 export interface Project {
-  id: number; title: string; description: string; batchId: number; associateId: number;
-  submissionDate: string; repositoryUrl: string; associateName?: string;
+  id: number; batchId: number; title: string; repoUrl: string; submissionDate?: string;
 }
 
-// Review
+// Review — matches ReviewResponseDTO { reviewerId, score, comments, type }
 export interface Review {
-  id: number; projectId: number; reviewerId: number; reviewerName?: string;
-  score: number; comments: string; reviewDate: string;
+  reviewerId: number; score: number; comments: string; type: string;
 }
 
-// Evaluation
+// Evaluation — matches EvaluationResponseDTO { id, batchId, associateId, interimScore, finalScore, overallStatus }
 export interface Evaluation {
-  id: number; batchId: number; associateId: number; associateName?: string;
-  totalScore: number; quizScore: number; interviewScore: number; projectScore: number;
+  id: number; batchId: number; associateId: number;
+  interimScore: number; finalScore: number; overallStatus: string;
 }
 
 // Pagination

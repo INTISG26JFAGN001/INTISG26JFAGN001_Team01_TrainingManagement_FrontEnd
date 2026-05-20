@@ -22,6 +22,7 @@ export class ProjectService {
 
   getEvaluationsByBatch(batchId: number): Observable<Evaluation[]> { return this.http.get<Evaluation[]>(`${this.base}/evaluations/batch/${batchId}`); }
   calculateEvaluations(batchId: number): Observable<any> { return this.http.post(`${this.base}/evaluations/batch/${batchId}/calculate`, {}); }
+  submitEvaluation(p: Partial<Evaluation>): Observable<Evaluation> { return this.http.post<Evaluation>(`${this.base}/evaluations/submitEvaluation`, p); }
   getAssociateEvaluation(batchId: number, associateId: number): Observable<Evaluation> {
     return this.http.get<Evaluation>(`${this.base}/evaluations/batch/${batchId}/associate/${associateId}`);
   }

@@ -1,0 +1,62 @@
+.page-container { padding: 24px; max-width: 1200px; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.header-info h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+.header-info p { margin: 0; color: #546e7a; font-size: 13px; }
+
+.form-card { margin-bottom: 20px; border-radius: 12px; }
+mat-card-title { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+
+.enroll-form { display: flex; flex-wrap: wrap; gap: 12px; padding-top: 8px; }
+.field { flex: 1; min-width: 240px; }
+.form-actions { display: flex; gap: 8px; align-items: center; padding-top: 4px; }
+
+/* Autocomplete option rows */
+.option-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 0; min-width: 0;
+}
+.option-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(0,198,255,0.12); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.option-id {
+  display: inline-block; padding: 1px 7px; border-radius: 5px;
+  font-size: 11px; font-weight: 700; font-family: monospace;
+  background: rgba(0,198,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,198,255,0.2); flex-shrink: 0;
+}
+.option-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.option-hint { font-size: 11px; color: #78909c; margin-left: auto; flex-shrink: 0; white-space: nowrap; }
+
+/* Mini status hint in batch options */
+.batch-status-hint {
+  padding: 1px 6px; border-radius: 10px; font-size: 10px; font-weight: 600;
+}
+
+.content-card { border-radius: 12px; }
+.table-toolbar { padding: 16px 16px 0; }
+.search-field { width: 320px; }
+.table-container { overflow-x: auto; }
+.data-table { width: 100%; }
+
+.cell-name { display: flex; align-items: center; gap: 8px; }
+.avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: #e8eaf6; color: #3f51b5; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; flex-shrink: 0; }
+
+.status-select {
+  /* Same pill shape and font as .status-chip */
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  border: none; outline: none; cursor: pointer;
+  /* Let the browser draw its native arrow so selection feedback is clear */
+  appearance: auto; -webkit-appearance: auto;
+}
+
+.status-chip { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-enrolled  { background: #fff8e1; color: #f57f17; }
+.status-active    { background: #e8f5e9; color: #2e7d32; }
+.status-completed { background: #e3f2fd; color: #1565c0; }
+
+.no-data { text-align: center; padding: 32px; color: #90a4ae; font-size: 14px; }
+.loading-center { display: flex; justify-content: center; padding: 48px; }

@@ -1,0 +1,189 @@
+<div class="eval-page">
+
+  <!-- ── Selection ──────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <mat-icon>tune</mat-icon>
+      <span>Select Batch &amp; Interview</span>
+    </div>
+    <div class="selection-grid">
+
+      <div class="field-group">
+        <label class="field-label">Batch</label>
+        <input type="text"
+               [ngModel]="batchSearch"
+               (ngModelChange)="onBatchChange($event)"
+               list="batch-list-eval"
+               class="field-input" placeholder="Search batch…" autocomplete="off" />
+        <datalist id="batch-list-eval">
+          <option *ngFor="let b of batches"
+                  [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
+          </option>
+        </datalist>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Interview</label>
+        <select [ngModel]="selectedInterview?.id ?? null"
+                (ngModelChange)="onInterviewSelect($event)"
+                class="field-input"
+                [disabled]="!activeBatchId || loadingInterviews">
+          <option [ngValue]="null">
+            {{ loadingInterviews ? 'Loading…' : (activeBatchId ? '— Select interview —' : '— Select batch first —') }}
+          </option>
+          <option *ngFor="let iv of interviews" [ngValue]="iv.id">
+            {{ iv.title }} ({{ iv.interviewCategory || 'N/A' }})
+          </option>
+        </select>
+        <span class="hint warn" *ngIf="activeBatchId && !loadingInterviews && interviews.length === 0">
+          No published interviews for this batch
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Loading associates ──────────────────────────────────────────── -->
+  <div class="center-spinner" *ngIf="loadingAssociates">
+    <mat-spinner diameter="30"></mat-spinner>
+    <span>Loading associates…</span>
+  </div>
+
+  <!-- ── Associate list ─────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loadingAssociates && rows.length > 0">
+
+    <!-- Pending -->
+    <div class="card" *ngIf="pendingRows.length > 0">
+      <div class="card-header">
+        <mat-icon>pending_actions</mat-icon>
+        <span>Pending Evaluation ({{ pendingRows.length }})</span>
+      </div>
+      <div class="assoc-list">
+        <div class="assoc-row" *ngFor="let row of pendingRows"
+             [class.evaluating]="evaluatingRow === row">
+          <div class="assoc-info">
+            <div class="avatar">{{ getInitial(row.associate) }}</div>
+            <span class="assoc-name">{{ getAssociateName(row.associate) }}</span>
+            <span class="status-pill pending">Pending</span>
+          </div>
+          <button mat-flat-button color="primary"
+                  *ngIf="evaluatingRow !== row"
+                  (click)="startEvaluate(row)">
+            <mat-icon>star_rate</mat-icon> Evaluate
+          </button>
+          <button mat-stroked-button
+                  *ngIf="evaluatingRow === row"
+                  (click)="cancelEvaluate()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="card" *ngIf="doneRows.length > 0">
+      <div class="card-header">
+        <mat-icon>check_circle</mat-icon>
+        <span>Completed ({{ doneRows.length }})</span>
+      </div>
+      <div class="assoc-list">
+        <div class="assoc-row done" *ngFor="let row of doneRows">
+          <div class="assoc-info">
+            <div class="avatar done">{{ getInitial(row.associate) }}</div>
+            <span class="assoc-name">{{ getAssociateName(row.associate) }}</span>
+            <span class="status-pill" [ngClass]="row.evaluation!.resultStatus === 'PASS' ? 'pass' : 'fail'">
+              {{ row.evaluation!.resultStatus }}
+            </span>
+          </div>
+          <span class="score-text">
+            {{ row.evaluation!.totalScore }} / {{ row.evaluation!.maxScore }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- No associates -->
+  <div class="empty-state" *ngIf="!loadingAssociates && selectedInterview && rows.length === 0">
+    <mat-icon>group_off</mat-icon>
+    <p>No enrolled associates found for this batch</p>
+  </div>
+
+  <!-- ── Evaluation Form ────────────────────────────────────────────── -->
+  <div class="card eval-form-card" id="eval-form" *ngIf="evaluatingRow">
+    <div class="card-header">
+      <mat-icon>star_rate</mat-icon>
+      <span>Evaluate — {{ getAssociateName(evaluatingRow.associate) }}</span>
+      <div class="score-summary" [ngClass]="passPct >= 60 ? 'pass' : (maxScore > 0 ? 'fail' : '')">
+        <strong>{{ totalScore }}</strong><span> / {{ maxScore }}</span>
+        <span class="pct">&nbsp;({{ passPct | number:'1.0-0' }}%)</span>
+        <span class="threshold">&nbsp;— pass ≥60%</span>
+      </div>
+    </div>
+
+    <div class="center-spinner" *ngIf="loadingRubrics">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Loading rubrics…</span>
+    </div>
+
+    <form [formGroup]="form" *ngIf="!loadingRubrics" (ngSubmit)="submit()">
+
+      <div class="form-body">
+        <!-- No rubrics -->
+        <div class="no-rubrics" *ngIf="rubrics.length === 0">
+          <mat-icon>info</mat-icon>
+          No rubrics defined — add rubrics to this interview first.
+        </div>
+
+        <!-- Rubric rows -->
+        <div formArrayName="rubricScores">
+          <div class="rubric-row"
+               *ngFor="let ctrl of rubricScores.controls; let i = index"
+               [formGroupName]="i">
+            <div class="rubric-meta">
+              <span class="criteria">{{ rubrics[i].criteria }}</span>
+              <span class="weight-badge">max {{ rubrics[i].weight }}</span>
+            </div>
+            <div class="rubric-inputs">
+              <mat-form-field appearance="outline" class="score-field">
+                <mat-label>Score</mat-label>
+                <input matInput type="number" formControlName="scoreAwarded"
+                       min="0" [attr.max]="rubrics[i].weight" />
+                <mat-hint>0–{{ rubrics[i].weight }}</mat-hint>
+                <mat-error>0–{{ rubrics[i].weight }}</mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="remarks-field">
+                <mat-label>Remarks (optional)</mat-label>
+                <input matInput formControlName="remarks" placeholder="Brief note…" />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overall remarks -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Overall Remarks</mat-label>
+          <textarea matInput formControlName="evaluatorRemarks" rows="2"
+                    placeholder="Summary comments…"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="cancelEvaluate()">Cancel</button>
+        <button mat-flat-button color="primary" type="submit"
+                [disabled]="form.invalid || saving">
+          <mat-icon>{{ saving ? 'hourglass_empty' : 'send' }}</mat-icon>
+          {{ saving ? 'Submitting…' : 'Submit Evaluation' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Empty state: nothing selected -->
+  <div class="empty-state" *ngIf="!activeBatchId">
+    <mat-icon>manage_search</mat-icon>
+    <p>Select a batch and an interview to see associates</p>
+  </div>
+
+</div>

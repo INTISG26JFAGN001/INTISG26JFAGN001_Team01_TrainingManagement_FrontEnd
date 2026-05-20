@@ -1,0 +1,17 @@
+<div class="helpdesk-container">
+  <h1 class="down-title">Sorry, we're temporarily down :(</h1>
+
+  <h2 class="faq-title">FAQ's</h2>
+
+  <div class="faq-list">
+    <div class="faq-item" *ngFor="let faq of faqs">
+      <div class="faq-header" (click)="toggle(faq)">
+        <span class="faq-question">{{ faq.question }}</span>
+        <mat-icon class="faq-icon">{{ faq.open ? 'remove' : 'add' }}</mat-icon>
+      </div>
+      <div class="faq-answer" [class.open]="faq.open">
+        <p>{{ faq.answer }}</p>
+      </div>
+    </div>
+  </div>
+</div>

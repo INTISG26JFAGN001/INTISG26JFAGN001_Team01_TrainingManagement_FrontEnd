@@ -53,7 +53,9 @@
     </ng-container>
 
     <!-- Help Desk (always visible) -->
-    <div class="nav-item nav-help">
+    <div class="nav-item nav-help"
+         [class.active]="isActive('/helpdesk')"
+         (click)="navigate('/helpdesk')">
       <mat-icon class="nav-icon">help_outline</mat-icon>
       <span class="nav-label">Help Desk</span>
     </div>

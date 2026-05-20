@@ -1,0 +1,107 @@
+<div class="list-page">
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-fields">
+      <div class="filter-field">
+        <label>Batch</label>
+        <input type="text"
+               [ngModel]="batchSearch"
+               (ngModelChange)="batchSearch = $event; onBatchInput()"
+               list="batch-list-final-eval"
+               class="field-input" placeholder="Search batch…" autocomplete="off" />
+        <datalist id="batch-list-final-eval">
+          <option *ngFor="let b of batches"
+                  [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
+          </option>
+        </datalist>
+      </div>
+    </div>
+    <div class="filter-actions" *ngIf="batchId">
+      <button class="btn-add" (click)="calculate()" [disabled]="calculating">
+        <mat-icon>calculate</mat-icon>
+        {{ calculating ? 'Calculating…' : 'Calculate' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty state: no batch selected -->
+  <div class="empty-state" *ngIf="!batchSearch && !loading">
+    <mat-icon>bar_chart</mat-icon>
+    <p>Select a batch to view final evaluations</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-center" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card" *ngIf="batchId && !loading">
+    <table mat-table [dataSource]="dataSource" matSort class="data-table">
+
+      <!-- Associate Column -->
+      <ng-container matColumnDef="associate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Associate</th>
+        <td mat-cell *matCellDef="let eval">
+          <div class="cell-with-icon">
+            <div class="avatar">{{ getAssociateInitial(eval.associateId) }}</div>
+            <span>{{ getAssociateName(eval.associateId) }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Interim Score Column -->
+      <ng-container matColumnDef="interimScore">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Interim Score</th>
+        <td mat-cell *matCellDef="let eval">
+          <div class="score-cell">
+            <span class="score-bar-wrap">
+              <span class="score-bar"
+                    [style.width.px]="60 * (eval.interimScore / 100)"
+                    [style.background]="getScoreBarColor(eval.interimScore)">
+              </span>
+            </span>
+            <span class="score-text">{{ eval.interimScore | number:'1.1-1' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Final Score Column -->
+      <ng-container matColumnDef="finalScore">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Final Score</th>
+        <td mat-cell *matCellDef="let eval">
+          <div class="score-cell">
+            <span class="score-bar-wrap">
+              <span class="score-bar"
+                    [style.width.px]="60 * (eval.finalScore / 100)"
+                    [style.background]="getScoreBarColor(eval.finalScore)">
+              </span>
+            </span>
+            <span class="score-text">{{ eval.finalScore | number:'1.1-1' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let eval">
+          <span class="status-pill" [ngClass]="getStatusClass(eval.overallStatus)">
+            {{ eval.overallStatus || 'PENDING' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td [attr.colspan]="displayedColumns.length" class="no-data">
+          No evaluations yet. Click 'Calculate' to generate them.
+        </td>
+      </tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+  </div>
+
+</div>

@@ -1,0 +1,86 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>list_alt</mat-icon>
+  Rubrics — {{ data.title }}
+</h2>
+
+<mat-dialog-content class="dialog-body">
+
+  <!-- Weight Progress -->
+  <div class="weight-bar-wrapper">
+    <div class="weight-labels">
+      <span>Total Weight</span>
+      <span class="weight-val" [class.weight-ok]="weightOk" [class.weight-over]="totalWeight > 100">
+        {{ totalWeight }} / 100
+      </span>
+    </div>
+    <mat-progress-bar mode="determinate" [value]="totalWeight"
+      [color]="totalWeight > 100 ? 'warn' : weightOk ? 'accent' : 'primary'">
+    </mat-progress-bar>
+    <span class="weight-hint" *ngIf="!weightOk && totalWeight < 100">{{ weightLeft }} more needed to publish</span>
+    <span class="weight-hint ok" *ngIf="weightOk">Ready to publish!</span>
+    <span class="weight-hint warn" *ngIf="totalWeight > 100">Exceeds 100 — remove or adjust rubrics</span>
+  </div>
+
+  <!-- Existing Rubrics -->
+  <div *ngIf="loading" class="loading-center"><mat-spinner diameter="32"></mat-spinner></div>
+
+  <div *ngIf="!loading">
+    <div *ngIf="rubrics.length === 0" class="no-rubrics">
+      <mat-icon>format_list_bulleted</mat-icon>
+      <p>No rubrics yet. Add criteria below.</p>
+    </div>
+
+    <div class="rubric-list" *ngIf="rubrics.length > 0">
+      <div class="rubric-item" *ngFor="let r of rubrics">
+        <div class="rubric-info">
+          <span class="rubric-criteria">{{ r.criteria }}</span>
+        </div>
+        <div class="rubric-right">
+          <span class="weight-chip">{{ r.weight }}%</span>
+          <button mat-icon-button color="warn" (click)="deleteRubric(r)" [disabled]="isPublished"
+                  matTooltip="{{ isPublished ? 'Cannot modify published interview' : 'Remove rubric' }}">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Rubric Form -->
+    <div *ngIf="!isPublished">
+      <p class="section-label">Add Rubric</p>
+      <form [formGroup]="form" class="add-rubric-form">
+        <mat-form-field appearance="outline" class="criteria-field">
+          <mat-label>Criteria</mat-label>
+          <input matInput formControlName="criteria" placeholder="e.g. Problem Solving"/>
+          <mat-error>Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="weight-field">
+          <mat-label>Weight (%)</mat-label>
+          <input matInput type="number" formControlName="weight" min="1" max="100"
+                 [placeholder]="weightLeft + ' left'"/>
+          <mat-error>1–100 required</mat-error>
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="button" (click)="addRubric()"
+                [disabled]="form.invalid || saving || totalWeight >= 100">
+          <mat-icon>add</mat-icon> Add
+        </button>
+      </form>
+    </div>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button [mat-dialog-close]="false">Close</button>
+  <button mat-flat-button color="accent" (click)="publish()"
+          [disabled]="!weightOk || publishing || isPublished"
+          *ngIf="!isPublished">
+    <mat-icon>publish</mat-icon>
+    {{ publishing ? 'Publishing...' : 'Publish Interview' }}
+  </button>
+  <span class="published-badge" *ngIf="isPublished">
+    <mat-icon>check_circle</mat-icon> Published
+  </span>
+</mat-dialog-actions>

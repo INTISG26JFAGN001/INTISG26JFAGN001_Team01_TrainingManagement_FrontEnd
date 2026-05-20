@@ -1,0 +1,134 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>record_voice_over</mat-icon>
+  Interview Results
+  <span class="dialog-subtitle">— {{ data.title }}</span>
+</h2>
+
+<mat-dialog-content class="dialog-content">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="center-spinner">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="!loading && results.length === 0" class="empty-state">
+    <mat-icon>assignment_late</mat-icon>
+    <p>No evaluations found for this interview yet.</p>
+  </div>
+
+  <!-- Results -->
+  <ng-container *ngIf="!loading && results.length > 0">
+
+    <!-- Summary bar -->
+    <div class="summary-bar">
+      <span class="summary-chip">
+        Total&nbsp;<strong>{{ results.length }}</strong>
+      </span>
+      <span class="summary-chip pass">
+        <mat-icon>check_circle</mat-icon>&nbsp;Passed&nbsp;<strong>{{ passCount }}</strong>
+      </span>
+      <span class="summary-chip fail">
+        <mat-icon>cancel</mat-icon>&nbsp;Failed&nbsp;<strong>{{ results.length - passCount }}</strong>
+      </span>
+    </div>
+
+    <!-- Accordion — one panel per evaluation -->
+    <mat-accordion class="results-accordion" [multi]="false">
+      <mat-expansion-panel *ngFor="let r of results" class="result-panel"
+                           [ngClass]="r.resultStatus === 'PASS' ? 'panel-pass' : 'panel-fail'">
+
+        <!-- Panel header (always visible, click to expand) -->
+        <mat-expansion-panel-header class="panel-header">
+          <mat-panel-title class="panel-title">
+            <div class="avatar" [ngClass]="r.resultStatus === 'PASS' ? 'av-pass' : 'av-fail'">
+              {{ getInitial(r.associateId) }}
+            </div>
+            <div class="assoc-meta">
+              <span class="assoc-name">{{ getName(r.associateId) }}</span>
+              <span class="assoc-role" *ngIf="r.evaluatorRole">{{ r.evaluatorRole }}</span>
+            </div>
+          </mat-panel-title>
+
+          <mat-panel-description class="panel-desc">
+            <span class="score-text">{{ r.totalScore }}&thinsp;/&thinsp;{{ r.maxScore }}</span>
+            <span class="pct-text">({{ pct(r) }}%)</span>
+            <span class="result-pill"
+                  [style.background]="r.resultStatus === 'PASS' ? 'rgba(52,211,153,0.15)' : 'rgba(239,68,68,0.12)'"
+                  [style.color]="r.resultStatus === 'PASS' ? '#34d399' : '#ef4444'">
+              {{ r.resultStatus }}
+            </span>
+            <span class="eval-date">{{ r.evaluatedAt | date:'dd MMM yyyy' }}</span>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <!-- Expanded body — rubric breakdown -->
+        <div class="panel-body">
+
+          <!-- No rubric scores -->
+          <div *ngIf="!r.rubricScores || r.rubricScores.length === 0" class="no-rubrics">
+            <mat-icon>info</mat-icon> No rubric scores recorded.
+          </div>
+
+          <!-- Rubric table -->
+          <table class="rubric-table" *ngIf="r.rubricScores && r.rubricScores.length > 0">
+            <thead>
+              <tr>
+                <th>Criteria</th>
+                <th>Score</th>
+                <th>Max</th>
+                <th>%</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let rs of r.rubricScores">
+                <td class="td-criteria">{{ rs.criteria }}</td>
+                <td class="td-score">
+                  <span class="score-badge"
+                        [style.background]="scoreBg(rs.scoreAwarded, rs.weight)"
+                        [style.color]="scoreColor(rs.scoreAwarded, rs.weight)">
+                    {{ rs.scoreAwarded }}
+                  </span>
+                </td>
+                <td class="td-max">{{ rs.weight }}</td>
+                <td class="td-pct">{{ rubricPct(rs.scoreAwarded, rs.weight) }}%</td>
+                <td class="td-remarks">{{ rs.remarks || '—' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="totals-row">
+                <td colspan="2"><strong>Total &nbsp; {{ r.totalScore }} / {{ r.maxScore }}</strong></td>
+                <td class="td-pct"><strong>{{ pct(r) }}%</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- Score bar -->
+          <div class="score-bar-track" *ngIf="r.rubricScores && r.rubricScores.length > 0">
+            <div class="score-bar-fill"
+                 [style.width.%]="pct(r)"
+                 [style.background]="pct(r) >= 60 ? '#34d399' : '#ef4444'">
+            </div>
+          </div>
+
+          <!-- Overall evaluator remarks — shown below table -->
+          <div class="overall-remarks" *ngIf="r.evaluatorRemarks">
+            <div class="remarks-label">
+              <mat-icon>chat_bubble_outline</mat-icon>
+              <span>Evaluator Remarks</span>
+            </div>
+            <p class="remarks-text">{{ r.evaluatorRemarks }}</p>
+          </div>
+
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

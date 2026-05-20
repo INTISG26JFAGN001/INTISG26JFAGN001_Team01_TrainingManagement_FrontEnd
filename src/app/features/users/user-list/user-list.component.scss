@@ -1,3 +1,4 @@
+.id-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: monospace; background: rgba(0,198,255,0.08); color: var(--accent); border: 1px solid rgba(0,198,255,0.2); }
 .user-cell { display: flex; align-items: center; gap: 8px; }
 .avatar-sm {
   width: 32px; height: 32px; border-radius: 50%;

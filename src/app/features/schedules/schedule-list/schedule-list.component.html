@@ -1,0 +1,107 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-info">
+      <h2>Training Schedules</h2>
+      <p>{{ isAssociate ? 'Your upcoming training sessions' : 'View and manage batch training sessions' }}</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="showForm = !showForm" *ngIf="canManage">
+      <mat-icon>{{ showForm ? 'close' : 'add' }}</mat-icon> {{ showForm ? 'Cancel' : 'Add Session' }}
+    </button>
+  </div>
+
+  <!-- Add Session Form -->
+  <mat-card class="form-card" *ngIf="showForm && canManage">
+    <mat-card-header>
+      <mat-card-title><mat-icon>event</mat-icon> Schedule New Session</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" class="add-form">
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Batch</mat-label>
+          <mat-select formControlName="batchId">
+            <mat-option *ngFor="let b of batches" [value]="b.id">
+              {{ getBatchLabel(b.id) }} — {{ b.status }}
+            </mat-option>
+          </mat-select>
+          <mat-error>Batch is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Session Date</mat-label>
+          <input matInput type="datetime-local" formControlName="sessionDate"/>
+          <mat-error>Session date is required</mat-error>
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" (click)="addSchedule()" [disabled]="form.invalid || saving" class="submit-btn">
+          {{ saving ? 'Saving...' : 'Add Session' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Batch filter (staff/admin only) -->
+  <mat-card class="content-card">
+    <div class="table-toolbar" *ngIf="!isAssociate">
+      <mat-form-field appearance="outline" class="batch-select">
+        <mat-label>Filter by Batch</mat-label>
+        <mat-select [(ngModel)]="selectedBatchId" (ngModelChange)="onBatchChange()">
+          <mat-option [value]="null">All Batches</mat-option>
+          <mat-option *ngFor="let b of batches" [value]="b.id">
+            {{ getBatchLabel(b.id) }} — {{ b.status }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Associate: no batch enrolled message -->
+    <div class="no-data" *ngIf="isAssociate && !selectedBatchId && !loading">
+      <mat-icon>event_busy</mat-icon>
+      <p>You are not currently enrolled in an active batch.</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+
+    <div class="table-container" *ngIf="!loading && (selectedBatchId || !isAssociate)">
+
+      <div class="batch-label" *ngIf="selectedBatchId">
+        <mat-icon>groups</mat-icon>
+        <span>{{ getBatchLabel(selectedBatchId) }}</span>
+      </div>
+      <div class="batch-label" *ngIf="!selectedBatchId && !isAssociate">
+        <mat-icon>calendar_month</mat-icon>
+        <span>All Batches</span>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+
+        <ng-container matColumnDef="sessionDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Session Date &amp; Time</th>
+          <td mat-cell *matCellDef="let s">
+            <div class="date-cell">
+              <span class="date-main">{{ s.sessionDate | date:'EEEE, MMM d, y' }}</span>
+              <span class="date-time">{{ s.sessionDate | date:'h:mm a' }}</span>
+              <span class="upcoming-badge" *ngIf="isUpcoming(s.sessionDate)">Upcoming</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="batch">
+          <th mat-header-cell *matHeaderCellDef>Batch</th>
+          <td mat-cell *matCellDef="let s">{{ getBatchLabel(s.batchId) }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [class.upcoming-row]="isUpcoming(row.sessionDate)"></tr>
+        <tr class="mat-row" *matNoDataRow>
+          <td [attr.colspan]="displayedColumns.length" class="no-data">
+            {{ selectedBatchId ? 'No sessions scheduled for this batch.' : 'No sessions scheduled yet.' }}
+          </td>
+        </tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-card>
+
+</div>

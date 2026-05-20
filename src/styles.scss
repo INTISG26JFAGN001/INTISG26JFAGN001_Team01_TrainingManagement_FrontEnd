@@ -227,10 +227,28 @@ body {
 .header-actions { display: flex; align-items: center; gap: 12px; }
 .header-info { display: flex; flex-direction: column; }
 
-/* ── Angular Material Dark Overrides ── */
+/* ── Angular Material Overrides (theme-aware) ── */
+/* The prebuilt indigo-pink.css uses a light palette (black text). We override every
+   component that hard-codes a foreground colour so our CSS variables take effect. */
+
 .mat-mdc-form-field-subscript-wrapper { margin-top: -4px; }
 
-/* Form fields dark */
+/* ── Cards ── */
+.mat-mdc-card {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.mat-mdc-card-title,
+.mdc-card__title          { color: var(--text-primary)   !important; }
+.mat-mdc-card-subtitle,
+.mdc-card__subtitle       { color: var(--text-secondary) !important; }
+.mat-mdc-card-content,
+.mdc-card__primary-action { color: var(--text-primary)   !important; }
+.mat-card-header-text     { color: var(--text-primary)   !important; }
+
+/* ── Form fields ── */
 .mat-mdc-text-field-wrapper {
   background: var(--bg-input) !important;
   border-radius: var(--radius-sm) !important;
@@ -241,56 +259,137 @@ body {
 .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
   border-color: var(--border-active) !important;
 }
-.mat-mdc-form-field input { color: var(--text-primary) !important; }
-.mat-mdc-form-field-label, .mdc-floating-label { color: var(--text-secondary) !important; }
-.mat-mdc-select-value { color: var(--text-primary) !important; }
-.mat-mdc-select-arrow { color: var(--text-secondary) !important; }
+.mat-mdc-form-field input,
+.mat-mdc-form-field textarea   { color: var(--text-primary)   !important; }
+.mat-mdc-form-field-label,
+.mdc-floating-label,
+.mat-mdc-floating-label        { color: var(--text-secondary) !important; }
+.mat-mdc-select-value          { color: var(--text-primary)   !important; }
+.mat-mdc-select-arrow          { color: var(--text-secondary) !important; }
+.mdc-text-field__input         { color: var(--text-primary)   !important; }
+.mat-mdc-form-field-hint,
+.mat-mdc-form-field-error      { color: var(--text-secondary) !important; }
 
-/* Paginator dark */
-.mat-mdc-paginator { background: transparent !important; color: var(--text-secondary) !important; }
+/* ── Select dropdown panel ── */
+.mat-mdc-select-panel          { background: var(--bg-card) !important; border: 1px solid var(--border) !important; }
+.mat-mdc-option                { color: var(--text-primary) !important; background: transparent !important; }
+.mat-mdc-option:hover:not(.mdc-list-item--disabled) { background: rgba(255,255,255,0.06) !important; }
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: var(--accent-glow) !important;
+  .mdc-list-item__primary-text { color: var(--accent) !important; }
+}
+.mdc-list-item__primary-text   { color: var(--text-primary) !important; }
+
+/* ── Autocomplete ── */
+.mat-mdc-autocomplete-panel { background: var(--bg-card) !important; border: 1px solid var(--border) !important; }
+
+/* ── Table ── */
+.mat-mdc-table                 { background: transparent !important; }
+.mat-mdc-header-row            { background: rgba(255,255,255,0.03) !important; }
+.mat-mdc-header-cell,
+.mdc-data-table__header-cell   { color: var(--text-secondary) !important; border-bottom: 1px solid var(--border) !important; }
+.mat-mdc-row:hover             { background: rgba(255,255,255,0.025) !important; }
+.mat-mdc-cell,
+.mdc-data-table__cell          { color: var(--text-primary) !important; border-bottom: 1px solid var(--border) !important; }
+.mat-mdc-no-data-row           { color: var(--text-secondary) !important; }
+
+/* ── Paginator ── */
+.mat-mdc-paginator             { background: transparent !important; color: var(--text-secondary) !important; }
 .mat-mdc-paginator-range-label { color: var(--text-secondary) !important; }
-.mat-mdc-icon-button { color: var(--text-secondary) !important; }
+.mat-mdc-icon-button           { color: var(--text-secondary) !important; }
+.mat-mdc-paginator-container   { color: var(--text-secondary) !important; }
 
-/* Snackbar */
+/* ── Snackbar ── */
 .snack-error .mdc-snackbar__surface { background: var(--danger) !important; }
 
-/* Menu dark */
+/* ── Menu ── */
 .mat-mdc-menu-panel { background: var(--bg-card) !important; border: 1px solid var(--border) !important; }
-.mat-mdc-menu-item { color: var(--text-primary) !important; }
-.mat-mdc-menu-item:hover { background: rgba(255,255,255,0.05) !important; }
-.mat-divider { border-color: var(--border) !important; }
+.mat-mdc-menu-item  { color: var(--text-primary) !important; }
+.mat-mdc-menu-item .mat-icon   { color: var(--text-secondary) !important; }
+.mat-mdc-menu-item:hover       { background: rgba(255,255,255,0.05) !important; }
+.mat-divider                   { border-color: var(--border) !important; }
 
-/* Chip */
+/* ── Chip ── */
 mat-chip-listbox { display: flex; flex-wrap: wrap; gap: 4px; }
-.mat-mdc-chip { background: var(--bg-input) !important; color: var(--text-primary) !important; }
+.mat-mdc-chip    { background: var(--bg-input) !important; color: var(--text-primary) !important; }
+.mat-mdc-chip .mdc-evolution-chip__text-label { color: var(--text-primary) !important; }
 
-/* Dialog dark */
+/* ── Dialog ── */
 .mat-mdc-dialog-container .mdc-dialog__surface {
   background: var(--bg-card) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
 }
-.mat-mdc-dialog-title { color: var(--text-primary) !important; }
+.mat-mdc-dialog-title         { color: var(--text-primary)   !important; }
+.mat-mdc-dialog-content       { color: var(--text-primary)   !important; }
+.mdc-dialog__title,
+.mdc-dialog__content          { color: var(--text-primary)   !important; }
 
-/* Sidenav dark */
-.mat-drawer { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border) !important; }
-.mat-drawer-container { background: var(--bg-root) !important; }
-.mat-drawer-content { background: var(--bg-root) !important; }
+/* ── Sidenav ── */
+.mat-drawer         { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border) !important; }
+.mat-drawer-container { background: var(--bg-root)    !important; }
+.mat-drawer-content   { background: var(--bg-root)    !important; }
 
-/* Tabs */
-.mat-mdc-tab { color: var(--text-secondary) !important; }
+/* ── Tabs ── */
+.mat-mdc-tab .mdc-tab__text-label         { color: var(--text-secondary) !important; }
 .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: var(--accent) !important; }
 .mat-mdc-tab-header { background: var(--bg-card) !important; border-bottom: 1px solid var(--border) !important; }
 
-/* Progress bar */
+/* ── List ── */
+.mat-mdc-list-item,
+.mdc-list-item       { color: var(--text-primary) !important; }
+.mat-mdc-list-item .mdc-list-item__secondary-text { color: var(--text-secondary) !important; }
+
+/* ── Expansion Panel ── */
+.mat-expansion-panel { background: var(--bg-card) !important; color: var(--text-primary) !important; }
+.mat-expansion-panel-header-title       { color: var(--text-primary)   !important; }
+.mat-expansion-panel-header-description { color: var(--text-secondary) !important; }
+.mat-expansion-indicator::after         { border-color: var(--text-secondary) !important; }
+
+/* ── Tooltip ── */
+.mat-mdc-tooltip .mdc-tooltip__surface { background: var(--bg-card) !important; color: var(--text-primary) !important; border: 1px solid var(--border) !important; }
+
+/* ── Sort header ── */
+.mat-sort-header-content  { color: var(--text-secondary) !important; }
+.mat-sort-header-arrow    { color: var(--text-secondary) !important; }
+
+/* ── Stepper ── */
+.mat-step-label             { color: var(--text-secondary) !important; }
+.mat-step-label-selected    { color: var(--text-primary) !important; }
+.mat-step-header .mat-step-label.mat-step-label-active { color: var(--text-primary) !important; }
+
+/* ── Button text ── */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-stroked-button { color: var(--text-primary) !important; }
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary { color: #fff !important; }
+
+/* ── Progress bar / Spinner ── */
 .mat-mdc-progress-bar .mdc-linear-progress__buffer-bar { background: rgba(255,255,255,0.08) !important; }
 .mat-mdc-progress-bar .mdc-linear-progress__primary-bar { background: var(--accent) !important; }
-
-/* Spinner */
 .mat-mdc-progress-spinner circle { stroke: var(--accent) !important; }
 
-/* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Light-mode scrollbar ── */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* ── Light mode — restore black text on Material components ── */
+[data-theme="light"] .mat-mdc-card,
+[data-theme="light"] .mat-mdc-card-title,
+[data-theme="light"] .mat-mdc-card-subtitle,
+[data-theme="light"] .mat-mdc-card-content    { color: var(--text-primary) !important; }
+[data-theme="light"] .mat-mdc-table           { background: #fff !important; }
+[data-theme="light"] .mat-mdc-header-row      { background: #f5f7ff !important; }
+[data-theme="light"] .mat-mdc-row:hover       { background: rgba(0,0,0,0.03) !important; }
+[data-theme="light"] .mat-mdc-option:hover:not(.mdc-list-item--disabled) { background: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .mat-mdc-menu-item:hover { background: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .mat-mdc-chip            { background: #e8ecf4 !important; }
+[data-theme="light"] .mat-expansion-panel     { background: #fff !important; }

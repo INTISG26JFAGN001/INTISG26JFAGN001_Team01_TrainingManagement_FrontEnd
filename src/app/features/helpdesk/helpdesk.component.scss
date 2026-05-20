@@ -1,0 +1,73 @@
+.helpdesk-container {
+  padding: 32px 40px;
+  max-width: 800px;
+}
+
+.down-title {
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 32px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.faq-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.faq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.faq-question {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.faq-icon {
+  color: var(--text-secondary, #aaa);
+  flex-shrink: 0;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+
+  &.open {
+    max-height: 300px;
+  }
+
+  p {
+    padding: 0 20px 18px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary, #aaa);
+  }
+}

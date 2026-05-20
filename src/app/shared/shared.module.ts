@@ -30,6 +30,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatRadioModule } from '@angular/material/radio';
 
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { HeaderComponent } from './components/header/header.component';
@@ -43,7 +44,7 @@ const MAT_MODULES = [
   MatBadgeModule, MatProgressSpinnerModule, MatProgressBarModule,
   MatSnackBarModule, MatDialogModule, MatDatepickerModule, MatNativeDateModule,
   MatCheckboxModule, MatTabsModule, MatExpansionModule, MatStepperModule,
-  MatAutocompleteModule
+  MatAutocompleteModule, MatRadioModule
 ];
 
 @NgModule({

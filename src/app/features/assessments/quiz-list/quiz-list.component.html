@@ -4,23 +4,14 @@
   <div class="filter-card">
     <div class="filter-fields">
       <div class="filter-field">
-        <label>From Date</label>
-        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" />
-      </div>
-      <div class="filter-field">
-        <label>To Date</label>
-        <input type="date" [(ngModel)]="filter.toDate" class="field-input" />
-      </div>
-      <div class="filter-field">
-        <label>Candidate ID</label>
-        <input type="text" placeholder="Enter candidate ID" [(ngModel)]="filter.candidateId" class="field-input" />
-      </div>
-      <div class="filter-field">
-        <label>Batch ID</label>
-        <select [(ngModel)]="filter.batchId" class="field-input">
-          <option value="">All Batches</option>
-          <option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</option>
-        </select>
+        <label>Batch</label>
+        <input type="text" [(ngModel)]="filter.batchId" list="batch-list-quiz"
+               class="field-input" placeholder="Search batch…" autocomplete="off" />
+        <datalist id="batch-list-quiz">
+          <option *ngFor="let b of batches"
+                  [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
+          </option>
+        </datalist>
       </div>
       <div class="filter-field">
         <label>Status</label>
@@ -29,11 +20,20 @@
           <option value="DRAFT">Draft</option>
           <option value="PUBLISHED">Published</option>
           <option value="CLOSED">Closed</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
+      </div>
+      <div class="filter-field">
+        <label>Due From</label>
+        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" />
+      </div>
+      <div class="filter-field">
+        <label>Due To</label>
+        <input type="date" [(ngModel)]="filter.toDate" class="field-input" />
       </div>
     </div>
     <div class="filter-actions">
-      <button class="btn-search" (click)="applyAdvancedFilter()">
+      <button class="btn-search" (click)="applyFilter()">
         <mat-icon>search</mat-icon> Search
       </button>
       <button class="btn-reset" (click)="resetFilter()">
@@ -48,6 +48,8 @@
   <!-- Table Card -->
   <div class="table-card" *ngIf="!loading; else loadingTpl">
     <table mat-table [dataSource]="dataSource" matSort class="data-table">
+
+      <!-- Title -->
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Quiz Title</th>
         <td mat-cell *matCellDef="let q">
@@ -57,24 +59,36 @@
           </div>
         </td>
       </ng-container>
+
+      <!-- Batch -->
       <ng-container matColumnDef="batch">
         <th mat-header-cell *matHeaderCellDef>Batch</th>
-        <td mat-cell *matCellDef="let q">{{ getBatchName(q.batchId) }}</td>
+        <td mat-cell *matCellDef="let q">
+          <span class="id-chip" style="margin-right:6px">#{{ q.batchId }}</span>
+          {{ getBatchName(q.batchId) }}
+        </td>
       </ng-container>
+
+      <!-- Status -->
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef>Status</th>
         <td mat-cell *matCellDef="let q">
           <span class="status-pill" [ngClass]="q.status?.toLowerCase()">{{ q.status }}</span>
         </td>
       </ng-container>
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Created</th>
-        <td mat-cell *matCellDef="let q">{{ q.createdAt | date:'dd MMM yyyy' }}</td>
+
+      <!-- Due Date -->
+      <ng-container matColumnDef="dueDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Due Date</th>
+        <td mat-cell *matCellDef="let q">{{ q.dueDate ? (q.dueDate | date:'dd MMM yyyy') : '—' }}</td>
       </ng-container>
+
+      <!-- Actions -->
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let q">
-          <button mat-icon-button (click)="openForm(q)" matTooltip="Edit">
+        <td mat-cell *matCellDef="let q" (click)="$event.stopPropagation()">
+          <button mat-icon-button (click)="openForm(q)" matTooltip="Edit"
+                  *ngIf="q.status !== 'PUBLISHED'">
             <mat-icon class="action-edit">edit</mat-icon>
           </button>
           <button mat-icon-button (click)="delete(q)" matTooltip="Delete">
@@ -82,8 +96,10 @@
           </button>
         </td>
       </ng-container>
+
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          class="clickable-row" (click)="openDetail(row)"></tr>
       <tr class="mat-row" *matNoDataRow>
         <td [attr.colspan]="displayedColumns.length" class="no-data">
           No quizzes found. <span *ngIf="canCreate">Click "+ Add Quiz" to create one.</span>

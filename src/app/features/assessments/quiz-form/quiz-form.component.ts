@@ -1,106 +1,227 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormArray, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
 import { BatchService } from '../../../core/services/batch.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { Batch, Quiz } from '../../../core/models';
 
 @Component({
   selector: 'app-quiz-form',
-  template: `
-    <h2 mat-dialog-title>{{ data ? 'Edit Quiz' : 'Create Quiz' }}</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Quiz Title</mat-label>
-          <mat-icon matPrefix>fact_check</mat-icon>
-          <input matInput formControlName="title" placeholder="e.g. Java Fundamentals Quiz"/>
-          <mat-error *ngIf="form.get('title')?.hasError('required')">Title is required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId">
-            <mat-option *ngFor="let b of batches" [value]="b.id">{{ b.name }}</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('batchId')?.hasError('required')">Batch is required</mat-error>
-        </mat-form-field>
-
-        <div class="row-fields">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Duration (minutes)</mat-label>
-            <mat-icon matPrefix>timer</mat-icon>
-            <input matInput type="number" formControlName="durationMinutes" min="5" max="180"/>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Passing Score (%)</mat-label>
-            <mat-icon matPrefix>grade</mat-icon>
-            <input matInput type="number" formControlName="passingScore" min="0" max="100"/>
-          </mat-form-field>
-        </div>
-      </form>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-stroked-button [mat-dialog-close]="false">Cancel</button>
-      <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
-        {{ saving ? 'Saving...' : (data ? 'Update' : 'Create Quiz') }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; min-width: 460px; }
-    .full-width { width: 100%; }
-    .row-fields { display: flex; gap: 12px; }
-    .half-width { flex: 1; }
-  `]
+  templateUrl: './quiz-form.component.html',
+  styleUrls: ['./quiz-form.component.scss']
 })
 export class QuizFormComponent implements OnInit {
   batches: Batch[] = [];
   saving = false;
+  readonly answerOptions: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
+
+  /**
+   * Backend AssessmentStatus enum values:
+   *   DRAFT    – not yet visible to associates
+   *   PUBLISHED – live, associates can attempt
+   *   CLOSED   – due date passed, no more submissions
+   *   ARCHIVED – soft-deleted / historical record
+   */
+  readonly statusOptions = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'];
+
+  /**
+   * Creator identity — read from AuthService which stores these in localStorage
+   * during login (POST /auth/login → GET /user/username):
+   *   tms_username  ← user.username
+   *   tms_role      ← user.roles[0]  (e.g. 'ROLE_ADMIN')
+   * The interceptor also forwards X-User-Role so the backend can skip
+   * trainer validation for ROLE_ADMIN.
+   */
+  creatorUsername = '';
+  creatorRole = '';
+  trainerId: number | null = null;
+
+  /** Only applies when CREATING — backend UpdateAssessmentRequest has no @Future */
+  static futureDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const selected = new Date(control.value);
+    const today    = new Date(); today.setHours(0, 0, 0, 0);
+    return selected > today ? null : { pastDate: true };
+  }
+
+  get isEditing(): boolean { return !!this.data; }
+
+  /* ── Form group ──
+     CREATE: all fields active
+     EDIT  : batchId/durationMinutes/passingMarks/questions are kept in the
+             group (so patchValue works cleanly) but are disabled and excluded
+             from the payload — the backend PATCH /assessments/{id} only
+             accepts: title, dueDate, maxScore, status               */
   form = this.fb.group({
-    title: ['', Validators.required],
-    batchId: [null as number | null, Validators.required],
-    durationMinutes: [30, [Validators.required, Validators.min(5)]],
-    passingScore: [60, [Validators.required, Validators.min(0), Validators.max(100)]]
+    title:          ['', [Validators.required, Validators.maxLength(200)]],
+    batchId:        [null as number | null, Validators.required],
+    durationMinutes:[null as number | null, [Validators.min(1)]],
+    passingMarks:   [null as number | null, [Validators.required, Validators.min(1)]],
+    dueDate:        [null as string | null, [Validators.required, QuizFormComponent.futureDateValidator]],
+    maxScore:       [null as number | null, [Validators.min(1)]],
+    status:         ['DRAFT'],
+    questions:      this.fb.array([this.newQuestion()])
   });
+
+  get questions(): FormArray { return this.form.get('questions') as FormArray; }
+
+  newQuestion(): FormGroup {
+    return this.fb.group({
+      questionText:  ['', Validators.required],
+      optionA:       ['', Validators.required],
+      optionB:       ['', Validators.required],
+      optionC:       ['', Validators.required],
+      optionD:       ['', Validators.required],
+      correctOption: ['A', Validators.required],
+      marks:         [1, [Validators.required, Validators.min(1)]]
+    });
+  }
+
+  addQuestion(): void { this.questions.push(this.newQuestion()); }
+
+  removeQuestion(i: number): void {
+    if (this.questions.length > 1) this.questions.removeAt(i);
+  }
 
   constructor(
     private fb: FormBuilder,
     private svc: AssessmentService,
     private batchSvc: BatchService,
+    private trainerSvc: TrainerService,
     private snack: MatSnackBar,
+    private auth: AuthService,
     public dialogRef: MatDialogRef<QuizFormComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Quiz | null
   ) {}
 
   ngOnInit(): void {
+    this.creatorUsername = this.auth.getUsername();
+    this.creatorRole     = this.auth.getRole() ?? '';
+
     this.batchSvc.getAll().subscribe(b => this.batches = b);
-    if (this.data) {
-      this.form.patchValue({
-        title: this.data.title,
-        batchId: this.data.batchId,
-        durationMinutes: (this.data as any).durationMinutes ?? 30,
-        passingScore: (this.data as any).passingScore ?? 60
+
+    if (this.auth.isTrainer()) {
+      const userId = this.auth.getUserId();
+      this.trainerSvc.getAll().subscribe(trainers => {
+        const match = trainers.find(t => t.userId === userId);
+        this.trainerId = match?.trainerId ?? match?.id ?? null;
       });
+    }
+
+    if (this.data) {
+      /* ── EDIT MODE ──
+         The list opens this dialog after fetching the full QuizDetailResponse
+         (GET /assessments/quiz/{id}), so all fields are populated.
+         UpdateAssessmentRequest only accepts: title, dueDate, maxScore, status.
+         No @Future validator on dueDate in edit mode.                     */
+
+      // 1. Patch all editable + context fields
+      this.form.patchValue({
+        title:          this.data.title,
+        dueDate:        this.data.dueDate ? String(this.data.dueDate).substring(0, 10) : null,
+        maxScore:       this.data.maxScore ?? null,
+        status:         this.data.status ?? 'DRAFT',
+        batchId:        this.data.batchId,
+        durationMinutes:this.data.durationMinutes ?? null,
+        passingMarks:   this.data.passingMarks ?? null
+      });
+
+      // 2. Remove future-date validator — dueDate may already be in the past for CLOSED quizzes
+      this.form.get('dueDate')?.setValidators([Validators.required]);
+      this.form.get('dueDate')?.updateValueAndValidity();
+
+      // 3. Clear validators on fields the backend ignores on update
+      //    (batchId, passingMarks) — they are shown read-only, not submitted
+      this.form.get('batchId')?.clearValidators();
+      this.form.get('batchId')?.updateValueAndValidity();
+      this.form.get('passingMarks')?.clearValidators();
+      this.form.get('passingMarks')?.updateValueAndValidity();
+
+      // 4. Clear the questions FormArray — questions are not updatable via PATCH
+      //    /assessments/{id}. Leaving the default blank question would make the
+      //    form permanently invalid since questionText/options have Validators.required.
+      while (this.questions.length > 0) {
+        this.questions.removeAt(0);
+      }
+      this.questions.clearValidators();
+      this.questions.updateValueAndValidity();
+
+    } else {
+      /* ── CREATE MODE — form initialised with one blank question already ── */
     }
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = { ...this.form.value, type: 'QUIZ' };
-    const action = this.data
-      ? this.svc.update(this.data.id, payload as any)
-      : this.svc.createQuiz(payload as any);
+    const v = this.form.value;
 
-    action.subscribe({
-      next: () => {
-        this.snack.open(`Quiz ${this.data ? 'updated' : 'created'}`, 'Close', { duration: 3000 });
-        this.dialogRef.close(true);
-      },
-      error: () => { this.saving = false; }
-    });
+    if (this.data) {
+      /* ── UPDATE ──
+         Backend PATCH /assessments/{id} → UpdateAssessmentRequest
+         Accepted fields: title, dueDate, maxScore, status (all optional)  */
+      const payload: Record<string, any> = { title: v.title, status: v.status };
+      if (v.dueDate)  payload['dueDate']   = v.dueDate;
+      if (v.maxScore) payload['maxScore']  = v.maxScore;
+
+      this.svc.update(this.data.id, payload as any).subscribe({
+        next: () => {
+          this.snack.open('Quiz updated successfully', 'Close', { duration: 3000 });
+          this.dialogRef.close(true);
+        },
+        error: e => {
+          this.snack.open(e.error?.message || 'Failed to update quiz', 'Close', { duration: 4000 });
+          this.saving = false;
+        }
+      });
+
+    } else {
+      /* ── CREATE ──
+         Backend POST /assessments/quiz → CreateQuizRequest
+         Required: title, batchId, questions
+         Optional: durationMinutes, passingMarks, dueDate, status         */
+      const payload: any = {
+        title:        v.title,
+        batchId:      v.batchId,
+        passingMarks: v.passingMarks,
+        dueDate:      v.dueDate,
+        status:       v.status || 'DRAFT',
+        questions:    v.questions
+      };
+      if (v.durationMinutes) payload.durationMinutes = v.durationMinutes;
+      if (this.trainerId)    payload.trainerId = this.trainerId;
+
+      this.svc.createQuiz(payload).subscribe({
+        next: () => {
+          this.snack.open('Quiz created successfully', 'Close', { duration: 3000 });
+          this.dialogRef.close(true);
+        },
+        error: e => {
+          this.snack.open(e.error?.message || 'Failed to create quiz', 'Close', { duration: 4000 });
+          this.saving = false;
+        }
+      });
+    }
+  }
+
+  get totalMarks(): number {
+    return this.questions.controls.reduce((sum, q) => sum + (q.get('marks')?.value || 0), 0);
+  }
+
+  getOptionValue(questionGroup: any, opt: string): string {
+    return questionGroup.get('option' + opt)?.value || 'Option ' + opt;
+  }
+
+  get batchLabel(): string {
+    const b = this.batches.find(b => b.id === this.data?.batchId);
+    return b ? `#${b.id} — ${b.courseNames?.join(', ') || 'No course'}` : `#${this.data?.batchId}`;
+  }
+
+  get roleLabel(): string {
+    const map: Record<string, string> = { ROLE_ADMIN: 'Admin', ROLE_TRAINER: 'Trainer' };
+    return map[this.creatorRole] ?? this.creatorRole;
   }
 }

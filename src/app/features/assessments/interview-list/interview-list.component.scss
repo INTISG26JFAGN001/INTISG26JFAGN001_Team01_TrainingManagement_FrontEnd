@@ -1,5 +1,12 @@
 .list-page { display: flex; flex-direction: column; gap: 16px; }
 
+.id-chip {
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; font-family: monospace;
+  background: rgba(0,198,255,0.08); color: var(--accent);
+  border: 1px solid rgba(0,198,255,0.2);
+}
+
 .filter-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -75,13 +82,22 @@ input[type="date"].field-input::-webkit-calendar-picker-indicator { filter: inve
   display: inline-block; padding: 3px 10px; border-radius: 20px;
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   &.draft     { background: rgba(251,191,36,0.15); color: #fbbf24; }
-  &.published { background: rgba(52,211,153,0.15); color: #34d399; }
-  &.closed    { background: rgba(239,68,68,0.12);  color: #ef4444; }
+  &.published { background: rgba(52,211,153,0.15);  color: #34d399; }
+  &.closed    { background: rgba(239,68,68,0.12);   color: #ef4444; }
+  &.archived  { background: rgba(100,116,139,0.12); color: #64748b; }
 }
 
 .action-edit { color: var(--accent) !important; }
 .action-pub  { color: #34d399 !important; }
 .action-del  { color: #ef4444 !important; }
 
+.category-chip {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  &.interim { background: rgba(99,102,241,0.15); color: #6366f1; }
+  &.final   { background: rgba(234,88,12,0.15);  color: #ea580c; }
+}
+
 .no-data { text-align: center; padding: 40px !important; color: var(--text-muted); }
 .loading-center { display: flex; justify-content: center; padding: 60px; }
+.clickable-row { cursor: pointer; }
