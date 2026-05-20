@@ -51,7 +51,6 @@ export class CoursesComponent implements OnInit {
   }
 
   openForm(c?: Course): void {
-    console.log(c);
     this.dialog.open(CourseFormDialogComponent, {
       width: '560px',
       data: c ?? null
@@ -59,7 +58,6 @@ export class CoursesComponent implements OnInit {
   }
 
   delete(c: Course): void {
-    console.log(c);
     this.dialog.open(ConfirmDialogComponent, {
       data: { title: 'Delete Course', message: `Delete "${c.title}"?`, danger: true, confirmText: 'Delete' }
     }).afterClosed().subscribe(conf => {
