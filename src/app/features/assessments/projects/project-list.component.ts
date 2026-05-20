@@ -30,8 +30,8 @@ export class ProjectListComponent implements OnInit {
 
   canCreate = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: ProjectService,
@@ -60,8 +60,6 @@ export class ProjectListComponent implements OnInit {
     let data = [...this.allProjects];
     if (this.filter.batchId) { const s = this.filter.batchId.trim().toLowerCase(); data = data.filter(p => `#${p.batchId} — ${this.getBatchName(p.batchId)}`.toLowerCase().includes(s)); }
     this.dataSource.data = data;
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
   }
 
   resetFilter(): void {

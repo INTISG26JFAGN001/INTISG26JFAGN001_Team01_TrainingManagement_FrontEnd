@@ -78,8 +78,8 @@ export class EnrollmentsPageComponent implements OnInit {
     })
   );
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private fb: FormBuilder,
@@ -128,8 +128,7 @@ export class EnrollmentsPageComponent implements OnInit {
     this.svc.getAllEnrollments().subscribe({
       next: d => {
         this.dataSource.data = d;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => { this.snack.open('Failed to load enrollments', 'Close', { duration: 3000 }); this.loading = false; }

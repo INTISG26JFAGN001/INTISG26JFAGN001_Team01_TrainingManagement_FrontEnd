@@ -18,8 +18,8 @@ export class CoursesComponent implements OnInit {
   loading = true;
   canEdit = ['ROLE_ADMIN', 'ROLE_TECH_LEAD'].includes(this.auth.getRole() ?? '');
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: CatalogService,
@@ -38,8 +38,7 @@ export class CoursesComponent implements OnInit {
     this.svc.getCourses().subscribe({
       next: d => {
         this.dataSource.data = d;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => this.loading = false

@@ -33,8 +33,8 @@ export class AssociateListComponent implements OnInit {
     return ['userId', 'fullName', 'email', 'experienceLevel', 'batch'];
   }
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: AssociateService,
@@ -86,8 +86,7 @@ export class AssociateListComponent implements OnInit {
         });
 
         this.dataSource.data = enriched;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => {

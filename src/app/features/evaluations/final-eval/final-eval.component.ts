@@ -25,8 +25,8 @@ export class FinalEvalComponent implements OnInit {
   dataSource = new MatTableDataSource<Evaluation>();
   displayedColumns = ['associate', 'interimScore', 'finalScore', 'status'];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: ProjectService,
@@ -62,10 +62,6 @@ export class FinalEvalComponent implements OnInit {
       next: ({ evaluations, details }) => {
         this.associates = (details as any)?.associates ?? [];
         this.dataSource.data = evaluations;
-        setTimeout(() => {
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        });
         this.loading = false;
       },
       error: () => { this.loading = false; }

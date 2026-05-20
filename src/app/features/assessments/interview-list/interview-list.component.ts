@@ -36,8 +36,8 @@ export class InterviewListComponent implements OnInit {
     return cols;
   }
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: AssessmentService,
@@ -80,8 +80,6 @@ export class InterviewListComponent implements OnInit {
         } else {
           this.allData = d;
           this.dataSource.data = d;
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
           this.loading = false;
         }
       },
@@ -95,8 +93,7 @@ export class InterviewListComponent implements OnInit {
       next: d => {
         this.allData = d;
         this.dataSource.data = d;
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => { this.loading = false; }

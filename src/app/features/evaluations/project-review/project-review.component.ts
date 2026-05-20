@@ -25,8 +25,8 @@ export class ProjectReviewComponent implements OnInit {
   dataSource = new MatTableDataSource<Project>();
   displayedColumns = ['title', 'repoUrl', 'action'];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: ProjectService,
@@ -65,10 +65,6 @@ export class ProjectReviewComponent implements OnInit {
     }
     const filtered = this.allProjects.filter(p => p.batchId === batchId);
     this.dataSource.data = filtered;
-    setTimeout(() => {
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    });
   }
 
   openReviewDialog(project: Project): void {
