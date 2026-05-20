@@ -106,7 +106,7 @@ export class QuizFormComponent implements OnInit {
     if (this.auth.isTrainer()) {
       const userId = this.auth.getUserId();
       this.trainerSvc.getAll().subscribe(trainers => {
-        const match = trainers.find(t => t.userId === userId);
+        const match = trainers.find(t => Number(t.userId) === Number(userId));
         this.trainerId = match?.trainerId ?? match?.id ?? null;
       });
     }
