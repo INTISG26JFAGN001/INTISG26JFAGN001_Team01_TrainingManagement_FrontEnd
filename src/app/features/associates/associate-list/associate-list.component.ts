@@ -56,9 +56,14 @@ export class AssociateListComponent implements OnInit {
     forkJoin({
       associates:  this.svc.getAll(),
       users:       this.userSvc.getAll().pipe(catchError(() => of([] as User[]))),
+      batches:       this.batchSvc.getAll().pipe(catchError(()=> of([] as Batch[]))), 
       enrollments: this.svc.getAllEnrollments().pipe(catchError(() => of([] as Enrollment[])))
     }).subscribe({
-      next: ({ associates, users, enrollments }) => {
+      next: ({ associates, users, batches, enrollments }) => {
+        console.log("Associates: "+associates);
+        console.log("Users: "+users.map((e)=>e.fullName));
+        console.log("Batches: "+batches);
+        console.log("Enrollments: "+enrollments);
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
         const STATUS_PRIORITY: Record<string, number> = { ACTIVE: 0, ENROLLED: 1, COMPLETED: 2 };
         const safeEnrollments: Enrollment[] = Array.isArray(enrollments) ? enrollments : [];
