@@ -2,10 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { BatchService } from '../../../core/services/batch.service';
 import { TrainerService } from '../../../core/services/trainer.service';
 import { CatalogService } from '../../../core/services/catalog.service';
-import { Trainer, Course } from '../../../core/models';
+
 
 @Component({
   selector: 'app-batch-form',
