@@ -2,10 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { BatchService } from '../../../core/services/batch.service';
 import { TrainerService } from '../../../core/services/trainer.service';
 import { CatalogService } from '../../../core/services/catalog.service';
-import { Trainer, Course } from '../../../core/models';
+import { UserService } from '../../../core/services/user.service';
+import { Trainer, Course, User } from '../../../core/models';
 
 @Component({
   selector: 'app-batch-form',
@@ -80,12 +83,24 @@ export class BatchFormComponent implements OnInit {
     private svc: BatchService,
     private trainerSvc: TrainerService,
     private catalogSvc: CatalogService,
+    private userSvc: UserService,
     private snack: MatSnackBar,
     public dialogRef: MatDialogRef<BatchFormComponent>
   ) {}
 
   ngOnInit(): void {
-    this.trainerSvc.getAll().subscribe(t => this.trainers = t);
+    forkJoin({
+      trainers: this.trainerSvc.getAll(),
+      users:    this.userSvc.getAll().pipe(catchError(() => of([] as User[])))
+    }).subscribe({
+      next: ({ trainers, users }) => {
+        const userMap = new Map<number, User>(users.map(u => [u.id, u]));
+        this.trainers = trainers.map(t => {
+          const u = userMap.get(t.userId);
+          return u ? { ...t, fullName: u.fullName || u.username } : t;
+        });
+      }
+    });
     this.catalogSvc.getCourses().subscribe(c => this.courses = c);
   }
 
