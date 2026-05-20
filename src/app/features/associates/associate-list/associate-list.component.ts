@@ -9,6 +9,7 @@ import { catchError, switchMap, map } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { UserService } from '../../../core/services/user.service';
+import { ScheduleService } from '../../../core/services/schedule.service';
 import { Associate, Batch, Enrollment, User } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { AssociateFormComponent } from '../associate-form/associate-form.component';
@@ -24,10 +25,14 @@ export class AssociateListComponent implements OnInit {
   isAssociate = this.auth.isAssociate();
   myProfile: Associate | null = null;
 
+  expandedAssociate: Associate | null = null;
+  private scheduleCache = new Map<number, any[]>();
+  scheduleLoading = new Set<number>();
+
   get displayedColumns(): string[] {
     if (this.isAssociate) return ['fullName', 'experienceLevel', 'batch'];
-    if (this.isAdmin) return ['userId', 'fullName', 'email', 'experienceLevel', 'batch', 'actions'];
-    return ['userId', 'fullName', 'email', 'experienceLevel', 'batch'];
+    if (this.isAdmin) return ['userId', 'fullName', 'email', 'experienceLevel', 'batch', 'schedules', 'actions'];
+    return ['userId', 'fullName', 'email', 'experienceLevel', 'batch', 'schedules'];
   }
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -37,6 +42,7 @@ export class AssociateListComponent implements OnInit {
     private svc: AssociateService,
     private batchSvc: BatchService,
     private userSvc: UserService,
+    private scheduleSvc: ScheduleService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private auth: AuthService
@@ -156,6 +162,34 @@ export class AssociateListComponent implements OnInit {
     });
   }
 
+  toggleExpand(a: Associate, event: Event): void {
+    event.stopPropagation();
+    const isExpanding = this.expandedAssociate !== a;
+    this.expandedAssociate = isExpanding ? a : null;
+    if (!isExpanding) return;
+
+    const batchId = a.batchId ?? 0;
+    if (!batchId || this.scheduleCache.has(batchId) || this.scheduleLoading.has(batchId)) return;
+
+    this.scheduleLoading.add(batchId);
+    this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([]))).subscribe((schedules: any[]) => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const upcoming = schedules
+        .filter((s: any) => new Date(s.sessionDate) >= today)
+        .sort((a: any, b: any) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime());
+      this.scheduleCache.set(batchId, upcoming);
+      this.scheduleLoading.delete(batchId);
+    });
+  }
+
+  getSchedules(a: Associate): any[] {
+    return this.scheduleCache.get(a.batchId ?? 0) ?? [];
+  }
+
+  isLoadingSchedules(a: Associate): boolean {
+    return this.scheduleLoading.has(a.batchId ?? 0);
+  }
+
   getDisplayName(a: Associate): string { return a.fullName || ('User #' + a.userId); }
 
   getXpLabel(a: Associate): string {
@@ -173,6 +207,11 @@ export class AssociateListComponent implements OnInit {
     const id = a.batchId ?? a.currentBatchId ?? 0;
     if (!id || id === 0) return '—';
     return `#${id}`;
+  }
+
+  isToday(dateStr: string): boolean {
+    const d = new Date(dateStr), t = new Date();
+    return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
   }
 
   isBatchAssigned(a: Associate): boolean {

@@ -75,21 +75,72 @@
           </td>
         </ng-container>
 
+        <!-- Schedules (expand toggle) -->
+        <ng-container matColumnDef="schedules">
+          <th mat-header-cell *matHeaderCellDef>Upcoming Sessions</th>
+          <td mat-cell *matCellDef="let a">
+            <button mat-icon-button
+                    [matTooltip]="expandedAssociate === a ? 'Collapse' : 'View Schedules'"
+                    (click)="toggleExpand(a, $event)"
+                    [disabled]="!isBatchAssigned(a)">
+              <mat-icon>{{ expandedAssociate === a ? 'expand_less' : 'calendar_month' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
         <!-- Actions (admin only) -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let a">
-            <button mat-icon-button color="primary" (click)="openEdit(a)" matTooltip="Edit associate">
+            <button mat-icon-button color="primary" (click)="openEdit(a); $event.stopPropagation()" matTooltip="Edit associate">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="warn" (click)="delete(a)" matTooltip="Remove associate profile">
+            <button mat-icon-button color="warn" (click)="delete(a); $event.stopPropagation()" matTooltip="Remove associate profile">
               <mat-icon>person_remove</mat-icon>
             </button>
           </td>
         </ng-container>
 
+        <!-- Expanded schedule detail row -->
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let a" [attr.colspan]="displayedColumns.length" class="detail-cell">
+            <div class="schedule-expand" *ngIf="expandedAssociate === a">
+
+              <div *ngIf="isLoadingSchedules(a)" class="sched-loading">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Loading schedules…</span>
+              </div>
+
+              <ng-container *ngIf="!isLoadingSchedules(a)">
+                <div *ngIf="getSchedules(a).length === 0" class="sched-empty">
+                  <mat-icon>event_busy</mat-icon>
+                  <span>No upcoming sessions for this batch.</span>
+                </div>
+
+                <div class="sched-list" *ngIf="getSchedules(a).length > 0">
+                  <div class="sched-header">
+                    <mat-icon>upcoming</mat-icon>
+                    Upcoming Sessions &nbsp;
+                    <span class="sched-count">{{ getSchedules(a).length }}</span>
+                  </div>
+                  <div class="sched-item" *ngFor="let s of getSchedules(a)">
+                    <mat-icon class="sched-icon">event</mat-icon>
+                    <span class="sched-date">{{ s.sessionDate | date:'EEEE, MMM d, y' }}</span>
+                    <span class="sched-badge" *ngIf="isToday(s.sessionDate)">Today</span>
+                  </div>
+                </div>
+              </ng-container>
+
+            </div>
+          </td>
+        </ng-container>
+
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="data-row"
+            [class.row-expanded]="expandedAssociate === row">
+        </tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
         <tr class="mat-row" *matNoDataRow>
           <td [attr.colspan]="displayedColumns.length" class="no-data">No associates found.</td>
         </tr>

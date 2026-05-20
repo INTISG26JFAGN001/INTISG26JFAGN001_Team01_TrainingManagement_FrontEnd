@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
@@ -10,6 +10,8 @@ import { Quiz } from '../../../core/models';
 import { QuizAttemptDialogComponent } from './quiz-attempt-dialog.component';
 
 interface QuizRow extends Quiz { attempted?: boolean; score?: number; resultStatus?: string; }
+
+type TabKey = 'upcoming' | 'past' | 'attempted';
 
 @Component({
   selector: 'app-my-quizzes',
@@ -22,6 +24,25 @@ export class MyQuizzesComponent implements OnInit {
   associateId = 0;
   batchId: number | null = null;
 
+  activeTab: TabKey = 'upcoming';
+
+  get upcoming(): QuizRow[] {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return this.quizzes.filter(q => !q.attempted && q.status !== 'CLOSED' && (!q.dueDate || new Date(q.dueDate) >= today));
+  }
+  get past(): QuizRow[] {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return this.quizzes.filter(q => !q.attempted && (q.status === 'CLOSED' || (q.dueDate && new Date(q.dueDate) < today)));
+  }
+  get attempted(): QuizRow[] {
+    return this.quizzes.filter(q => q.attempted);
+  }
+  get filteredQuizzes(): QuizRow[] {
+    return this[this.activeTab];
+  }
+
+  selectTab(tab: TabKey): void { this.activeTab = tab; }
+
   constructor(
     private assessmentSvc: AssessmentService,
     private associateSvc: AssociateService,
@@ -32,7 +53,8 @@ export class MyQuizzesComponent implements OnInit {
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
-    this.associateSvc.getById(userId).pipe(
+    this.associateSvc.getAll().pipe(
+      map((list: any[]) => list.find((a: any) => a.userId === userId) ?? null),
       catchError(() => of(null)),
       switchMap((me: any) => {
         if (!me) return of({ quizzes: [] as Quiz[], associateId: 0, batchId: null as number | null });
@@ -46,7 +68,7 @@ export class MyQuizzesComponent implements OnInit {
             return this.assessmentSvc.getQuizzesByBatch(batchId).pipe(
               catchError(() => of([])),
               switchMap(quizzes => {
-                const published = quizzes.filter((q: any) => q.status === 'PUBLISHED');
+                const published = quizzes.filter((q: any) => q.status === 'PUBLISHED' || q.status === 'CLOSED');
                 return of({ quizzes: published, associateId: me.id, batchId });
               })
             );
@@ -60,9 +82,9 @@ export class MyQuizzesComponent implements OnInit {
         const rows: QuizRow[] = res.quizzes;
         // Fetch results for each quiz in parallel
         if (rows.length === 0) { this.quizzes = []; this.loading = false; return; }
-        // catchError per quiz: 404 means not attempted yet — treat as null result
+        // Use userId (not associate entity ID) — attempts are stored with userId
         const resultObs: Observable<any>[] = rows.map((q: QuizRow) =>
-          this.assessmentSvc.getQuizResult(q.id, res.associateId).pipe(catchError(() => of(null)))
+          this.assessmentSvc.getQuizResult(q.id, userId).pipe(catchError(() => of(null)))
         );
         forkJoin(resultObs).subscribe({
           next: results => {
@@ -103,7 +125,7 @@ export class MyQuizzesComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
-    const map: Record<string, string> = { PASSED: 'chip-pass', FAILED: 'chip-fail' };
+    const map: Record<string, string> = { PASS: 'chip-pass', FAIL: 'chip-fail' };
     return map[status] ?? '';
   }
 }

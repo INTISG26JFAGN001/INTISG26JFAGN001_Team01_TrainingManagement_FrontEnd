@@ -68,6 +68,10 @@
         <mat-icon>groups</mat-icon>
         <span>{{ getBatchLabel(selectedBatchId) }}</span>
       </div>
+      <div class="batch-label" *ngIf="!selectedBatchId && !isAssociate">
+        <mat-icon>calendar_month</mat-icon>
+        <span>All Batches</span>
+      </div>
 
       <table mat-table [dataSource]="dataSource" matSort class="data-table">
 
@@ -92,7 +96,7 @@
             [class.upcoming-row]="isUpcoming(row.sessionDate)"></tr>
         <tr class="mat-row" *matNoDataRow>
           <td [attr.colspan]="displayedColumns.length" class="no-data">
-            {{ selectedBatchId ? 'No sessions scheduled for this batch.' : 'Select a batch to view its schedule.' }}
+            {{ selectedBatchId ? 'No sessions scheduled for this batch.' : 'No sessions scheduled yet.' }}
           </td>
         </tr>
       </table>

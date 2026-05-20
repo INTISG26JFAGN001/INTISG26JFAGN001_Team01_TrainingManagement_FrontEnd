@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { Batch, Quiz } from '../../../core/models';
 
 @Component({
@@ -36,6 +37,7 @@ export class QuizFormComponent implements OnInit {
    */
   creatorUsername = '';
   creatorRole = '';
+  trainerId: number | null = null;
 
   /** Only applies when CREATING — backend UpdateAssessmentRequest has no @Future */
   static futureDateValidator(control: AbstractControl): ValidationErrors | null {
@@ -88,6 +90,7 @@ export class QuizFormComponent implements OnInit {
     private fb: FormBuilder,
     private svc: AssessmentService,
     private batchSvc: BatchService,
+    private trainerSvc: TrainerService,
     private snack: MatSnackBar,
     private auth: AuthService,
     public dialogRef: MatDialogRef<QuizFormComponent>,
@@ -99,6 +102,14 @@ export class QuizFormComponent implements OnInit {
     this.creatorRole     = this.auth.getRole() ?? '';
 
     this.batchSvc.getAll().subscribe(b => this.batches = b);
+
+    if (this.auth.isTrainer()) {
+      const userId = this.auth.getUserId();
+      this.trainerSvc.getAll().subscribe(trainers => {
+        const match = trainers.find(t => t.userId === userId);
+        this.trainerId = match?.trainerId ?? match?.id ?? null;
+      });
+    }
 
     if (this.data) {
       /* ── EDIT MODE ──
@@ -181,6 +192,7 @@ export class QuizFormComponent implements OnInit {
         questions:    v.questions
       };
       if (v.durationMinutes) payload.durationMinutes = v.durationMinutes;
+      if (this.trainerId)    payload.trainerId = this.trainerId;
 
       this.svc.createQuiz(payload).subscribe({
         next: () => {

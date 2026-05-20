@@ -43,7 +43,7 @@
               <mat-icon>school</mat-icon>
               Training Session
             </p>
-            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }}</p>
+            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }} &bull; {{ s.sessionDate | date:'h:mm a' }}</p>
             <span class="today-badge" *ngIf="isToday(s.sessionDate)">Today</span>
           </div>
           <mat-icon class="session-arrow">chevron_right</mat-icon>
@@ -68,7 +68,7 @@
               <mat-icon>check_circle</mat-icon>
               Training Session
             </p>
-            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }}</p>
+            <p class="session-date-full">{{ s.sessionDate | date:'EEEE, MMMM d, y' }} &bull; {{ s.sessionDate | date:'h:mm a' }}</p>
           </div>
           <mat-icon class="session-arrow past-arrow">check</mat-icon>
         </div>

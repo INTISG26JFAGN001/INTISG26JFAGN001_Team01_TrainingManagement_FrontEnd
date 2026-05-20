@@ -27,18 +27,29 @@ export class MySchedulesComponent implements OnInit {
   ngOnInit(): void {
     const userId = this.auth.getUserId();
 
+    // GET /associates/{userId} queries by the userId column (not PK), so this is correct
     this.associateSvc.getById(userId).pipe(
       catchError(() => of(null)),
       switchMap((me: any) => {
         if (!me) return of([]);
+
+        // Use batchId directly from associate record if valid (> 0)
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? me.batchId : null;
+        if (directBatchId) {
+          this.batchId = directBatchId;
+          return this.scheduleSvc.getByBatch(directBatchId).pipe(catchError(() => of([])));
+        }
+
+        // Fallback: look up via enrollment record
         return this.associateSvc.getMyEnrollment(me.id).pipe(
           catchError(() => of(null)),
           switchMap((raw: any) => {
             const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
-            const batchId: number | null = enrollment?.batchId ?? me.batchId ?? me.currentBatchId ?? null;
-            if (!batchId) return of([]);
-            this.batchId = batchId;
-            return this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([])));
+            const enrollBatchId: number | null =
+              enrollment?.batchId ?? enrollment?.batch?.id ?? null;
+            if (!enrollBatchId || enrollBatchId <= 0) return of([]);
+            this.batchId = enrollBatchId;
+            return this.scheduleSvc.getByBatch(enrollBatchId).pipe(catchError(() => of([])));
           })
         );
       })

@@ -59,6 +59,14 @@ export class HeaderComponent implements OnInit {
     return 'Training Management System';
   }
 
+  goToProfile(): void {
+    if (this.role === 'ROLE_ASSOCIATE') {
+      this.router.navigate(['/my-portal/profile']);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/auth/login']);

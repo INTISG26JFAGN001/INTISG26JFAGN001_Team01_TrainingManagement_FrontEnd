@@ -13,48 +13,93 @@
       <p>You are not currently enrolled in an active batch. Quizzes will appear here once you are assigned to a batch.</p>
     </div>
 
-    <div *ngIf="batchId && quizzes.length === 0" class="empty-state">
-      <mat-icon>fact_check</mat-icon>
-      <h3>No Quizzes Yet</h3>
-      <p>Your trainer has not published any quizzes for your batch yet. Check back later.</p>
-    </div>
+    <ng-container *ngIf="batchId">
 
-    <div class="quiz-grid" *ngIf="quizzes.length > 0">
-      <mat-card class="quiz-card" *ngFor="let q of quizzes">
-        <mat-card-header>
-          <div mat-card-avatar class="quiz-avatar">
-            <mat-icon>{{ q.attempted ? 'check_circle' : 'fact_check' }}</mat-icon>
+      <!-- Category cards -->
+      <div class="category-row">
+        <div class="category-card" [class.active]="activeTab === 'upcoming'" (click)="selectTab('upcoming')">
+          <mat-icon class="cat-icon upcoming-icon">pending_actions</mat-icon>
+          <div class="cat-body">
+            <span class="cat-count">{{ upcoming.length }}</span>
+            <span class="cat-label">Upcoming</span>
           </div>
-          <mat-card-title>{{ q.title }}</mat-card-title>
-          <mat-card-subtitle>
-            Due: {{ q.dueDate ? (q.dueDate | date:'mediumDate') : 'No deadline' }}
-          </mat-card-subtitle>
-        </mat-card-header>
+        </div>
 
-        <mat-card-content>
-          <div class="quiz-meta-row">
-            <span class="quiz-chip"><mat-icon>timer</mat-icon> {{ q.durationMinutes ?? 30 }} min</span>
-            <span class="quiz-chip"><mat-icon>help_outline</mat-icon> {{ q.questions ? q.questions.length : '?' }} Qs</span>
-            <span class="quiz-chip"><mat-icon>flag</mat-icon> Pass: {{ q.passingMarks ?? q.passingScore }}</span>
+        <div class="category-card" [class.active]="activeTab === 'past'" (click)="selectTab('past')">
+          <mat-icon class="cat-icon past-icon">event_busy</mat-icon>
+          <div class="cat-body">
+            <span class="cat-count">{{ past.length }}</span>
+            <span class="cat-label">Past</span>
           </div>
+        </div>
 
-          <div class="result-row" *ngIf="q.attempted">
-            <mat-icon [ngClass]="q.resultStatus === 'PASSED' ? 'icon-pass' : 'icon-fail'">
-              {{ q.resultStatus === 'PASSED' ? 'check_circle' : 'cancel' }}
-            </mat-icon>
-            <span>Score: <strong>{{ q.score }}</strong></span>
-            <span class="status-chip" [ngClass]="getStatusColor(q.resultStatus ?? '')">{{ q.resultStatus }}</span>
+        <div class="category-card" [class.active]="activeTab === 'attempted'" (click)="selectTab('attempted')">
+          <mat-icon class="cat-icon attempted-icon">check_circle</mat-icon>
+          <div class="cat-body">
+            <span class="cat-count">{{ attempted.length }}</span>
+            <span class="cat-label">Attempted</span>
           </div>
-        </mat-card-content>
+        </div>
+      </div>
 
-        <mat-card-actions>
-          <button mat-flat-button color="primary" (click)="openQuiz(q)" [disabled]="q.attempted">
-            <mat-icon>{{ q.attempted ? 'done_all' : 'play_arrow' }}</mat-icon>
-            {{ q.attempted ? 'Attempted' : 'Take Quiz' }}
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+      <!-- Empty state for selected tab -->
+      <div *ngIf="filteredQuizzes.length === 0" class="empty-state">
+        <mat-icon>{{ activeTab === 'upcoming' ? 'fact_check' : activeTab === 'past' ? 'event_busy' : 'done_all' }}</mat-icon>
+        <h3>No {{ activeTab | titlecase }} Quizzes</h3>
+        <p *ngIf="activeTab === 'upcoming'">No quizzes due right now. Check back later.</p>
+        <p *ngIf="activeTab === 'past'">No past quizzes with missed deadlines.</p>
+        <p *ngIf="activeTab === 'attempted'">You haven't attempted any quizzes yet.</p>
+      </div>
+
+      <!-- Quiz grid -->
+      <div class="quiz-grid" *ngIf="filteredQuizzes.length > 0">
+        <mat-card class="quiz-card" *ngFor="let q of filteredQuizzes">
+          <mat-card-header>
+            <div mat-card-avatar class="quiz-avatar" [ngClass]="activeTab + '-avatar'">
+              <mat-icon>{{ activeTab === 'attempted' ? 'check_circle' : activeTab === 'past' ? 'event_busy' : 'fact_check' }}</mat-icon>
+            </div>
+            <mat-card-title>{{ q.title }}</mat-card-title>
+            <mat-card-subtitle>
+              Due: {{ q.dueDate ? (q.dueDate | date:'mediumDate') : 'No deadline' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="quiz-meta-row">
+              <span class="quiz-chip"><mat-icon>timer</mat-icon> {{ q.durationMinutes ?? 30 }} min</span>
+              <span class="quiz-chip"><mat-icon>help_outline</mat-icon> {{ q.questions ? q.questions.length : '?' }} Qs</span>
+              <span class="quiz-chip"><mat-icon>flag</mat-icon> Pass: {{ q.passingMarks ?? q.passingScore }}</span>
+            </div>
+
+            <div class="result-row" *ngIf="q.attempted">
+              <mat-icon [ngClass]="q.resultStatus === 'PASS' ? 'icon-pass' : 'icon-fail'">
+                {{ q.resultStatus === 'PASS' ? 'check_circle' : 'cancel' }}
+              </mat-icon>
+              <span>Score: <strong>{{ q.score }}</strong></span>
+              <span class="status-chip" [ngClass]="getStatusColor(q.resultStatus ?? '')">{{ q.resultStatus }}</span>
+            </div>
+
+            <div class="missed-badge" *ngIf="activeTab === 'past'">
+              <mat-icon>schedule</mat-icon> Deadline passed
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions>
+            <button mat-flat-button color="primary" (click)="openQuiz(q)"
+                    *ngIf="activeTab === 'upcoming'">
+              <mat-icon>play_arrow</mat-icon> Take Quiz
+            </button>
+            <button mat-stroked-button disabled *ngIf="activeTab === 'past'">
+              <mat-icon>lock</mat-icon> Missed
+            </button>
+            <button mat-stroked-button disabled *ngIf="activeTab === 'attempted'">
+              <mat-icon>done_all</mat-icon> Completed
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+    </ng-container>
   </div>
 </div>
 

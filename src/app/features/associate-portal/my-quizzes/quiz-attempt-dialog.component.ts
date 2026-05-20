@@ -2,7 +2,6 @@ import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
-import { AssociateService } from '../../../core/services/associate.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Quiz } from '../../../core/models';
 
@@ -22,10 +21,10 @@ interface AnswerMap { [questionId: number]: string; }
 
     <!-- Result view -->
     <mat-dialog-content *ngIf="result; else quizForm" class="result-view">
-      <div class="result-banner" [ngClass]="result.resultStatus === 'PASSED' ? 'result-pass' : 'result-fail'">
-        <mat-icon>{{ result.resultStatus === 'PASSED' ? 'check_circle' : 'cancel' }}</mat-icon>
+      <div class="result-banner" [ngClass]="result.resultStatus === 'PASS' ? 'result-pass' : 'result-fail'">
+        <mat-icon>{{ result.resultStatus === 'PASS' ? 'check_circle' : 'cancel' }}</mat-icon>
         <div>
-          <h3>{{ result.resultStatus === 'PASSED' ? 'Congratulations!' : 'Better luck next time!' }}</h3>
+          <h3>{{ result.resultStatus === 'PASS' ? 'Congratulations!' : 'Better luck next time!' }}</h3>
           <p>Score: <strong>{{ result.score }}</strong> / {{ quiz.maxScore }}</p>
           <p>Status: <strong>{{ result.resultStatus }}</strong></p>
         </div>
@@ -49,7 +48,7 @@ interface AnswerMap { [questionId: number]: string; }
 
     <mat-dialog-actions align="end">
       <button mat-stroked-button [mat-dialog-close]="!!result">{{ result ? 'Close' : 'Cancel' }}</button>
-      <button mat-flat-button color="primary" (click)="submit()" [disabled]="submitting || !!result">
+      <button *ngIf="!result" mat-flat-button color="primary" (click)="submit()" [disabled]="submitting">
         {{ submitting ? 'Submitting...' : 'Submit Quiz' }}
       </button>
     </mat-dialog-actions>
@@ -84,7 +83,6 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
 
   constructor(
     private svc: AssessmentService,
-    private associateSvc: AssociateService,
     private auth: AuthService,
     private snack: MatSnackBar,
     public dialogRef: MatDialogRef<QuizAttemptDialogComponent>,
@@ -95,11 +93,7 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const userId = this.auth.getUserId();
-    this.associateSvc.getAll().subscribe(list => {
-      const me = list.find((a: any) => a.userId === userId);
-      if (me) this.associateId = me.id;
-    });
+    this.associateId = this.auth.getUserId();
     this.startTimer();
   }
 
@@ -124,7 +118,7 @@ export class QuizAttemptDialogComponent implements OnInit, OnDestroy {
     clearInterval(this.timer);
     const answers = this.quiz.questions.map(q => ({
       questionId: q.id,
-      selectedAnswer: this.answers[q.id!] ?? 'A'
+      selectedOption: this.answers[q.id!] ?? null
     }));
     const payload = { associateId: this.associateId, answers };
     this.svc.submitQuizAttempt(this.quiz.id, payload).subscribe({

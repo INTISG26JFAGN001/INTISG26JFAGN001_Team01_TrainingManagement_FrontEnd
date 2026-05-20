@@ -24,6 +24,7 @@ const routes: Routes = [
   { path: 'schedules', loadChildren: () => import('./features/schedules/schedules.module').then(m => m.SchedulesModule), canActivate: [AuthGuard] },
   { path: 'enrollments', loadChildren: () => import('./features/enrollments/enrollments.module').then(m => m.EnrollmentsModule), canActivate: [AuthGuard, RoleGuard], data: { roles: STAFF } },
   { path: 'my-portal', loadChildren: () => import('./features/associate-portal/associate-portal.module').then(m => m.AssociatePortalModule), canActivate: [AuthGuard, RoleGuard], data: { roles: ASSOCIATE_ONLY } },
+  { path: 'helpdesk', loadChildren: () => import('./features/helpdesk/helpdesk.module').then(m => m.HelpdeskModule), canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

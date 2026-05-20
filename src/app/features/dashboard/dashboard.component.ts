@@ -120,15 +120,29 @@ export class DashboardComponent implements OnInit {
   private loadAssociateDashboard(): void {
     const userId = this.auth.getUserId();
 
+    // GET /associates/{userId} queries by userId column — direct lookup is correct
     this.associateSvc.getById(userId).pipe(
       catchError(() => of(null)),
       switchMap((me: any) => {
-        if (!me) return of({ me: null, batchId: null as number | null, batch: null, quizzes: [], schedules: [] });
-        return this.associateSvc.getMyEnrollment(me.id).pipe(
-          catchError(() => of(null)),
-          switchMap((enrollment: any) => {
-            const batchId: number | null = enrollment?.batchId ?? me.batchId ?? null;
-            if (!batchId) return of({ me, batchId: null, batch: null, quizzes: [], schedules: [] });
+        if (!me) return of({ me: null, batchId: null as number | null, batch: null, quizzes: [], schedules: [], projects: [] });
+
+        // Use batchId directly if valid, otherwise fall back to enrollment lookup
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? me.batchId : null;
+
+        const batchId$ = directBatchId
+          ? of(directBatchId)
+          : this.associateSvc.getMyEnrollment(me.id).pipe(
+              catchError(() => of(null)),
+              map((enrollment: any) => {
+                const arr = Array.isArray(enrollment) ? (enrollment[0] ?? null) : enrollment;
+                const bid: number | null = arr?.batchId ?? arr?.batch?.id ?? null;
+                return (bid && bid > 0) ? bid : null;
+              })
+            );
+
+        return batchId$.pipe(
+          switchMap((batchId: number | null) => {
+            if (!batchId) return of({ me, batchId: null, batch: null, quizzes: [], schedules: [], projects: [] });
             return forkJoin({
               batch:     this.batchSvc.getById(batchId).pipe(catchError(() => of(null))),
               quizzes:   this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
@@ -141,13 +155,13 @@ export class DashboardComponent implements OnInit {
       switchMap((res: any) => {
         if (!res.me || !res.batchId) return of({ ...res, quizResults: [] });
         const published = (res.quizzes ?? []).filter((q: any) => q.status === 'PUBLISHED');
-        if (!published.length) return of({ ...res, quizResults: [] });
+        if (!published.length) return of({ ...res, quizResults: [], quizzesTotal: 0 });
         const resultObs: Observable<any>[] = published.map((q: any) =>
-          this.assessmentSvc.getQuizResult(q.id, res.me.id).pipe(catchError(() => of(null)))
+          this.assessmentSvc.getQuizResult(q.id, userId).pipe(catchError(() => of(null)))
         );
         return forkJoin(resultObs).pipe(
-          map((results: any[]) => ({ ...res, quizResults: results.filter(Boolean) })),
-          catchError(() => of({ ...res, quizResults: [] }))
+          map((results: any[]) => ({ ...res, quizResults: results.filter(Boolean), quizzesTotal: published.length })),
+          catchError(() => of({ ...res, quizResults: [], quizzesTotal: published.length }))
         );
       })
     ).subscribe({
@@ -164,8 +178,8 @@ export class DashboardComponent implements OnInit {
           .sort((a: any, b: any) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
           .slice(0, 3);
         this.associateStats.upcomingSessions = this.upcomingSchedules.length;
-        this.associateStats.quizzesTotal = (res.quizResults ?? []).length;
-        this.associateStats.quizzesPassed = (res.quizResults ?? []).filter((r: any) => r.resultStatus === 'PASSED').length;
+        this.associateStats.quizzesTotal = res.quizzesTotal ?? 0;
+        this.associateStats.quizzesPassed = (res.quizResults ?? []).filter((r: any) => r.resultStatus === 'PASS').length;
         this.associateStats.projectsSubmitted = (res.projects ?? []).filter((p: any) => p.batchId === res.batchId).length;
         this.loading = false;
       },

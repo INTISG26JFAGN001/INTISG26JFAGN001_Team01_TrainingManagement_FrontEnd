@@ -4,7 +4,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
 import { switchMap, catchError, map } from 'rxjs/operators';
 import { ScheduleService } from '../../../core/services/schedule.service';
 import { BatchService } from '../../../core/services/batch.service';
@@ -51,25 +51,47 @@ export class ScheduleListComponent implements OnInit {
     if (this.isAssociate) {
       this.loadAssociateView();
     } else {
-      this.batchSvc.getAll().subscribe(b => { this.batches = b; });
+      this.loading = true;
+      this.batchSvc.getAll().subscribe(b => {
+        this.batches = b;
+        this.loadAllSchedules();
+      });
     }
   }
 
   private loadAssociateView(): void {
     const userId = this.auth.getUserId();
     this.loading = true;
+    // GET /associates/{userId} queries by the userId column (not PK), so this is correct
     this.associateSvc.getById(userId).pipe(
       catchError(() => of(null)),
       switchMap((me: any) => {
-        if (!me) return of({ me: null, enrollment: null });
+
+        console.log('Associate profile:', me);
+        console.log('me.batchId:', me?.batchId);
+
+        if (!me) return of(null);
+
+        // Use batchId directly if valid (> 0)
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? me.batchId : null;
+       
+         console.log('directBatchId resolved:', directBatchId);
+
+        if (directBatchId) return of(directBatchId);
+
+        // Fallback: look up via enrollment
         return this.associateSvc.getMyEnrollment(me.id).pipe(
           catchError(() => of(null)),
-          map((enrollment: any) => ({ me, enrollment }))
+          map((raw: any) => {
+            const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+            const enrollBatchId: number | null =
+              enrollment?.batchId ?? enrollment?.batch?.id ?? null;
+            return (enrollBatchId && enrollBatchId > 0) ? enrollBatchId : null;
+          })
         );
       })
     ).subscribe({
-      next: ({ me, enrollment }: any) => {
-        const batchId: number | null = enrollment?.batchId ?? me?.batchId ?? null;
+      next: (batchId: number | null) => {
         if (!batchId) { this.loading = false; return; }
         this.selectedBatchId = batchId;
         this.batchSvc.getById(batchId).pipe(catchError(() => of(null))).subscribe(b => {
@@ -81,8 +103,23 @@ export class ScheduleListComponent implements OnInit {
     });
   }
 
+  loadAllSchedules(): void {
+    this.loading = true;
+    this.svc.getAll().subscribe({
+      next: d => {
+        this.dataSource.data = d.sort((a, b) =>
+          new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
+        );
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
+  }
+
   loadSchedules(): void {
-    if (!this.selectedBatchId) return;
+    if (!this.selectedBatchId) { this.loadAllSchedules(); return; }
     this.loading = true;
     this.svc.getByBatch(this.selectedBatchId).subscribe({
       next: d => {
@@ -98,7 +135,11 @@ export class ScheduleListComponent implements OnInit {
   }
 
   onBatchChange(): void {
-    if (this.selectedBatchId) this.loadSchedules();
+    if (this.selectedBatchId) {
+      this.loadSchedules();
+    } else {
+      this.loadAllSchedules();
+    }
   }
 
   addSchedule(): void {

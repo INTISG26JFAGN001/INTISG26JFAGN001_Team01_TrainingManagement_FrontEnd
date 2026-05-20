@@ -34,7 +34,7 @@
         <span class="menu-role">{{ getRoleLabel() }}</span>
       </div>
       <mat-divider></mat-divider>
-      <button mat-menu-item>
+      <button mat-menu-item (click)="goToProfile()">
         <mat-icon>person_outline</mat-icon><span>My Profile</span>
       </button>
       <button mat-menu-item (click)="logout()" class="logout-item">
