@@ -5,7 +5,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap, map } from 'rxjs/operators';
 import { TrainerService } from '../../../core/services/trainer.service';
 import { UserService } from '../../../core/services/user.service';
 import { Trainer, User } from '../../../core/models';
@@ -36,23 +36,27 @@ export class TrainerListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    forkJoin({
-      trainers: this.svc.getAll(),
-      // users enriches display names — fallback to empty so trainer list still renders if user endpoint is unavailable
-      users: this.userSvc.getAll().pipe(catchError(() => of([] as User[])))
-    }).subscribe({
+    // GET /user/all is admin-only — fetch each trainer's user record individually via
+    // GET /user/{id} which is accessible to all authenticated roles.
+    this.svc.getAll().pipe(
+      switchMap((trainers: Trainer[]) => {
+        if (!trainers.length) return of({ trainers, users: [] as User[] });
+        const userIds = [...new Set(trainers.map(t => t.userId))];
+        return forkJoin(
+          userIds.map(uid => this.userSvc.getById(uid).pipe(catchError(() => of(null))))
+        ).pipe(
+          map(results => ({ trainers, users: results.filter(Boolean) as User[] }))
+        );
+      }),
+      catchError(() => of({ trainers: [] as Trainer[], users: [] as User[] }))
+    ).subscribe({
       next: ({ trainers, users }) => {
-        // Build a quick userId → User lookup map
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
-
-        // Enrich each trainer with fullName and email from the users list
         const enriched: Trainer[] = trainers.map(t => {
           const u = userMap.get(t.userId);
           return u ? { ...t, fullName: u.fullName || u.username, email: u.email } : t;
         });
-
         this.dataSource.data = enriched;
-
         this.loading = false;
       },
       error: () => { this.snack.open('Failed to load trainers', 'Close', { duration: 3000 }); this.loading = false; }

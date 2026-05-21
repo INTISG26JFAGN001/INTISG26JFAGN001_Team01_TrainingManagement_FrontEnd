@@ -109,7 +109,7 @@ export class ScheduleFormDialog {
             this.svc.updateSessionDate(this.data.scheduleId, String(this.form.value.sessionDate)).subscribe({
                 next: (res) => {
                     console.log(res); 
-                    this.snack.open(`Technology ${this.data ? 'updated' : 'created'}`, 'Close', { duration: 3000 });
+                    this.snack.open(`Session ${this.data ? 'updated' : 'created'} successfully`, 'Close', { duration: 3000 });
                     this.dialogRef.close(true);
                 },
                 error: (res) => {

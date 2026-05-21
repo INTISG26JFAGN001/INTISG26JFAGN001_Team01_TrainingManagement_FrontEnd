@@ -53,11 +53,22 @@ export class AssociateListComponent implements OnInit {
       this.loadMyProfile();
       return;
     }
+    // GET /user/all is admin-only — load associates + enrollments first, then fetch
+    // each user individually via GET /user/{id} (accessible to all roles).
     forkJoin({
       associates:  this.svc.getAll(),
-      users:       this.userSvc.getAll().pipe(catchError(() => of([] as User[]))),
       enrollments: this.svc.getAllEnrollments().pipe(catchError(() => of([] as Enrollment[])))
-    }).subscribe({
+    }).pipe(
+      switchMap(({ associates, enrollments }) => {
+        if (!associates.length) return of({ associates, enrollments, users: [] as User[] });
+        const userIds = [...new Set(associates.map((a: Associate) => a.userId))];
+        return forkJoin(
+          userIds.map(uid => this.userSvc.getById(uid).pipe(catchError(() => of(null))))
+        ).pipe(
+          map(results => ({ associates, enrollments, users: results.filter(Boolean) as User[] }))
+        );
+      })
+    ).subscribe({
       next: ({ associates, users, enrollments }) => {
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
         const STATUS_PRIORITY: Record<string, number> = { ACTIVE: 0, ENROLLED: 1, COMPLETED: 2 };

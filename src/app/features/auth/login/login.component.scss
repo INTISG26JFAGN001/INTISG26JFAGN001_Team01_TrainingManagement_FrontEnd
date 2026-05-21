@@ -203,6 +203,11 @@
     font-size: 14px;
     font-family: 'Inter', sans-serif;
     &::placeholder { color: rgba(255,255,255,0.3); }
+    /* Hide browser-native password reveal button (Edge / Chrome) */
+    &::-ms-reveal,
+    &::-ms-clear { display: none; }
+    &::-webkit-contacts-auto-fill-button,
+    &::-webkit-credentials-auto-fill-button { display: none; visibility: hidden; pointer-events: none; }
   }
 
   .eye-btn {

@@ -9,6 +9,7 @@ import { switchMap, catchError, map } from 'rxjs/operators';
 import { ScheduleService } from '../../../core/services/schedule.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { AssociateService } from '../../../core/services/associate.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { Schedule, Batch } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -30,6 +31,7 @@ export class ScheduleListComponent implements OnInit {
 
   isAssociate = this.auth.isAssociate();
   canManage = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
+  private trainerBatchIds: Set<number> | null = null;
 
   form = this.fb.group({
     batchId: [null as number | null, Validators.required],
@@ -46,6 +48,7 @@ export class ScheduleListComponent implements OnInit {
     private batchSvc: BatchService,
     private dialog: MatDialog,
     private associateSvc: AssociateService,
+    private trainerSvc: TrainerService,
     private fb: FormBuilder,
     private snack: MatSnackBar,
     private auth: AuthService
@@ -54,6 +57,23 @@ export class ScheduleListComponent implements OnInit {
   ngOnInit(): void {
     if (this.isAssociate) {
       this.loadAssociateView();
+    } else if (this.auth.isTrainer()) {
+      this.loading = true;
+      const userId = this.auth.getUserId();
+      this.trainerSvc.getAll().pipe(
+        switchMap((trainers: any[]) => {
+          const me = trainers.find(t => Number(t.userId) === Number(userId));
+          if (!me) return of([] as Batch[]);
+          const tid = me.trainerId ?? me.id;
+          if (!tid) return of([] as Batch[]);
+          return this.batchSvc.filterByTrainer(tid).pipe(catchError(() => of([] as Batch[])));
+        }),
+        catchError(() => of([] as Batch[]))
+      ).subscribe(b => {
+        this.batches = b;
+        this.trainerBatchIds = new Set(b.map(x => x.id));
+        this.loadAllSchedules();
+      });
     } else {
       this.loading = true;
       this.batchSvc.getAll().subscribe(b => {
@@ -111,10 +131,13 @@ export class ScheduleListComponent implements OnInit {
     this.loading = true;
     this.svc.getAll().subscribe({
       next: d => {
-        this.dataSource.data = d.sort((a, b) =>
+        let schedules = d;
+        if (this.trainerBatchIds) {
+          schedules = d.filter(s => this.trainerBatchIds!.has(Number(s.batchId)));
+        }
+        this.dataSource.data = schedules.sort((a, b) =>
           new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
         );
-
         this.loading = false;
       },
       error: () => { this.loading = false; }

@@ -1,8 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormBuilder, Validators } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ProjectService } from '../../../core/services/project.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Project, Review } from '../../../core/models';
 
 @Component({
@@ -80,6 +82,33 @@ import { Project, Review } from '../../../core/models';
                 <tr mat-header-row *matHeaderRowDef="reviewCols"></tr>
                 <tr mat-row *matRowDef="let row; columns: reviewCols;"></tr>
               </table>
+
+              <!-- Add Review Form (admin / trainer / tech-lead / scrum-lead) -->
+              <div *ngIf="canReview" class="review-form-section">
+                <div class="review-form-title">
+                  <mat-icon style="font-size:16px;width:16px;height:16px;color:var(--accent)">add_circle</mat-icon>
+                  Add Review
+                </div>
+                <form [formGroup]="reviewForm" class="review-form">
+                  <mat-form-field appearance="outline" class="review-field">
+                    <mat-label>Score</mat-label>
+                    <input matInput type="number" formControlName="score" min="0" max="100" placeholder="0–100"/>
+                    <mat-error *ngIf="reviewForm.get('score')?.hasError('required')">Score is required</mat-error>
+                    <mat-error *ngIf="reviewForm.get('score')?.hasError('min') || reviewForm.get('score')?.hasError('max')">Score must be 0–100</mat-error>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="review-field review-field-full">
+                    <mat-label>Comments</mat-label>
+                    <textarea matInput formControlName="comments" rows="3" placeholder="Enter review comments…"></textarea>
+                  </mat-form-field>
+                  <div class="review-actions">
+                    <button mat-flat-button color="primary" (click)="submitReview()" [disabled]="reviewForm.invalid || savingReview">
+                      {{ savingReview ? 'Submitting…' : 'Submit Review' }}
+                    </button>
+                    <span *ngIf="reviewError" class="review-error">{{ reviewError }}</span>
+                    <span *ngIf="reviewSuccess" class="review-success">Review submitted successfully!</span>
+                  </div>
+                </form>
+              </div>
             </div>
           </mat-tab>
         </mat-tab-group>
@@ -123,6 +152,16 @@ import { Project, Review } from '../../../core/models';
     ::ng-deep .results-table th { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
     ::ng-deep .results-table td { font-size:13px; color:var(--text-primary); border-bottom:1px solid var(--border); }
     ::ng-deep .results-table tr:last-child td { border-bottom:none; }
+
+    /* Add review form */
+    .review-form-section { margin-top:20px; padding-top:16px; border-top:1px solid var(--border,#e0e0e0); }
+    .review-form-title { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+    .review-form { display:flex; flex-wrap:wrap; gap:12px; }
+    .review-field { flex:1; min-width:140px; }
+    .review-field-full { flex:100%; }
+    .review-actions { flex:100%; display:flex; align-items:center; gap:12px; }
+    .review-error { font-size:12px; color:#f44336; }
+    .review-success { font-size:12px; color:#34d399; font-weight:600; }
   `]
 })
 export class ProjectDetailDialogComponent implements OnInit {
@@ -131,9 +170,21 @@ export class ProjectDetailDialogComponent implements OnInit {
   loading = true;
   reviewCols = ['reviewer', 'score', 'comments', 'reviewDate'];
 
+  canReview = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD', 'ROLE_SCRUM_LEAD');
+  savingReview = false;
+  reviewError = '';
+  reviewSuccess = false;
+
+  reviewForm = this.fb.group({
+    score:    [null as number | null, [Validators.required, Validators.min(0), Validators.max(100)]],
+    comments: ['']
+  });
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { projectId: number; title: string },
-    private svc: ProjectService
+    private svc: ProjectService,
+    private auth: AuthService,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
@@ -147,6 +198,27 @@ export class ProjectDetailDialogComponent implements OnInit {
         this.loading = false;
       },
       error: () => { this.loading = false; }
+    });
+  }
+
+  submitReview(): void {
+    if (this.reviewForm.invalid) { this.reviewForm.markAllAsTouched(); return; }
+    this.savingReview = true;
+    this.reviewError = '';
+    this.reviewSuccess = false;
+    const { score, comments } = this.reviewForm.value;
+    this.svc.createReview(this.data.projectId, { score: score!, comments: comments || '' }).subscribe({
+      next: (r) => {
+        this.reviews = [...this.reviews, r];
+        this.reviewForm.reset();
+        this.savingReview = false;
+        this.reviewSuccess = true;
+        setTimeout(() => this.reviewSuccess = false, 3000);
+      },
+      error: (e) => {
+        this.reviewError = e.error?.message || 'Failed to submit review';
+        this.savingReview = false;
+      }
     });
   }
 }

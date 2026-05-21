@@ -7,6 +7,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
 import { AssessmentService } from '../../../core/services/assessment.service';
 import { BatchService } from '../../../core/services/batch.service';
+import { TrainerService } from '../../../core/services/trainer.service';
+import { of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { Assessment, Batch } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '../../../core/services/auth.service';
@@ -29,6 +32,7 @@ export class InterviewListComponent implements OnInit {
 
   filter = { batchId: '', status: '', category: '', fromDate: '', toDate: '' };
   private allData: Assessment[] = [];
+  private trainerBatchIds: Set<number> | null = null;
 
   get displayedColumns(): string[] {
     const cols = ['title', 'batch', 'category', 'dueDate', 'status'];
@@ -42,13 +46,32 @@ export class InterviewListComponent implements OnInit {
   constructor(
     private svc: AssessmentService,
     private batchSvc: BatchService,
+    private trainerSvc: TrainerService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private auth: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.batchSvc.getAll().subscribe(b => { this.batches = b; this.load(); });
+    if (this.auth.isTrainer()) {
+      const userId = this.auth.getUserId();
+      this.trainerSvc.getAll().pipe(
+        switchMap((trainers: any[]) => {
+          const me = trainers.find(t => Number(t.userId) === Number(userId));
+          if (!me) return of([] as Batch[]);
+          const tid = me.trainerId ?? me.id;
+          if (!tid) return of([] as Batch[]);
+          return this.batchSvc.filterByTrainer(tid).pipe(catchError(() => of([] as Batch[])));
+        }),
+        catchError(() => of([] as Batch[]))
+      ).subscribe(b => {
+        this.batches = b;
+        this.trainerBatchIds = new Set(b.map(x => x.id));
+        this.load();
+      });
+    } else {
+      this.batchSvc.getAll().subscribe(b => { this.batches = b; this.load(); });
+    }
   }
 
   load(): void {
@@ -78,8 +101,9 @@ export class InterviewListComponent implements OnInit {
             error: () => this.loadData()
           });
         } else {
-          this.allData = d;
-          this.dataSource.data = d;
+          const filtered = this.trainerBatchIds ? d.filter(i => this.trainerBatchIds!.has(Number(i.batchId))) : d;
+          this.allData = filtered;
+          this.dataSource.data = filtered;
           this.loading = false;
         }
       },
@@ -91,9 +115,9 @@ export class InterviewListComponent implements OnInit {
   private loadData(): void {
     this.svc.getByType('INTERVIEW').subscribe({
       next: d => {
-        this.allData = d;
-        this.dataSource.data = d;
-
+        const filtered = this.trainerBatchIds ? d.filter(i => this.trainerBatchIds!.has(Number(i.batchId))) : d;
+        this.allData = filtered;
+        this.dataSource.data = filtered;
         this.loading = false;
       },
       error: () => { this.loading = false; }

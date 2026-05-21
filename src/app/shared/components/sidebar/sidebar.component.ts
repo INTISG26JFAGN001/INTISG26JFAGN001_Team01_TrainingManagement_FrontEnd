@@ -32,7 +32,7 @@ export class SidebarComponent {
         { label: 'Associates', icon: 'person', route: '/associates', roles: this.STAFF },
         { label: 'Trainers', icon: 'supervisor_account', route: '/trainers', roles: this.ADMIN_LEAD },
         { label: 'Schedules', icon: 'calendar_today', route: '/schedules', roles: this.STAFF },
-        { label: 'Enrollments', icon: 'assignment_turned_in', route: '/enrollments', roles: this.STAFF },
+        { label: 'Enrollments', icon: 'assignment_turned_in', route: '/enrollments', roles: this.ADMIN_LEAD },
       ]
     },
     {

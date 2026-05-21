@@ -6,7 +6,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, combineLatest, forkJoin, Observable, of } from 'rxjs';
-import { catchError, map, startWith } from 'rxjs/operators';
+import { catchError, map, startWith, switchMap } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { UserService } from '../../../core/services/user.service';
@@ -102,9 +102,19 @@ export class EnrollmentsPageComponent implements OnInit {
 
     forkJoin({
       associates: this.svc.getAll(),
-      batches:    this.batchSvc.getAll(),
-      users:      this.userSvc.getAll().pipe(catchError(() => of([] as User[])))
-    }).subscribe({
+      batches:    this.batchSvc.getAll()
+    }).pipe(
+      switchMap(({ associates, batches }) => {
+        if (!associates.length) return of({ associates, batches, users: [] as User[] });
+        const userIds = [...new Set(associates.map((a: Associate) => a.userId))];
+        return forkJoin(
+          userIds.map(uid => this.userSvc.getById(uid).pipe(catchError(() => of(null))))
+        ).pipe(
+          map(results => ({ associates, batches, users: results.filter(Boolean) as User[] }))
+        );
+      }),
+      catchError(() => of({ associates: [] as Associate[], batches: [] as Batch[], users: [] as User[] }))
+    ).subscribe({
       next: ({ associates, batches, users }) => {
         // Enrich associates with real names from user service
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));

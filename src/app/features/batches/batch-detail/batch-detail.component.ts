@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap, map } from 'rxjs/operators';
 import { BatchService } from '../../../core/services/batch.service';
 import { TrainerService } from '../../../core/services/trainer.service';
 import { UserService } from '../../../core/services/user.service';
@@ -31,22 +31,44 @@ export class BatchDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+
+    // Step 1: load batch + enrollments + associates + trainers
     forkJoin({
-      batch: this.svc.getDetails(id),
-      // Use enrollment endpoint — source of truth for who is actually enrolled in this batch
-      enrollments: this.associateSvc.getEnrollmentsByBatch(id).pipe(catchError(() => of([] as Enrollment[]))),
-      // Load all associates so we can resolve associateId → userId for each enrollment
+      batch:         this.svc.getDetails(id),
+      enrollments:   this.associateSvc.getEnrollmentsByBatch(id).pipe(catchError(() => of([] as Enrollment[]))),
       allAssociates: this.associateSvc.getAll().pipe(catchError(() => of([] as Associate[]))),
-      trainers: this.trainerSvc.getAll().pipe(catchError(() => of([] as Trainer[]))),
-      users: this.userSvc.getAll().pipe(catchError(() => of([] as User[])))
-    }).subscribe({
+      trainers:      this.trainerSvc.getAll().pipe(catchError(() => of([] as Trainer[])))
+    }).pipe(
+      // Step 2: collect the exact userIds we need, then fetch only those users individually
+      // GET /user/{id} is accessible to all roles; GET /user/all is admin-only
+      switchMap(({ batch, enrollments, allAssociates, trainers }) => {
+        const associateMap = new Map<number, Associate>(allAssociates.map(a => [a.id, a]));
+        const trainer = trainers.find(t => (t.trainerId ?? t.id) === batch.trainerId);
+
+        const userIds = new Set<number>();
+        enrollments.forEach((e: Enrollment) => {
+          const assoc = associateMap.get(e.associateId);
+          if (assoc?.userId) userIds.add(assoc.userId);
+        });
+        if (trainer?.userId) userIds.add(trainer.userId);
+
+        const userFetches = [...userIds].map(uid =>
+          this.userSvc.getById(uid).pipe(catchError(() => of(null)))
+        );
+
+        const users$ = userFetches.length
+          ? forkJoin(userFetches).pipe(map(results => results.filter(Boolean) as User[]))
+          : of([] as User[]);
+
+        return users$.pipe(
+          map(users => ({ batch, enrollments, allAssociates, trainers, users }))
+        );
+      })
+    ).subscribe({
       next: ({ batch, enrollments, allAssociates, trainers, users }) => {
-        // Build lookup maps
-        const userMap = new Map<number, User>(users.map(u => [u.id, u]));
-        // associateMap keyed by Associate PK (id), matching Enrollment.associateId
+        const userMap      = new Map<number, User>(users.map(u => [u.id, u]));
         const associateMap = new Map<number, Associate>(allAssociates.map(a => [a.id, a]));
 
-        // Build enrolled students: enrollment → associate (by PK) → user (by userId)
         const enrichedAssociates: Associate[] = enrollments.map((e: Enrollment) => {
           const assoc = associateMap.get(e.associateId);
           if (!assoc) return { id: e.associateId, userId: e.associateId } as Associate;
@@ -54,16 +76,14 @@ export class BatchDetailComponent implements OnInit {
           return u ? { ...assoc, fullName: u.fullName || u.username, email: u.email } : assoc;
         });
 
-        // Attach enriched associates — backend doesn't include them in BatchDetailsDTO
         (batch as any).associates = enrichedAssociates;
         this.batch = batch as BatchDetails;
 
-        // Resolve trainer name
         const trainer = trainers.find(t => (t.trainerId ?? t.id) === batch.trainerId);
         if (trainer) {
           this.trainerUserId = trainer.userId;
-          const trainerUser = userMap.get(trainer.userId);
-          this.trainerName = trainerUser
+          const trainerUser  = userMap.get(trainer.userId);
+          this.trainerName   = trainerUser
             ? (trainerUser.fullName || trainerUser.username)
             : (trainer.fullName || '');
         }
