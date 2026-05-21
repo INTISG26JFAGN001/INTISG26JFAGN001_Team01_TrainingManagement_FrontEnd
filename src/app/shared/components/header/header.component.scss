@@ -99,17 +99,6 @@
 
 .menu-btn { margin-right: 2px; }
 
-.notif-btn {
-  .notif-dot {
-    position: absolute;
-    top: 7px; right: 8px;
-    width: 7px; height: 7px;
-    background: var(--accent);
-    border-radius: 50%;
-    border: 1.5px solid var(--bg-header);
-  }
-}
-
 /* ── User menu trigger ── */
 .user-menu {
   display: flex;

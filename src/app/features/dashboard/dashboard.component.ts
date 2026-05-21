@@ -170,7 +170,7 @@ export class DashboardComponent implements OnInit {
               batch:     this.batchSvc.getById(batchId).pipe(catchError(() => of(null))),
               quizzes:   this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
               schedules: this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([]))),
-              projects:  this.projectSvc.getProjects().pipe(catchError(() => of([])))
+              projects:  this.projectSvc.getProjectsByAssociate(me.id).pipe(catchError(() => of([])))
             }).pipe(map(extra => ({ me, batchId, ...extra })));
           })
         );
@@ -203,7 +203,7 @@ export class DashboardComponent implements OnInit {
         this.associateStats.upcomingSessions = this.upcomingSchedules.length;
         this.associateStats.quizzesTotal = res.quizzesTotal ?? 0;
         this.associateStats.quizzesPassed = (res.quizResults ?? []).filter((r: any) => r.resultStatus === 'PASS').length;
-        this.associateStats.projectsSubmitted = (res.projects ?? []).filter((p: any) => p.batchId === res.batchId).length;
+        this.associateStats.projectsSubmitted = (res.projects ?? []).length;
         this.loading = false;
       },
       error: () => { this.loading = false; }

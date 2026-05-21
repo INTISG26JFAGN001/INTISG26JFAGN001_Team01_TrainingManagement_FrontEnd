@@ -63,13 +63,9 @@ export class MyProjectsComponent implements OnInit {
 
         return batchId$.pipe(
           switchMap((batchId: number | null) => {
-            if (!batchId) return of({ projects: [], batchId: null, associateId: me.id });
-            return this.projectSvc.getProjects().pipe(
+            return this.projectSvc.getProjectsByAssociate(me.id).pipe(
               catchError(() => of([])),
-              switchMap((all: any[]) => {
-                const mine = all.filter((p: any) => p.batchId === batchId);
-                return of({ projects: mine, batchId, associateId: me.id });
-              })
+              switchMap((projects: any[]) => of({ projects, batchId, associateId: me.id }))
             );
           })
         );
@@ -88,7 +84,7 @@ export class MyProjectsComponent implements OnInit {
   submitProject(): void {
     if (this.form.invalid || !this.batchId) return;
     this.submitting = true;
-    const payload = { ...this.form.value, batchId: this.batchId };
+    const payload = { ...this.form.value, batchId: this.batchId, associateId: this.associateId };
     this.projectSvc.submitProject(payload).subscribe({
       next: () => {
         this.snack.open('Project submitted successfully!', 'Close', { duration: 3000 });

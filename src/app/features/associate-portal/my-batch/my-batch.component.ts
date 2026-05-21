@@ -86,7 +86,7 @@ export class MyBatchComponent implements OnInit {
 
         this.totalQuizzes    = (res.quizzes    as any[]).filter((q: any) => q.status === 'PUBLISHED' || q.status === 'CLOSED').length;
         this.totalInterviews = (res.interviews as any[]).filter((i: any) => i.status === 'PUBLISHED' || i.status === 'CLOSED').length;
-        this.myProjects      = (res.projects   as any[]).filter((p: any) => p.batchId === res.batchId).length;
+        this.myProjects      = (res.projects   as any[]).length;
         this.batchmates      = Array.isArray(res.batchmates) ? (res.batchmates as any[]).length : 0;
 
         if (this.batchStartDate && this.batchEndDate) {
@@ -123,7 +123,7 @@ export class MyBatchComponent implements OnInit {
       schedules:   this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([]))),
       quizzes:     this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
       interviews:  this.assessmentSvc.getInterviewsByBatch(batchId).pipe(catchError(() => of([]))),
-      projects:    this.projectSvc.getProjects().pipe(catchError(() => of([]))),
+      projects:    this.projectSvc.getProjectsByAssociate(this.associateId).pipe(catchError(() => of([]))),
       batchmates:  this.associateSvc.getByBatch(batchId).pipe(catchError(() => of([])))
     }).pipe(switchMap((res: any) => of({ ...res, batchId })));
   }

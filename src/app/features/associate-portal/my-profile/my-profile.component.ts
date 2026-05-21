@@ -64,7 +64,7 @@ export class MyProfileComponent implements OnInit {
                 catchError(() => this.batchSvc.getById(batchId).pipe(catchError(() => of(null))))
               ),
               quizzes: this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
-              projects: this.projectSvc.getProjects().pipe(catchError(() => of([])))
+              projects: this.projectSvc.getProjectsByAssociate(me.id).pipe(catchError(() => of([])))
             }).pipe(
               switchMap(({ batch, quizzes, projects }: any) => {
                 const published = (quizzes as any[]).filter(
@@ -94,8 +94,7 @@ export class MyProfileComponent implements OnInit {
         this.quizzesAttempted = results.filter(Boolean).length;
         this.quizzesPassed    = results.filter((r: any) => r?.resultStatus === 'PASS').length;
 
-        const batchId = res.batchId ?? null;
-        this.projectsCount = (res.projects ?? []).filter((p: any) => p.batchId === batchId).length;
+        this.projectsCount = (res.projects ?? []).length;
 
         this.loading = false;
       },

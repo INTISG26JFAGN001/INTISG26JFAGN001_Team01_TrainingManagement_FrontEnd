@@ -12,13 +12,6 @@
   </div>
 
   <div class="header-right">
-    <button class="icon-btn" matTooltip="Settings">
-      <mat-icon>settings</mat-icon>
-    </button>
-    <button class="icon-btn notif-btn" matTooltip="Notifications">
-      <mat-icon>notifications_none</mat-icon>
-      <span class="notif-dot"></span>
-    </button>
     <button class="icon-btn" (click)="toggleTheme()" [matTooltip]="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
       <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
