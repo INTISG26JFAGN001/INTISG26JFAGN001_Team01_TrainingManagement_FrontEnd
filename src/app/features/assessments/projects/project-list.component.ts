@@ -5,9 +5,10 @@ import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { ProjectService } from '../../../core/services/project.service';
 import { BatchService } from '../../../core/services/batch.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Project, Batch } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -36,6 +37,7 @@ export class ProjectListComponent implements OnInit {
   constructor(
     private svc: ProjectService,
     private batchSvc: BatchService,
+    private trainerSvc: TrainerService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private auth: AuthService
@@ -45,12 +47,30 @@ export class ProjectListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
+    const batches$ = this.auth.isTrainer()
+      ? this.trainerSvc.getAll().pipe(
+          switchMap((trainers: any[]) => {
+            const me = trainers.find(t => Number(t.userId) === Number(this.auth.getUserId()));
+            if (!me) return of([] as Batch[]);
+            const tid = me.trainerId ?? me.id;
+            if (!tid) return of([] as Batch[]);
+            return this.batchSvc.filterByTrainer(tid).pipe(catchError(() => of([] as Batch[])));
+          }),
+          catchError(() => of([] as Batch[]))
+        )
+      : this.batchSvc.getAll().pipe(catchError(() => of([] as Batch[])));
+
     forkJoin({
       projects: this.svc.getProjects().pipe(catchError(() => of([]))),
-      batches:  this.batchSvc.getAll().pipe(catchError(() => of([])))
+      batches:  batches$
     }).subscribe(({ projects, batches }) => {
-      this.allProjects = projects;
       this.batches = batches;
+      if (this.auth.isTrainer()) {
+        const batchIds = new Set(batches.map((b: Batch) => b.id));
+        this.allProjects = projects.filter((p: Project) => batchIds.has(Number(p.batchId)));
+      } else {
+        this.allProjects = projects;
+      }
       this.applyFilter();
       this.loading = false;
     });

@@ -53,6 +53,8 @@ export class AssociateListComponent implements OnInit {
       this.loadMyProfile();
       return;
     }
+    // GET /user/all is admin-only — load associates + enrollments first, then fetch
+    // each user individually via GET /user/{id} (accessible to all roles).
     forkJoin({
       associates:  this.svc.getAll(),
       users:       this.userSvc.getAll().pipe(catchError(() => of([] as User[]))),

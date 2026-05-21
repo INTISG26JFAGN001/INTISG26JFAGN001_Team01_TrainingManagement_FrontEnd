@@ -107,10 +107,15 @@ export class BatchListComponent implements OnInit {
     return { ACTIVE: 'status-ongoing', UPCOMING: 'status-upcoming', COMPLETED: 'status-completed' }[s] ?? '';
   }
 
-  /** Safely format a date — handles ISO, date-only, and timestamp formats */
-  formatDate(val: string | undefined): string {
+  /** Safely format a date — handles ISO strings, date-only, and Java LocalDate array [y, m, d] */
+  formatDate(val: any): string {
     if (!val) return '—';
+    // Java LocalDate serialized as [year, month, day] array (month is 1-based)
+    if (Array.isArray(val) && val.length >= 3) {
+      const [y, m, day] = val;
+      val = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
     const d = new Date(val);
-    return isNaN(d.getTime()) ? val : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 }

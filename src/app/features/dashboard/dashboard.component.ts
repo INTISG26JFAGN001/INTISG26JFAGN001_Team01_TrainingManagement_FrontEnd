@@ -113,22 +113,24 @@ export class DashboardComponent implements OnInit {
         });
 
         const me = (trainers as any[]).find(t => Number(t.userId) === Number(userId));
-        const myIds = new Set<number>(
-          [me?.trainerId, me?.id, me?.userId].filter((v): v is number => v != null)
-        );
-        const trainerBatches = myIds.size > 0
-          ? (batches as any[]).filter(b => myIds.has(Number(b.trainerId)))
+        // Use only the Trainer PK (trainerId ?? id) — never userId, which is a User PK
+        // and could accidentally match batches of other trainers whose PK = this user's ID.
+        const tid: number | null = me ? Number(me.trainerId ?? me.id) : null;
+        const trainerBatches = tid != null
+          ? (batches as any[]).filter(b => Number(b.trainerId) === tid)
           : [];
 
         const enriched = trainerBatches.map((b: any) => ({
           ...b, associateCount: batchCountMap.get(b.id) ?? 0
         }));
 
+        const trainerBatchIdSet = new Set<number>(trainerBatches.map((b: any) => Number(b.id)));
+
         this.myBatches = enriched.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
-        this.trainerStats.myBatches    = this.myBatches.length;
-        this.trainerStats.myAssociates = this.myBatches.reduce((sum: number, b: any) => sum + (b.associateCount ?? 0), 0);
-        this.trainerStats.quizzes      = (assessments as any[]).filter((a: any) => a.type === 'QUIZ').length;
-        this.trainerStats.interviews   = (assessments as any[]).filter((a: any) => a.type !== 'QUIZ').length;
+        this.trainerStats.myBatches    = enriched.length;  // all trainer batches, not just active/upcoming
+        this.trainerStats.myAssociates = enriched.reduce((sum: number, b: any) => sum + (b.associateCount ?? 0), 0);
+        this.trainerStats.quizzes      = (assessments as any[]).filter((a: any) => a.type === 'QUIZ'       && trainerBatchIdSet.has(Number(a.batchId))).length;
+        this.trainerStats.interviews   = (assessments as any[]).filter((a: any) => a.type === 'INTERVIEW'  && trainerBatchIdSet.has(Number(a.batchId))).length;
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -170,7 +172,7 @@ export class DashboardComponent implements OnInit {
               batch:     this.batchSvc.getById(batchId).pipe(catchError(() => of(null))),
               quizzes:   this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
               schedules: this.scheduleSvc.getByBatch(batchId).pipe(catchError(() => of([]))),
-              projects:  this.projectSvc.getProjects().pipe(catchError(() => of([])))
+              projects:  this.projectSvc.getProjectsByAssociate(me.id).pipe(catchError(() => of([])))
             }).pipe(map(extra => ({ me, batchId, ...extra })));
           })
         );
@@ -203,7 +205,7 @@ export class DashboardComponent implements OnInit {
         this.associateStats.upcomingSessions = this.upcomingSchedules.length;
         this.associateStats.quizzesTotal = res.quizzesTotal ?? 0;
         this.associateStats.quizzesPassed = (res.quizResults ?? []).filter((r: any) => r.resultStatus === 'PASS').length;
-        this.associateStats.projectsSubmitted = (res.projects ?? []).filter((p: any) => p.batchId === res.batchId).length;
+        this.associateStats.projectsSubmitted = (res.projects ?? []).length;
         this.loading = false;
       },
       error: () => { this.loading = false; }

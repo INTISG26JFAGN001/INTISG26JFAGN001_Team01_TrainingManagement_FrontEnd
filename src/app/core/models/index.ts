@@ -93,9 +93,9 @@ export interface Interview extends Assessment {
 }
 export interface Rubric { id: number; assessmentId: number; criteria: string; weight: number; }
 
-// Project — matches ProjectResponseDTO { id, batchId, title, repoUrl, submissionDate }
+// Project — matches ProjectResponseDTO { id, batchId, associateId, title, repoUrl, submissionDate }
 export interface Project {
-  id: number; batchId: number; title: string; repoUrl: string; submissionDate?: string;
+  id: number; batchId: number; associateId?: number; title: string; repoUrl: string; submissionDate?: string;
 }
 
 // Review — matches ReviewResponseDTO { reviewerId, score, comments, type }

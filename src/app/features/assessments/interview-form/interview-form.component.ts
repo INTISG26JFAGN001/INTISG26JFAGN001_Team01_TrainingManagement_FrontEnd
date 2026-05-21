@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssessmentService } from '../../../core/services/assessment.service';
 import { BatchService } from '../../../core/services/batch.service';
+import { TrainerService } from '../../../core/services/trainer.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Batch, Interview } from '../../../core/models';
 
@@ -63,6 +64,7 @@ export class InterviewFormComponent implements OnInit {
     private fb: FormBuilder,
     private svc: AssessmentService,
     private batchSvc: BatchService,
+    private trainerSvc: TrainerService,
     private snack: MatSnackBar,
     private auth: AuthService,
     public dialogRef: MatDialogRef<InterviewFormComponent>,
@@ -73,7 +75,20 @@ export class InterviewFormComponent implements OnInit {
     this.creatorUsername = this.auth.getUsername();
     this.creatorRole     = this.auth.getRole() ?? '';
 
-    this.batchSvc.getAll().subscribe(b => this.batches = b);
+    if (this.auth.isTrainer()) {
+      const userId = this.auth.getUserId();
+      this.trainerSvc.getAll().subscribe(trainers => {
+        const match = trainers.find(t => Number(t.userId) === Number(userId));
+        const tid = match?.trainerId ?? match?.id ?? null;
+        if (tid) {
+          this.batchSvc.filterByTrainer(tid).subscribe(b => this.batches = b);
+        } else {
+          this.batchSvc.getAll().subscribe(b => this.batches = b);
+        }
+      });
+    } else {
+      this.batchSvc.getAll().subscribe(b => this.batches = b);
+    }
 
     if (this.data) {
       /* ── EDIT MODE ── */

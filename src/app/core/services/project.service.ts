@@ -11,6 +11,7 @@ export class ProjectService {
   constructor(private http: HttpClient) {}
 
   getProjects(): Observable<Project[]> { return this.http.get<Project[]>(`${this.base}/projects/getProjects`); }
+  getProjectsByAssociate(associateId: number): Observable<Project[]> { return this.http.get<Project[]>(`${this.base}/projects/associate/${associateId}`); }
   getProject(id: number): Observable<Project> { return this.http.get<Project>(`${this.base}/projects/${id}`); }
   submitProject(p: Partial<Project>): Observable<Project> { return this.http.post<Project>(`${this.base}/projects/submitProject`, p); }
   updateProject(id: number, p: Partial<Project>): Observable<Project> { return this.http.put<Project>(`${this.base}/projects/update/${id}`, p); }
