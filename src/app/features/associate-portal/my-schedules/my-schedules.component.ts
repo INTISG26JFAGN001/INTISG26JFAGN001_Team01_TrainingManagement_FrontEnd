@@ -34,7 +34,7 @@ export class MySchedulesComponent implements OnInit {
         if (!me) return of([]);
 
         // Use batchId directly from associate record if valid (> 0)
-        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? me.batchId : null;
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
         if (directBatchId) {
           this.batchId = directBatchId;
           return this.scheduleSvc.getByBatch(directBatchId).pipe(catchError(() => of([])));

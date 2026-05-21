@@ -65,21 +65,32 @@ export class DashboardComponent implements OnInit {
 
   private loadAdminDashboard(): void {
     forkJoin({
-      batches: this.batchSvc.getAll().pipe(catchError(() => of([]))),
-      associates: this.associateSvc.getAll().pipe(catchError(() => of([]))),
-      trainers: this.trainerSvc.getAll().pipe(catchError(() => of([]))),
-      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([])))
+      batches:     this.batchSvc.getAll().pipe(catchError(() => of([]))),
+      associates:  this.associateSvc.getAll().pipe(catchError(() => of([]))),
+      trainers:    this.trainerSvc.getAll().pipe(catchError(() => of([]))),
+      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([]))),
+      enrollments: this.associateSvc.getAllEnrollments().pipe(catchError(() => of([])))
     }).subscribe({
       next: (res) => {
-        this.stats.batches = res.batches.length;
-        this.stats.associates = res.associates.length;
-        this.stats.trainers = res.trainers.length;
+        // Build batchId → associate count from enrollments
+        const batchCountMap = new Map<number, number>();
+        (res.enrollments as any[]).forEach((e: any) => {
+          if (e.batchId) batchCountMap.set(e.batchId, (batchCountMap.get(e.batchId) ?? 0) + 1);
+        });
+
+        const enriched = (res.batches as any[]).map((b: any) => ({
+          ...b, associateCount: batchCountMap.get(b.id) ?? 0
+        }));
+
+        this.stats.batches     = enriched.length;
+        this.stats.associates  = res.associates.length;
+        this.stats.trainers    = res.trainers.length;
         this.stats.assessments = res.assessments.length;
-        this.stats.ongoing = res.batches.filter((b: any) => b.status === 'ACTIVE').length;
-        this.stats.upcoming = res.batches.filter((b: any) => b.status === 'UPCOMING').length;
-        this.stats.completed = res.batches.filter((b: any) => b.status === 'COMPLETED').length;
-        this.recentBatches = res.batches.slice(0, 5);
-        this.ongoingBatches = res.batches.filter((b: any) => b.status === 'ACTIVE').slice(0, 4);
+        this.stats.ongoing     = enriched.filter((b: any) => b.status === 'ACTIVE').length;
+        this.stats.upcoming    = enriched.filter((b: any) => b.status === 'UPCOMING').length;
+        this.stats.completed   = enriched.filter((b: any) => b.status === 'COMPLETED').length;
+        this.recentBatches     = enriched.slice(0, 5);
+        this.ongoingBatches    = enriched.filter((b: any) => b.status === 'ACTIVE').slice(0, 4);
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -91,9 +102,16 @@ export class DashboardComponent implements OnInit {
     forkJoin({
       trainers:    this.trainerSvc.getAll().pipe(catchError(() => of([]))),
       batches:     this.batchSvc.getAll().pipe(catchError(() => of([]))),
-      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([])))
+      assessments: this.assessmentSvc.getAll().pipe(catchError(() => of([]))),
+      enrollments: this.associateSvc.getAllEnrollments().pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ trainers, batches, assessments }) => {
+      next: ({ trainers, batches, assessments, enrollments }) => {
+        // Build batchId → associate count from enrollments
+        const batchCountMap = new Map<number, number>();
+        (enrollments as any[]).forEach((e: any) => {
+          if (e.batchId) batchCountMap.set(e.batchId, (batchCountMap.get(e.batchId) ?? 0) + 1);
+        });
+
         const me = (trainers as any[]).find(t => Number(t.userId) === Number(userId));
         const myIds = new Set<number>(
           [me?.trainerId, me?.id, me?.userId].filter((v): v is number => v != null)
@@ -101,11 +119,16 @@ export class DashboardComponent implements OnInit {
         const trainerBatches = myIds.size > 0
           ? (batches as any[]).filter(b => myIds.has(Number(b.trainerId)))
           : [];
-        this.myBatches = trainerBatches.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
-        this.trainerStats.myBatches = this.myBatches.length;
-        this.trainerStats.myAssociates = this.myBatches.reduce((sum: number, b: any) => sum + (b.associates?.length ?? 0), 0);
-        this.trainerStats.quizzes = (assessments as any[]).filter((a: any) => a.type === 'QUIZ').length;
-        this.trainerStats.interviews = (assessments as any[]).filter((a: any) => a.type !== 'QUIZ').length;
+
+        const enriched = trainerBatches.map((b: any) => ({
+          ...b, associateCount: batchCountMap.get(b.id) ?? 0
+        }));
+
+        this.myBatches = enriched.filter((b: any) => b.status === 'ACTIVE' || b.status === 'UPCOMING');
+        this.trainerStats.myBatches    = this.myBatches.length;
+        this.trainerStats.myAssociates = this.myBatches.reduce((sum: number, b: any) => sum + (b.associateCount ?? 0), 0);
+        this.trainerStats.quizzes      = (assessments as any[]).filter((a: any) => a.type === 'QUIZ').length;
+        this.trainerStats.interviews   = (assessments as any[]).filter((a: any) => a.type !== 'QUIZ').length;
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -154,7 +177,7 @@ export class DashboardComponent implements OnInit {
       }),
       switchMap((res: any) => {
         if (!res.me || !res.batchId) return of({ ...res, quizResults: [] });
-        const published = (res.quizzes ?? []).filter((q: any) => q.status === 'PUBLISHED');
+        const published = (res.quizzes ?? []).filter((q: any) => q.status === 'PUBLISHED' || q.status === 'CLOSED');
         if (!published.length) return of({ ...res, quizResults: [], quizzesTotal: 0 });
         const resultObs: Observable<any>[] = published.map((q: any) =>
           this.assessmentSvc.getQuizResult(q.id, userId).pipe(catchError(() => of(null)))
@@ -221,5 +244,9 @@ export class DashboardComponent implements OnInit {
       ROLE_TECH_LEAD: 'Tech Lead', ROLE_SCRUM_LEAD: 'Scrum Lead'
     };
     return map[this.role] ?? this.role;
+  }
+
+  get roleCssClass(): string {
+    return 'role-' + this.role.toLowerCase().replace('role_', '');
   }
 }

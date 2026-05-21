@@ -2,7 +2,7 @@
   <div class="page-header">
     <div class="header-info">
       <h2>My Profile</h2>
-      <p>Your personal details and training enrollment information</p>
+      <p>Your personal details and training summary</p>
     </div>
   </div>
 
@@ -16,34 +16,70 @@
 
     <ng-container *ngIf="associate">
 
-      <!-- Profile card -->
-      <mat-card class="profile-card">
-        <mat-card-content>
-          <div class="profile-hero">
-            <div class="avatar-circle">
-              <span>{{ (associate.fullName || 'A').charAt(0).toUpperCase() }}</span>
-            </div>
-            <div class="profile-main">
-              <h3 class="profile-name">{{ associate.fullName || '—' }}</h3>
-              <p class="profile-email">
-                <mat-icon>email</mat-icon>
-                {{ associate.email || '—' }}
-              </p>
-              <span class="exp-badge">{{ getExperienceLabel(associate.experienceLevel) }}</span>
+      <!-- ── Hero card ── -->
+      <div class="hero-card">
+        <div class="hero-left">
+          <div class="avatar-circle">{{ getInitials(associate.fullName) }}</div>
+          <div class="hero-info">
+            <h3 class="hero-name">{{ associate.fullName }}</h3>
+            <p class="hero-username">@{{ associate.username }}</p>
+            <p class="hero-email" *ngIf="associate.email">
+              <mat-icon>email</mat-icon>{{ associate.email }}
+            </p>
+            <div class="hero-badges">
+              <span class="badge-role">{{ getRoleLabel(associate.role) }}</span>
+              <span class="badge-exp" *ngIf="getExperienceLabel(associate.experienceLevel)">
+                {{ getExperienceLabel(associate.experienceLevel) }}
+              </span>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+        <div class="hero-xp">
+          <mat-icon>star</mat-icon>
+          <span class="xp-num">{{ associate.xp ?? 0 }}</span>
+          <span class="xp-text">XP</span>
+        </div>
+      </div>
 
-      <!-- Details grid -->
+      <!-- ── Stats row ── -->
+      <div class="stats-row">
+        <div class="stat-chip">
+          <div class="stat-chip-icon quizzes"><mat-icon>fact_check</mat-icon></div>
+          <div class="stat-chip-body">
+            <span class="stat-chip-val">{{ quizzesAttempted }}</span>
+            <span class="stat-chip-label">Quizzes Attempted</span>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon pass"><mat-icon>trending_up</mat-icon></div>
+          <div class="stat-chip-body">
+            <span class="stat-chip-val">{{ quizzesPassed }}</span>
+            <span class="stat-chip-label">Quizzes Passed</span>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon rate"><mat-icon>percent</mat-icon></div>
+          <div class="stat-chip-body">
+            <span class="stat-chip-val">{{ quizPassRate }}%</span>
+            <span class="stat-chip-label">Pass Rate</span>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon projects"><mat-icon>rocket_launch</mat-icon></div>
+          <div class="stat-chip-body">
+            <span class="stat-chip-val">{{ projectsCount }}</span>
+            <span class="stat-chip-label">Projects Submitted</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Detail cards ── -->
       <div class="details-grid">
 
         <!-- Personal info -->
         <mat-card class="detail-card">
           <mat-card-header>
-            <mat-card-title>
-              <mat-icon>badge</mat-icon> Personal Information
-            </mat-card-title>
+            <mat-card-title><mat-icon>badge</mat-icon> Personal Information</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="field-list">
@@ -52,109 +88,68 @@
                 <span class="field-value">{{ associate.fullName || '—' }}</span>
               </div>
               <div class="field-row">
-                <span class="field-label">Email</span>
-                <span class="field-value">{{ associate.email || '—' }}</span>
+                <span class="field-label">Username</span>
+                <span class="field-value">{{ associate.username || '—' }}</span>
               </div>
-              <div class="field-row">
+              <div class="field-row" *ngIf="associate.email">
+                <span class="field-label">Email</span>
+                <span class="field-value">{{ associate.email }}</span>
+              </div>
+              <div class="field-row" *ngIf="getExperienceLabel(associate.experienceLevel)">
                 <span class="field-label">Experience Level</span>
                 <span class="field-value">{{ getExperienceLabel(associate.experienceLevel) }}</span>
               </div>
               <div class="field-row">
+                <span class="field-label">Role</span>
+                <span class="field-value">{{ getRoleLabel(associate.role) }}</span>
+              </div>
+              <div class="field-row">
                 <span class="field-label">XP Points</span>
-                <span class="field-value xp-value">
-                  <mat-icon>star</mat-icon>
-                  {{ associate.xp ?? 0 }}
+                <span class="field-value xp-inline">
+                  <mat-icon>star</mat-icon>{{ associate.xp ?? 0 }}
                 </span>
               </div>
             </div>
           </mat-card-content>
         </mat-card>
 
-        <!-- Enrollment info -->
+        <!-- Current batch -->
         <mat-card class="detail-card">
           <mat-card-header>
-            <mat-card-title>
-              <mat-icon>assignment_turned_in</mat-icon> Enrollment Details
-            </mat-card-title>
+            <mat-card-title><mat-icon>groups</mat-icon> Current Batch</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <ng-container *ngIf="enrollment; else derivedOrEmpty">
+            <ng-container *ngIf="batch; else noBatch">
               <div class="field-list">
                 <div class="field-row">
-                  <span class="field-label">Enrollment Status</span>
-                  <span class="status-chip" [ngClass]="getStatusColor(enrollment.status)">
-                    {{ enrollment.status }}
-                  </span>
+                  <span class="field-label">Batch ID</span>
+                  <span class="field-value">#{{ batch.id }}</span>
                 </div>
                 <div class="field-row">
-                  <span class="field-label">Join Date</span>
-                  <span class="field-value">
-                    {{ (enrollment.joinDate || enrollment.enrollmentDate) | date:'mediumDate' }}
+                  <span class="field-label">Status</span>
+                  <span class="status-chip" [ngClass]="getBatchStatusClass(batch.status)">
+                    {{ batch.status }}
                   </span>
                 </div>
-                <div class="field-row" *ngIf="enrollment.batchId">
-                  <span class="field-label">Batch</span>
-                  <span class="field-value">#{{ enrollment.batchId }}</span>
+                <div class="field-row" *ngIf="batch.startDate">
+                  <span class="field-label">Start Date</span>
+                  <span class="field-value">{{ batch.startDate | date:'mediumDate' }}</span>
+                </div>
+                <div class="field-row" *ngIf="batch.endDate">
+                  <span class="field-label">End Date</span>
+                  <span class="field-value">{{ batch.endDate | date:'mediumDate' }}</span>
+                </div>
+                <div class="field-row" *ngIf="batch.courseNames?.length">
+                  <span class="field-label">Courses</span>
+                  <span class="field-value courses-val">{{ batch.courseNames.join(', ') }}</span>
                 </div>
               </div>
             </ng-container>
-
-            <ng-template #derivedOrEmpty>
-              <ng-container *ngIf="batch; else noEnrollment">
-                <div class="field-list">
-                  <div class="field-row">
-                    <span class="field-label">Enrollment Status</span>
-                    <span class="status-chip" [ngClass]="getStatusColor(batch.status)">
-                      {{ batch.status }}
-                    </span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Batch</span>
-                    <span class="field-value">#{{ batch.id }}</span>
-                  </div>
-                </div>
-              </ng-container>
-              <ng-template #noEnrollment>
-                <p class="no-data-text">You are not currently enrolled in any batch.</p>
-              </ng-template>
-            </ng-template>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Batch info -->
-        <mat-card class="detail-card">
-          <mat-card-header>
-            <mat-card-title>
-              <mat-icon>groups</mat-icon> Current Batch
-            </mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div *ngIf="batch; else noBatch" class="field-list">
-              <div class="field-row">
-                <span class="field-label">Batch ID</span>
-                <span class="field-value">{{ batch.id }}</span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Status</span>
-                <span class="status-chip" [ngClass]="getBatchStatusColor(batch.status)">
-                  {{ batch.status }}
-                </span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Start Date</span>
-                <span class="field-value">{{ batch.startDate | date:'mediumDate' }}</span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">End Date</span>
-                <span class="field-value">{{ batch.endDate | date:'mediumDate' }}</span>
-              </div>
-              <div class="field-row" *ngIf="batch.courseNames?.length">
-                <span class="field-label">Courses</span>
-                <span class="field-value">{{ batch.courseNames.join(', ') }}</span>
-              </div>
-            </div>
             <ng-template #noBatch>
-              <p class="no-data-text">No active batch assigned.</p>
+              <div class="empty-card-state">
+                <mat-icon>group_off</mat-icon>
+                <p>No active batch assigned.</p>
+              </div>
             </ng-template>
           </mat-card-content>
         </mat-card>

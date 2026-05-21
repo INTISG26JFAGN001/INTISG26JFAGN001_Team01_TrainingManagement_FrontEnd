@@ -323,7 +323,7 @@ export class InterviewDetailDialogComponent implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      interview:   this.svc.getInterviewDetail(this.data.interviewId),
+      interview:   this.svc.getInterview(this.data.interviewId),
       rubrics:     this.svc.getRubrics(this.data.interviewId).pipe(catchError(() => of([]))),
       evaluations: this.svc.getEvaluationsByAssessment(this.data.interviewId).pipe(catchError(() => of([])))
     }).subscribe({

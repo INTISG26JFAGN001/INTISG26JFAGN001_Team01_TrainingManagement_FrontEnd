@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
-interface NavItem { label: string; icon: string; route?: string; children?: NavItem[]; roles?: string[]; expanded?: boolean; }
+interface NavItem { label: string; icon: string; route?: string; children?: NavItem[]; roles?: string[]; expanded?: boolean; dividerBefore?: boolean; }
 
 @Component({
   selector: 'app-sidebar',
@@ -51,18 +51,15 @@ export class SidebarComponent {
         { label: 'Project Review', icon: 'rate_review',       route: '/evaluations/project',   roles: this.STAFF },
       ]
     },
-    // Associate-only section
-    {
-      label: 'My Learning', icon: 'school', expanded: false, roles: this.ASSOCIATE,
-      children: [
-        { label: 'My Quizzes',   icon: 'fact_check',        route: '/my-portal/quizzes',      roles: this.ASSOCIATE },
-        { label: 'My Results',   icon: 'bar_chart',         route: '/my-portal/results',      roles: this.ASSOCIATE },
-        { label: 'My Schedules', icon: 'calendar_month',    route: '/my-portal/schedules',    roles: this.ASSOCIATE },
-        { label: 'My Projects',  icon: 'rocket_launch',     route: '/my-portal/projects',     roles: this.ASSOCIATE },
-        { label: 'Leaderboard',  icon: 'emoji_events',      route: '/my-portal/leaderboard',  roles: this.ASSOCIATE },
-        { label: 'My Profile',   icon: 'manage_accounts',   route: '/my-portal/profile',      roles: this.ASSOCIATE },
-      ]
-    },
+    // Associate-only flat items
+    { label: 'My Batch',       icon: 'groups',            route: '/my-portal/batch',        roles: this.ASSOCIATE, dividerBefore: true },
+    { label: 'My Schedules',   icon: 'calendar_month',    route: '/my-portal/schedules',    roles: this.ASSOCIATE },
+    { label: 'My Quizzes',     icon: 'fact_check',        route: '/my-portal/quizzes',      roles: this.ASSOCIATE },
+    { label: 'My Interviews',  icon: 'record_voice_over', route: '/my-portal/interviews',   roles: this.ASSOCIATE },
+    { label: 'My Projects',    icon: 'rocket_launch',     route: '/my-portal/projects',     roles: this.ASSOCIATE },
+    { label: 'My Results',     icon: 'leaderboard',       route: '/my-portal/results',      roles: this.ASSOCIATE },
+    { label: 'Leaderboard',    icon: 'emoji_events',      route: '/my-portal/leaderboard',  roles: this.ASSOCIATE },
+    { label: 'My Profile',     icon: 'manage_accounts',   route: '/my-portal/profile',      roles: this.ASSOCIATE },
   ];
 
   constructor(private auth: AuthService, private router: Router) {}

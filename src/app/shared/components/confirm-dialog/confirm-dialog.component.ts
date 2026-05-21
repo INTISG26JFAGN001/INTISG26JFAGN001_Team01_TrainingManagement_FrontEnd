@@ -21,9 +21,9 @@ export interface ConfirmDialogData { title: string; message: string; confirmText
     </mat-dialog-actions>
   `,
   styles: [`
-    .dialog-title { display: flex; align-items: center; gap: 8px; }
-    .dialog-title.danger { color: #e53935; }
-    mat-dialog-content p { color: #546e7a; font-size: 14px; }
+    .dialog-title { display: flex; align-items: center; gap: 8px; color: var(--text-primary); }
+    .dialog-title.danger { color: var(--danger); }
+    mat-dialog-content p { color: var(--text-secondary); font-size: 14px; }
     mat-dialog-actions { padding: 16px 0 0; gap: 8px; }
   `]
 })

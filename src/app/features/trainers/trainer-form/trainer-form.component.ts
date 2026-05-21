@@ -71,7 +71,7 @@ export class TrainerFormComponent implements OnInit {
         }
 
         // 2. Duplicate check — is this userId already a trainer?
-        const duplicate = trainers.find(t => t.userId === userId);
+        const duplicate = trainers.find(t => Number(t.userId) === Number(userId));
         if (duplicate) {
           this.validationError =
             `"${user.fullName || user.username}" is already registered as a trainer (Trainer ID: ${duplicate.trainerId ?? duplicate.id}).`;

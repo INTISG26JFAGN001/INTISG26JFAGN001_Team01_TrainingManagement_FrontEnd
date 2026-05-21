@@ -59,9 +59,6 @@ export class AssessmentService {
   createRubric(assessmentId: number, p: Partial<Rubric>): Observable<Rubric> { return this.http.post<Rubric>(`${this.base}/${assessmentId}/rubrics`, p); }
   deleteRubric(assessmentId: number, rubricId: number): Observable<void> { return this.http.delete<void>(`${this.base}/${assessmentId}/rubrics/${rubricId}`); }
 
-  // Interview — get full detail with rubrics
-  getInterviewDetail(id: number): Observable<Interview> { return this.http.get<Interview>(`${this.base}/interview/${id}`); }
-
   // Interview Evaluation (PES service)
   private evalBase = `${environment.apiUrl}/interview-evaluations`;
   submitInterviewEvaluation(p: InterviewEvaluationRequest): Observable<InterviewEvaluationResponse> {

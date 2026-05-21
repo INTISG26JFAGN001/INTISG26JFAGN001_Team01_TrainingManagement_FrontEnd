@@ -65,10 +65,10 @@
   &.warn { background: rgba(245,158,11,0.2); color: #fbbf24; }
 }
 
-/* ── Quiz cards ── */
-.quiz-list { display: flex; flex-direction: column; gap: 14px; }
+/* ── Interview cards ── */
+.interview-list { display: flex; flex-direction: column; gap: 14px; }
 
-.quiz-card {
+.interview-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -84,23 +84,18 @@
 }
 
 .card-left { flex: 1; min-width: 0; }
-.card-right { flex-shrink: 0; display: flex; align-items: center; }
 
-/* ── Type badge ── */
-.type-badge {
+.category-badge {
   display: inline-block;
   padding: 3px 10px; border-radius: 8px;
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   margin-bottom: 8px;
-  &.type-upcoming  { background: rgba(96,165,250,0.15);  color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
-  &.type-completed { background: rgba(52,211,153,0.15);  color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
-  &.type-missed    { background: rgba(239,68,68,0.15);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+  &.cat-interim { background: rgba(99,102,241,0.15);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+  &.cat-final   { background: rgba(239,68,68,0.15);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+  &.cat-general { background: rgba(148,163,184,0.1);  color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
 }
 
-.quiz-title {
-  margin: 0 0 10px; font-size: 16px; font-weight: 600;
-  color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.iv-title { margin: 0 0 8px; font-size: 16px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .iv-meta {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -113,16 +108,7 @@
   mat-icon { font-size: 14px; height: 14px; width: 14px; }
 }
 
-/* ── Action button ── */
-.action-btn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 20px; border-radius: 10px;
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  border: none; transition: opacity 0.15s, transform 0.15s;
-  &:hover { opacity: 0.88; transform: translateY(-1px); }
-  mat-icon { font-size: 18px; height: 18px; width: 18px; }
-  &.btn-primary { background: var(--accent); color: #000; }
-}
+.card-right { flex-shrink: 0; display: flex; align-items: center; }
 
 /* ── State badges ── */
 .state-badge {
@@ -130,7 +116,8 @@
   padding: 8px 16px; border-radius: 10px;
   font-size: 13px; font-weight: 600;
   mat-icon { font-size: 17px; height: 17px; width: 17px; }
-  &.state-missed { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+  &.state-upcoming { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0,198,255,0.2); }
+  &.state-missed   { background: rgba(239,68,68,0.1); color: #fca5a5;   border: 1px solid rgba(239,68,68,0.2); }
 }
 
 /* ── Score section ── */

@@ -38,8 +38,8 @@ export class ScheduleListComponent implements OnInit {
 
   displayedColumns = ['sessionDate', 'batch', 'actions'];
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
+  @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
   constructor(
     private svc: ScheduleService,
@@ -114,8 +114,7 @@ export class ScheduleListComponent implements OnInit {
         this.dataSource.data = d.sort((a, b) =>
           new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
         );
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => { this.loading = false; }
@@ -130,8 +129,7 @@ export class ScheduleListComponent implements OnInit {
         this.dataSource.data = d.sort((a, b) =>
           new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime()
         );
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+
         this.loading = false;
       },
       error: () => { this.loading = false; }
