@@ -37,4 +37,16 @@ export class LandingComponent {
 
   goToLogin(): void { this.router.navigate(['/auth/login']); }
   goToDemo(): void { this.router.navigate(['/auth/login']); }
+
+  scrollTo(id:string){
+    const element = document.getElementById(id);
+    // const x = element?.offsetLeft;
+    // const y = element?.offsetTop;
+    // if(element){
+    //   scroll({behavior: 'smooth', top: y, left: x});
+    // }
+    if(element){
+      element.scrollIntoView({behavior: 'smooth'});
+    }
+  }
 }
