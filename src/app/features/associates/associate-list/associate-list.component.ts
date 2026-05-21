@@ -9,7 +9,7 @@ import { catchError, switchMap, map } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
 import { BatchService } from '../../../core/services/batch.service';
 import { UserService } from '../../../core/services/user.service';
-import { Associate, Batch, Enrollment, User } from '../../../core/models';
+import { Associate, Batch, Enrollment, Trainer, User } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { AssociateFormComponent } from '../associate-form/associate-form.component';
 import { AssociateEditFormComponent } from '../associate-edit-form/associate-edit-form.component';
@@ -57,19 +57,22 @@ export class AssociateListComponent implements OnInit {
     // each user individually via GET /user/{id} (accessible to all roles).
     forkJoin({
       associates:  this.svc.getAll(),
+      users:       this.userSvc.getAll().pipe(catchError(() => of([] as User[]))),
+      batches:       this.batchSvc.getAll().pipe(catchError(()=> of([] as Batch[]))), 
       enrollments: this.svc.getAllEnrollments().pipe(catchError(() => of([] as Enrollment[])))
-    }).pipe(
-      switchMap(({ associates, enrollments }) => {
-        if (!associates.length) return of({ associates, enrollments, users: [] as User[] });
-        const userIds = [...new Set(associates.map((a: Associate) => a.userId))];
-        return forkJoin(
-          userIds.map(uid => this.userSvc.getById(uid).pipe(catchError(() => of(null))))
-        ).pipe(
-          map(results => ({ associates, enrollments, users: results.filter(Boolean) as User[] }))
-        );
-      })
-    ).subscribe({
-      next: ({ associates, users, enrollments }) => {
+    }).subscribe({
+      next: ({ associates, users, batches, enrollments }) => {
+        if(this.auth.isTrainer()){
+          let updatedBatches = [];
+          for(let b of batches){
+            
+          }
+          console.log(this.myProfile?.userId);
+        }
+        console.log("Associates: "+associates.map((e)=>e.userId));
+        console.log("Users: "+users.map((e)=>e.fullName));
+        console.log("Batches: "+batches.map(e=>e.courseNames));
+        console.log("Enrollments: "+enrollments.map(e=>e.associateId));
         const userMap = new Map<number, User>(users.map(u => [u.id, u]));
         const STATUS_PRIORITY: Record<string, number> = { ACTIVE: 0, ENROLLED: 1, COMPLETED: 2 };
         const safeEnrollments: Enrollment[] = Array.isArray(enrollments) ? enrollments : [];
@@ -81,6 +84,7 @@ export class AssociateListComponent implements OnInit {
           grouped.get(e.associateId)!.push(e);
         }
         const enrollmentBatchMap = new Map<number, number>();
+        console.log(grouped);
         grouped.forEach((list, associateId) => {
           list.sort((a, b) => (STATUS_PRIORITY[a.status] ?? 9) - (STATUS_PRIORITY[b.status] ?? 9));
           enrollmentBatchMap.set(associateId, list[0].batchId);
