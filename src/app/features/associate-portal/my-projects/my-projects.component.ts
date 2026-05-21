@@ -31,12 +31,15 @@ export class MyProjectsComponent implements OnInit {
     private snack: MatSnackBar
   ) {
     this.form = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
+      title:   ['', [Validators.required, Validators.minLength(3)]],
       repoUrl: ['', [Validators.required, Validators.pattern('https?://.+')]]
     });
   }
 
-  ngOnInit(): void {
+  ngOnInit(): void { this.loadData(); }
+
+  private loadData(): void {
+    this.loading = true;
     const userId = this.auth.getUserId();
 
     this.associateSvc.getById(userId).pipe(
@@ -44,11 +47,22 @@ export class MyProjectsComponent implements OnInit {
       switchMap((me: any) => {
         if (!me) return of({ projects: [], batchId: null, associateId: 0 });
         this.associateId = me.id;
-        return this.associateSvc.getMyEnrollment(me.id).pipe(
-          catchError(() => of(null)),
-          switchMap((raw: any) => {
-            const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
-            const batchId: number | null = enrollment?.batchId ?? me.batchId ?? me.currentBatchId ?? null;
+
+        // Direct batchId first, enrollment fallback
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
+        const batchId$ = directBatchId
+          ? of(directBatchId)
+          : this.associateSvc.getMyEnrollment(me.id).pipe(
+              catchError(() => of(null)),
+              switchMap((raw: any) => {
+                const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+                const bid: number | null = enrollment?.batchId ?? null;
+                return of(bid && bid > 0 ? Number(bid) : null);
+              })
+            );
+
+        return batchId$.pipe(
+          switchMap((batchId: number | null) => {
             if (!batchId) return of({ projects: [], batchId: null, associateId: me.id });
             return this.projectSvc.getProjects().pipe(
               catchError(() => of([])),
@@ -62,10 +76,10 @@ export class MyProjectsComponent implements OnInit {
       })
     ).subscribe({
       next: (res: any) => {
-        this.batchId = res.batchId;
+        this.batchId     = res.batchId;
         this.associateId = res.associateId;
-        this.projects = res.projects;
-        this.loading = false;
+        this.projects    = res.projects;
+        this.loading     = false;
       },
       error: () => { this.loading = false; }
     });
@@ -81,7 +95,7 @@ export class MyProjectsComponent implements OnInit {
         this.form.reset();
         this.showForm = false;
         this.submitting = false;
-        this.ngOnInit();
+        this.loadData();
       },
       error: (e) => {
         this.snack.open(e.error?.message || 'Submission failed. Please try again.', 'Close', { duration: 4000 });

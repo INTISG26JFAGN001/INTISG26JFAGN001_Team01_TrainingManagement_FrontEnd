@@ -6,7 +6,8 @@
       <div class="filter-field">
         <label>Batch</label>
         <input type="text" [(ngModel)]="filter.batchId" list="batch-list-interview"
-               class="field-input" placeholder="Search batch…" autocomplete="off" />
+               class="field-input" placeholder="Search batch…" autocomplete="off"
+               (keydown.enter)="applyFilter()" />
         <datalist id="batch-list-interview">
           <option *ngFor="let b of batches"
                   [value]="'#' + b.id + ' — ' + (b.courseNames?.join(', ') || 'No course')">
@@ -33,11 +34,11 @@
       </div>
       <div class="filter-field">
         <label>Due From</label>
-        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" />
+        <input type="date" [(ngModel)]="filter.fromDate" class="field-input" (keydown.enter)="applyFilter()" />
       </div>
       <div class="filter-field">
         <label>Due To</label>
-        <input type="date" [(ngModel)]="filter.toDate" class="field-input" />
+        <input type="date" [(ngModel)]="filter.toDate" class="field-input" (keydown.enter)="applyFilter()" />
       </div>
     </div>
     <div class="filter-actions">

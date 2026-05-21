@@ -41,7 +41,7 @@ import { Associate } from '../../../core/models';
     .edit-form { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; min-width: 360px; }
     .full-width { width: 100%; }
     .info-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; font-size: 13px; }
-    .info-label { color: #78909c; min-width: 70px; flex-shrink: 0; }
+    .info-label { color: var(--text-secondary); min-width: 70px; flex-shrink: 0; }
     .info-value { font-weight: 500; }
     .id-chip {
       display: inline-block; padding: 2px 8px; border-radius: 6px;
@@ -49,7 +49,7 @@ import { Associate } from '../../../core/models';
       background: rgba(0,198,255,0.08); color: var(--accent, #1565c0);
       border: 1px solid rgba(0,198,255,0.2);
     }
-    .xp-hint { font-size: 11px; color: #90a4ae; }
+    .xp-hint { font-size: 11px; color: var(--text-muted); }
   `]
 })
 export class AssociateEditFormComponent {

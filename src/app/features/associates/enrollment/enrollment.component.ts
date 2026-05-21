@@ -36,7 +36,18 @@ import { Associate, Enrollment } from '../../../core/models';
       </button>
     </mat-dialog-actions>
   `,
-  styles: [`.dialog-form{min-width:420px}.full-width{width:100%}.enrollments-list{margin-bottom:12px}h4{font-size:13px;color:#546e7a;margin:0 0 8px}.enrollment-item{display:flex;align-items:center;gap:8px;padding:6px 0}.batch-name{flex:1;font-size:13px}.status-chip{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}.status-chip.status-enrolled{background:#fff8e1;color:#f57f17}.status-chip.status-active{background:#e8f5e9;color:#2e7d32}.status-chip.status-completed{background:#e3f2fd;color:#1565c0}`]
+  styles: [`
+    .dialog-form    { min-width: 420px; }
+    .full-width     { width: 100%; }
+    .enrollments-list { margin-bottom: 12px; }
+    h4 { font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+    .enrollment-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+    .batch-name  { flex: 1; font-size: 13px; color: var(--text-primary); }
+    .status-chip { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .status-chip.status-enrolled  { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .status-chip.status-active    { background: rgba(52,211,153,0.12);  color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .status-chip.status-completed { background: rgba(99,102,241,0.12);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+  `]
 })
 export class EnrollmentComponent implements OnInit {
   form = this.fb.group({ batchId: [null, Validators.required] });

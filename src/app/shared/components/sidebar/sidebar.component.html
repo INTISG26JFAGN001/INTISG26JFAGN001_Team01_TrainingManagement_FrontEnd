@@ -17,6 +17,9 @@
     <ng-container *ngFor="let item of navItems">
       <ng-container *ngIf="isVisible(item)">
 
+        <!-- Optional divider before item -->
+        <div *ngIf="item.dividerBefore" class="sidebar-divider" style="margin: 8px 0;"></div>
+
         <!-- Single item -->
         <div *ngIf="!item.children"
              class="nav-item"

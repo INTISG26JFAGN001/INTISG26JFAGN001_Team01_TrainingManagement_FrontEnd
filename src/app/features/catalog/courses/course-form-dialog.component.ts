@@ -63,7 +63,7 @@ import { Course, Technology } from '../../../core/models';
   styles: [`
     h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; font-size: 16px; }
     .context-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-    .context-name { font-size: 14px; font-weight: 500; color: #546e7a; }
+    .context-name { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
     .id-chip {
       display: inline-block; padding: 2px 8px; border-radius: 6px;
       font-size: 12px; font-weight: 700; font-family: monospace;

@@ -25,64 +25,75 @@ export interface ProjectReviewDialogData {
 
       <div *ngIf="loadingReviews" class="loading-center"><mat-spinner diameter="32"></mat-spinner></div>
 
-      <!-- Existing reviews -->
       <div *ngIf="!loadingReviews">
-        <p class="section-label">Existing Reviews ({{ reviews.length }})</p>
+
+        <!-- Existing reviews -->
+        <p class="section-label">Reviews ({{ reviews.length }})</p>
 
         <div *ngIf="reviews.length === 0" class="no-reviews">
           No reviews yet for this project.
         </div>
 
-        <div *ngFor="let review of reviews" class="review-card">
+        <div *ngFor="let review of reviews" class="review-card"
+             [class.my-review]="review.reviewerId === currentUserId">
           <div class="review-header">
             <div class="reviewer-info">
               <div class="avatar">{{ getReviewerInitial(review.reviewerId) }}</div>
-              <span class="reviewer-id">Reviewer #{{ review.reviewerId }}</span>
-              <span class="type-chip" [ngClass]="review.type.toLowerCase()">{{ review.type }}</span>
+              <span class="reviewer-id">
+                Reviewer #{{ review.reviewerId }}
+                <span class="you-badge" *ngIf="review.reviewerId === currentUserId">You</span>
+              </span>
+              <span class="type-chip" *ngIf="review.type">{{ review.type }}</span>
             </div>
             <span class="score-badge">{{ review.score }}<span class="score-max">/100</span></span>
           </div>
           <p class="review-comments">{{ review.comments }}</p>
         </div>
 
-        <!-- Add Review Form -->
-        <mat-divider style="margin: 20px 0;"></mat-divider>
-        <p class="section-label">Add Review</p>
+        <!-- Add Review Form — only when current user hasn't reviewed yet -->
+        <ng-container *ngIf="!alreadyReviewedByMe">
+          <mat-divider style="margin: 20px 0;"></mat-divider>
+          <p class="section-label">Add Your Review</p>
 
-        <form [formGroup]="form" (ngSubmit)="submit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Score (0–100)</mat-label>
-            <input matInput type="number" formControlName="score" min="0" max="100" placeholder="e.g. 85" />
-            <mat-error *ngIf="form.get('score')?.hasError('required')">Score is required</mat-error>
-            <mat-error *ngIf="form.get('score')?.hasError('min') || form.get('score')?.hasError('max')">
-              Score must be between 0 and 100
-            </mat-error>
-          </mat-form-field>
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Score (0–100)</mat-label>
+              <input matInput type="number" formControlName="score" min="0" max="100" placeholder="e.g. 85" />
+              <mat-error *ngIf="form.get('score')?.hasError('required')">Score is required</mat-error>
+              <mat-error *ngIf="form.get('score')?.hasError('min') || form.get('score')?.hasError('max')">
+                Score must be between 0 and 100
+              </mat-error>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Type</mat-label>
-            <mat-select formControlName="type">
-              <mat-option value="TECH">TECH</mat-option>
-              <mat-option value="SCRUM">SCRUM</mat-option>
-            </mat-select>
-            <mat-error>Select a review type</mat-error>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Review Type</mat-label>
+              <input matInput formControlName="type" placeholder="e.g. Tech, Scrum, Design…" />
+              <mat-error *ngIf="form.get('type')?.hasError('required')">Type is required</mat-error>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Comments</mat-label>
-            <textarea matInput formControlName="comments" rows="3"
-                      placeholder="Enter your review comments..."></textarea>
-            <mat-error>Comments are required</mat-error>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Comments</mat-label>
+              <textarea matInput formControlName="comments" rows="3"
+                        placeholder="Enter your review comments..."></textarea>
+              <mat-error>Comments are required</mat-error>
+            </mat-form-field>
 
-          <div class="form-actions">
-            <button mat-flat-button color="primary" type="submit"
-                    [disabled]="form.invalid || saving">
-              <mat-icon>{{ saving ? 'hourglass_empty' : 'add_comment' }}</mat-icon>
-              {{ saving ? 'Submitting...' : 'Submit Review' }}
-            </button>
-          </div>
-        </form>
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit"
+                      [disabled]="form.invalid || saving">
+                <mat-icon>{{ saving ? 'hourglass_empty' : 'add_comment' }}</mat-icon>
+                {{ saving ? 'Submitting...' : 'Submit Review' }}
+              </button>
+            </div>
+          </form>
+        </ng-container>
+
+        <!-- Already reviewed by this user -->
+        <div *ngIf="alreadyReviewedByMe" class="already-reviewed-banner">
+          <mat-icon>check_circle</mat-icon>
+          You have already submitted a review for this project.
+        </div>
+
       </div>
 
     </mat-dialog-content>
@@ -118,6 +129,7 @@ export interface ProjectReviewDialogData {
       border-radius: 8px;
       padding: 12px 16px;
       margin-bottom: 10px;
+      &.my-review { border-color: rgba(0,198,255,0.3); }
     }
 
     .review-header {
@@ -134,14 +146,23 @@ export interface ProjectReviewDialogData {
       border: 1px solid rgba(0,198,255,.2);
     }
 
-    .reviewer-id { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .reviewer-id {
+      font-size: 13px; font-weight: 600; color: var(--text-primary);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .you-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      background: rgba(0,198,255,0.12); color: var(--accent);
+      border: 1px solid rgba(0,198,255,0.25); border-radius: 4px;
+      padding: 1px 6px;
+    }
 
     .type-chip {
       display: inline-block; padding: 2px 8px; border-radius: 4px;
       font-size: 11px; font-weight: 700; text-transform: uppercase;
-
-      &.tech  { background: rgba(0,198,255,.12); color: var(--accent); }
-      &.scrum { background: rgba(167,139,250,.12); color: #a78bfa; }
+      background: rgba(148,163,184,0.1); color: #94a3b8;
+      border: 1px solid rgba(148,163,184,0.2);
     }
 
     .score-badge {
@@ -153,8 +174,14 @@ export interface ProjectReviewDialogData {
       font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5;
     }
 
-    .form-actions {
-      display: flex; justify-content: flex-end; margin-top: 8px;
+    .form-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+    .already-reviewed-banner {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 20px; padding: 14px 16px;
+      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25);
+      border-radius: 10px; font-size: 13px; font-weight: 500; color: #34d399;
+      mat-icon { font-size: 20px; height: 20px; width: 20px; flex-shrink: 0; }
     }
   `]
 })
@@ -163,11 +190,16 @@ export class ProjectReviewDialogComponent implements OnInit {
   loadingReviews = true;
   saving = false;
   submitted = false;
+  currentUserId: number;
+
+  get alreadyReviewedByMe(): boolean {
+    return this.reviews.some(r => Number(r.reviewerId) === this.currentUserId);
+  }
 
   form = this.fb.group({
     score:    [null as number | null, [Validators.required, Validators.min(0), Validators.max(100)]],
-    comments: ['', Validators.required],
-    type:     ['TECH', Validators.required]
+    type:     ['', Validators.required],
+    comments: ['', Validators.required]
   });
 
   constructor(
@@ -177,11 +209,11 @@ export class ProjectReviewDialogComponent implements OnInit {
     private snack: MatSnackBar,
     public dialogRef: MatDialogRef<ProjectReviewDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProjectReviewDialogData
-  ) {}
-
-  ngOnInit(): void {
-    this.loadReviews();
+  ) {
+    this.currentUserId = this.auth.getUserId();
   }
+
+  ngOnInit(): void { this.loadReviews(); }
 
   loadReviews(): void {
     this.loadingReviews = true;
@@ -194,26 +226,25 @@ export class ProjectReviewDialogComponent implements OnInit {
   }
 
   getReviewerInitial(reviewerId: number): string {
-    return String(reviewerId).charAt(0);
+    return String(reviewerId).charAt(0).toUpperCase();
   }
 
   submit(): void {
-    if (this.form.invalid || this.saving) return;
+    if (this.form.invalid || this.saving || this.alreadyReviewedByMe) return;
     this.saving = true;
     const v = this.form.value;
     const payload = {
-      reviewerId: this.auth.getUserId(),
-      score: v.score!,
-      comments: v.comments!,
-      type: v.type!
+      reviewerId: this.currentUserId,
+      score:    v.score!,
+      type:     v.type!,
+      comments: v.comments!
     };
-
     this.svc.createReview(this.data.projectId, payload).subscribe({
       next: () => {
         this.snack.open('Review submitted successfully', 'Close', { duration: 3000 });
         this.submitted = true;
         this.saving = false;
-        this.form.reset({ type: 'TECH' });
+        this.form.reset();
         this.loadReviews();
       },
       error: e => {

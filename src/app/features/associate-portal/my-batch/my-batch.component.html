@@ -1,0 +1,211 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Batch</h2>
+      <p>Your current training batch details and progress</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <ng-container *ngIf="loading">
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading batch details...</p>
+    </div>
+  </ng-container>
+
+  <!-- Not enrolled -->
+  <ng-container *ngIf="!loading && !batchId">
+    <div class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You are not enrolled in any batch yet. Contact your administrator to get enrolled.</p>
+    </div>
+  </ng-container>
+
+  <!-- Batch content -->
+  <ng-container *ngIf="!loading && batchId">
+
+    <!-- ── Hero card ── -->
+    <mat-card class="hero-card">
+      <mat-card-content>
+
+        <div class="hero-top">
+          <div class="batch-identity">
+            <div class="batch-icon-wrap">
+              <mat-icon>groups</mat-icon>
+            </div>
+            <div>
+              <div class="batch-title">Batch #{{ batch?.id ?? batchId }}</div>
+              <div class="course-tags" *ngIf="batch?.courseNames?.length">
+                <span class="course-tag" *ngFor="let c of batch.courseNames">{{ c }}</span>
+              </div>
+              <div class="course-tags" *ngIf="!batch?.courseNames?.length && batch?.courseIds?.length">
+                <span class="course-tag" *ngFor="let id of batch.courseIds">Course #{{ id }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-badges">
+            <span class="status-chip" [ngClass]="getBatchStatusClass(batch?.status)">
+              {{ batch?.status ?? '—' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress bar (only when dates available) -->
+        <ng-container *ngIf="batchStartDate && batchEndDate">
+          <div class="progress-section">
+            <div class="progress-labels">
+              <span class="prog-label">
+                <mat-icon>play_arrow</mat-icon>
+                {{ formatDate(batchStartDate) }}
+              </span>
+              <span class="prog-pct">{{ progressPct }}% complete</span>
+              <span class="prog-label">
+                {{ formatDate(batchEndDate) }}
+                <mat-icon>flag</mat-icon>
+              </span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" [style.width.%]="progressPct"></div>
+            </div>
+            <div class="days-left" *ngIf="batch?.status === 'ACTIVE' && daysLeft >= 0">
+              <mat-icon>hourglass_bottom</mat-icon>
+              {{ daysLeft }} day{{ daysLeft !== 1 ? 's' : '' }} remaining
+            </div>
+          </div>
+        </ng-container>
+
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Stats row ── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon sessions"><mat-icon>event</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ upcomingSessions }}</div>
+          <div class="stat-label">Upcoming Sessions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon past"><mat-icon>history</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ pastSessions }}</div>
+          <div class="stat-label">Past Sessions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon quiz"><mat-icon>quiz</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ totalQuizzes }}</div>
+          <div class="stat-label">Quizzes</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon interview"><mat-icon>record_voice_over</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ totalInterviews }}</div>
+          <div class="stat-label">Interviews</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon project"><mat-icon>rocket_launch</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ myProjects }}</div>
+          <div class="stat-label">Projects Submitted</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon peers"><mat-icon>people</mat-icon></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ batchmates }}</div>
+          <div class="stat-label">Batchmates</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Detail cards ── -->
+    <div class="details-grid">
+
+      <!-- Batch info -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title><mat-icon>info</mat-icon> Batch Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="field-list">
+            <div class="field-row">
+              <span class="field-label">Batch ID</span>
+              <span class="field-value">#{{ batch?.id ?? batchId }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Status</span>
+              <span class="status-chip" [ngClass]="getBatchStatusClass(batch?.status)">
+                {{ batch?.status ?? '—' }}
+              </span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Start Date</span>
+              <span class="field-value">{{ formatDate(batchStartDate) }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">End Date</span>
+              <span class="field-value">{{ formatDate(batchEndDate) }}</span>
+            </div>
+            <div class="field-row">
+              <span class="field-label">Duration</span>
+              <span class="field-value">{{ totalDays > 0 ? totalDays + ' days' : '—' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Courses -->
+      <mat-card class="detail-card" *ngIf="batch?.courseNames?.length">
+        <mat-card-header>
+          <mat-card-title><mat-icon>import_contacts</mat-icon> Courses in this Batch</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="course-list">
+            <div class="course-item" *ngFor="let c of batch.courseNames; let i = index">
+              <div class="course-num">{{ i + 1 }}</div>
+              <div class="course-name">{{ c }}</div>
+              <mat-icon class="course-icon">check_circle</mat-icon>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Quick links -->
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title><mat-icon>link</mat-icon> Quick Navigation</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="quick-links">
+            <a class="quick-link" routerLink="/my-portal/schedules">
+              <mat-icon>calendar_month</mat-icon> My Schedules
+            </a>
+            <a class="quick-link" routerLink="/my-portal/quizzes">
+              <mat-icon>fact_check</mat-icon> My Quizzes
+            </a>
+            <a class="quick-link" routerLink="/my-portal/interviews">
+              <mat-icon>record_voice_over</mat-icon> My Interviews
+            </a>
+            <a class="quick-link" routerLink="/my-portal/projects">
+              <mat-icon>rocket_launch</mat-icon> My Projects
+            </a>
+            <a class="quick-link" routerLink="/my-portal/leaderboard">
+              <mat-icon>emoji_events</mat-icon> Leaderboard
+            </a>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+  </ng-container>
+
+</div>

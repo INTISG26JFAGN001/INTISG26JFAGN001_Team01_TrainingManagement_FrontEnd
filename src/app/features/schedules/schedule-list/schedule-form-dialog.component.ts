@@ -58,13 +58,13 @@ import { MatSnackBar } from "@angular/material/snack-bar";
         .code-chip {
         display: inline-block; padding: 2px 8px; border-radius: 6px;
         font-size: 12px; font-weight: 700; font-family: monospace;
-        background: rgba(0,0,0,0.04); color: #37474f;
-        border: 1px solid rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.06); color: var(--text-secondary);
+        border: 1px solid var(--border);
         }
 
         .course-cell { display: flex; align-items: center; gap: 8px; }
-        .course-icon { font-size: 18px; color: #1565c0; }
-        .tech-chip { background: #e8eaf6; color: #1a237e; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .course-icon { font-size: 18px; color: var(--accent); }
+        .tech-chip { background: rgba(167,139,250,0.12); color: #a78bfa; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid rgba(167,139,250,0.25); }
 
         `]
 })

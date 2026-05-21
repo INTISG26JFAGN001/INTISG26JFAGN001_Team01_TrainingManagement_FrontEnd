@@ -138,7 +138,7 @@ export class InterviewListComponent implements OnInit {
       // Fetch full interview details before opening edit dialog —
       // the list only holds AssessmentSummaryResponse which may lack
       // scheduledDateTime, evaluatorRole, maxScore, dueDate, rubrics.
-      this.svc.getInterviewDetail(interview.id).subscribe({
+      this.svc.getInterview(interview.id).subscribe({
         next: fullInterview => {
           this.dialog.open(InterviewFormComponent, { width: '700px', maxHeight: '90vh', data: fullInterview })
             .afterClosed().subscribe(r => { if (r) this.load(); });

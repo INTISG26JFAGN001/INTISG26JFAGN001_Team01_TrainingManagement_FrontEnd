@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AssociateService } from '../../../core/services/associate.service';
-import { AssessmentService } from '../../../core/services/assessment.service';
+import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 interface LeaderboardEntry {
@@ -10,9 +10,7 @@ interface LeaderboardEntry {
   associateId: number;
   fullName: string;
   email: string;
-  quizXp: number;
-  interviewXp: number;
-  totalXp: number;
+  xp: number;
   isCurrentUser: boolean;
 }
 
@@ -26,11 +24,11 @@ export class MyLeaderboardComponent implements OnInit {
   batchId: number | null = null;
   currentAssociateId = 0;
   entries: LeaderboardEntry[] = [];
-  displayedColumns = ['rank', 'name', 'quizXp', 'interviewXp', 'totalXp'];
+  displayedColumns = ['rank', 'name', 'xp'];
 
   constructor(
     private associateSvc: AssociateService,
-    private assessmentSvc: AssessmentService,
+    private userSvc: UserService,
     private auth: AuthService
   ) {}
 
@@ -42,80 +40,60 @@ export class MyLeaderboardComponent implements OnInit {
       switchMap((me: any) => {
         if (!me) return of(null);
         this.currentAssociateId = me.id;
-        return this.associateSvc.getMyEnrollment(me.id).pipe(
-          catchError(() => of(null)),
-          switchMap((raw: any) => {
-            const enrollment = Array.isArray(raw) ? (raw[0] ?? null) : raw;
-            const batchId: number | null = enrollment?.batchId ?? me.batchId ?? null;
+
+        // Direct batchId first, enrollment fallback
+        const directBatchId: number | null = (me.batchId && me.batchId > 0) ? Number(me.batchId) : null;
+        const batchId$ = directBatchId
+          ? of(directBatchId)
+          : this.associateSvc.getMyEnrollment(me.id).pipe(
+              catchError(() => of(null)),
+              switchMap((raw: any) => {
+                const e = Array.isArray(raw) ? (raw[0] ?? null) : raw;
+                const bid = e?.batchId ?? null;
+                return of(bid && bid > 0 ? Number(bid) : null);
+              })
+            );
+
+        return batchId$.pipe(
+          switchMap((batchId: number | null) => {
             if (!batchId) return of(null);
             this.batchId = batchId;
-            return forkJoin({
-              associates: this.associateSvc.getByBatch(batchId).pipe(catchError(() => of([]))),
-              quizzes: this.assessmentSvc.getQuizzesByBatch(batchId).pipe(catchError(() => of([]))),
-              interviews: this.assessmentSvc.getInterviewsByBatch(batchId).pipe(catchError(() => of([])))
-            });
+            return this.associateSvc.getByBatch(batchId).pipe(
+              catchError(() => of([])),
+              switchMap((associates: any[]) => {
+                if (!associates.length) return of([]);
+                // Fetch user record for each associate to get fullName / email
+                const userObs = associates.map((a: any) =>
+                  this.userSvc.getById(a.userId).pipe(catchError(() => of(null)))
+                );
+                return forkJoin(userObs).pipe(
+                  switchMap(users => of(
+                    associates.map((a: any, i: number) => ({
+                      ...a,
+                      fullName: a.fullName || users[i]?.fullName || users[i]?.username || `Associate #${a.id}`,
+                      email:    a.email    || users[i]?.email    || ''
+                    }))
+                  ))
+                );
+              })
+            );
           })
-        );
-      }),
-      switchMap((data: any) => {
-        if (!data) return of(null);
-        const { associates, quizzes, interviews } = data;
-
-        const publishedQuizzes = (quizzes as any[]).filter((q: any) => q.status === 'PUBLISHED');
-        const publishedInterviews = (interviews as any[]).filter((i: any) => i.status === 'PUBLISHED');
-
-        const quizObs = publishedQuizzes.length
-          ? forkJoin(publishedQuizzes.map((q: any) =>
-              this.assessmentSvc.getQuizAttempts(q.id).pipe(catchError(() => of([])))
-            ))
-          : of([] as any[][]);
-
-        const interviewObs = publishedInterviews.length
-          ? forkJoin(publishedInterviews.map((i: any) =>
-              this.assessmentSvc.getEvaluationsByAssessment(i.id).pipe(catchError(() => of([])))
-            ))
-          : of([] as any[][]);
-
-        return forkJoin({ quizAttempts: quizObs, interviewEvals: interviewObs }).pipe(
-          switchMap((results: any) => of({ associates, ...results }))
         );
       })
     ).subscribe({
-      next: (data: any) => {
-        if (!data) { this.loading = false; return; }
-
-        const { associates, quizAttempts, interviewEvals } = data;
-        const xpMap: Record<number, { quizXp: number; interviewXp: number }> = {};
-        for (const a of associates) xpMap[a.id] = { quizXp: 0, interviewXp: 0 };
-
-        for (const attempts of (quizAttempts as any[][])) {
-          for (const attempt of attempts) {
-            if (xpMap[attempt.associateId] !== undefined) {
-              xpMap[attempt.associateId].quizXp += attempt.score ?? 0;
-            }
-          }
-        }
-
-        for (const evals of (interviewEvals as any[][])) {
-          for (const e of evals) {
-            if (xpMap[e.associateId] !== undefined) {
-              xpMap[e.associateId].interviewXp += e.totalScore ?? 0;
-            }
-          }
-        }
+      next: (associates: any) => {
+        if (!associates) { this.loading = false; return; }
 
         const unsorted: LeaderboardEntry[] = (associates as any[]).map((a: any) => ({
           rank: 0,
           associateId: a.id,
           fullName: a.fullName || a.email || `Associate #${a.id}`,
           email: a.email || '',
-          quizXp: xpMap[a.id]?.quizXp ?? 0,
-          interviewXp: xpMap[a.id]?.interviewXp ?? 0,
-          totalXp: (xpMap[a.id]?.quizXp ?? 0) + (xpMap[a.id]?.interviewXp ?? 0),
+          xp: Number(a.xp ?? 0),
           isCurrentUser: a.id === this.currentAssociateId
         }));
 
-        unsorted.sort((a, b) => b.totalXp - a.totalXp);
+        unsorted.sort((a, b) => b.xp - a.xp);
         this.entries = unsorted.map((e, i) => ({ ...e, rank: i + 1 }));
         this.loading = false;
       },
@@ -138,6 +116,12 @@ export class MyLeaderboardComponent implements OnInit {
   }
 
   getInitials(name: string): string {
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+  }
+
+  /** Width % for the XP bar, relative to the top scorer */
+  getXpBarPct(xp: number): number {
+    const max = this.entries[0]?.xp ?? 0;
+    return max > 0 ? Math.round((xp / max) * 100) : 0;
   }
 }
