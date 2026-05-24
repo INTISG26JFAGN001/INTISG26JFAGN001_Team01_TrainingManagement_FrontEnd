@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-landing',
@@ -8,6 +9,7 @@ import { Router } from '@angular/router';
 })
 export class LandingComponent {
   activeUseCase = 0;
+  loggedIn = signal(false);
 
   useCases = [
     { label: 'Onboarding', icon: 'person_add', desc: 'Streamline new hire onboarding with automated training paths, progress tracking, and completion certificates.' },
@@ -33,7 +35,11 @@ export class LandingComponent {
 
   partners = ['Cognizant', 'Capgemini', 'Infosys', 'Deloitte', 'IBM', 'Accenture'];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private auth: AuthService) {
+    if(auth.isLoggedIn()){
+      this.loggedIn.set(true);
+    }
+  }
 
   goToLogin(): void { this.router.navigate(['/auth/login']); }
   goToDemo(): void { this.router.navigate(['/auth/login']); }

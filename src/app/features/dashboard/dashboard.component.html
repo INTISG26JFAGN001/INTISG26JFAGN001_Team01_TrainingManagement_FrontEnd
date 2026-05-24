@@ -3,8 +3,10 @@
   <!-- Greeting Banner -->
   <div class="greeting-banner" [ngClass]="roleCssClass">
     <div class="greeting-text">
-      <h2>{{ getRoleGreeting() }}, {{ username }}!</h2>
+      <div style="display: flex; gap: 10px;">
+      <h2>{{ getRoleGreeting() }}, <span style="color: var(--accent);">{{ username }}</span>!</h2>
       <p class="role-badge-line"><span class="role-badge">{{ getRoleLabel() }}</span></p>
+      </div>
       <p class="greeting-sub">Welcome to the Training Management System.</p>
     </div>
     <div class="greeting-illustration">
@@ -20,34 +22,34 @@
   <!-- ===== ADMIN / TECH LEAD VIEW ===== -->
   <ng-container *ngIf="isAdmin || isTechLead">
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card" (click)="redirectToBatches()">
         <div class="stat-icon icon-teal"><mat-icon>groups</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.batches }}</span><span class="stat-label">Total Batches</span></div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" (click)="redirectToAssociates()">
         <div class="stat-icon icon-blue"><mat-icon>person</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.associates }}</span><span class="stat-label">Total Associates</span></div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" (click)="redirectToTrainers()">
         <div class="stat-icon icon-green"><mat-icon>supervisor_account</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.trainers }}</span><span class="stat-label">Total Trainers</span></div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" (click)="redirectToAssessments()">
         <div class="stat-icon icon-orange"><mat-icon>quiz</mat-icon></div>
         <div class="stat-info"><span class="stat-value">{{ stats.assessments }}</span><span class="stat-label">Assessments</span></div>
       </div>
     </div>
 
     <div class="secondary-stats">
-      <div class="secondary-card ongoing">
+      <div class="secondary-card ongoing" (click)="redirectToBatchesByStatus('active')">
         <mat-icon>play_circle</mat-icon>
         <div><span class="sec-val">{{ stats.ongoing }}</span><span class="sec-label">Ongoing</span></div>
       </div>
-      <div class="secondary-card upcoming">
+      <div class="secondary-card upcoming" (click)="redirectToBatchesByStatus('upcoming')">
         <mat-icon>schedule</mat-icon>
         <div><span class="sec-val">{{ stats.upcoming }}</span><span class="sec-label">Upcoming</span></div>
       </div>
-      <div class="secondary-card completed">
+      <div class="secondary-card completed" (click)="redirectToBatchesByStatus('completed')">
         <mat-icon>check_circle</mat-icon>
         <div><span class="sec-val">{{ stats.completed }}</span><span class="sec-label">Completed</span></div>
       </div>

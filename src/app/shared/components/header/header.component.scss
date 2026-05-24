@@ -128,6 +128,7 @@
 
 /* ── Dropdown menu content ── */
 ::ng-deep .user-dropdown {
+  width: 200px;
   .menu-user-info {
     padding: 10px 16px 8px;
     display: flex; flex-direction: column;

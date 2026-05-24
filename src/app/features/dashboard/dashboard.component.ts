@@ -8,6 +8,7 @@ import { AssessmentService } from '../../core/services/assessment.service';
 import { ScheduleService } from '../../core/services/schedule.service';
 import { ProjectService } from '../../core/services/project.service';
 import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,7 +49,8 @@ export class DashboardComponent implements OnInit {
     private assessmentSvc: AssessmentService,
     private scheduleSvc: ScheduleService,
     private projectSvc: ProjectService,
-    private auth: AuthService
+    private auth: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -250,5 +252,25 @@ export class DashboardComponent implements OnInit {
 
   get roleCssClass(): string {
     return 'role-' + this.role.toLowerCase().replace('role_', '');
+  }
+
+  redirectToBatches(){
+    this.router.navigate(['/batches']);
+  }
+
+  redirectToBatchesByStatus(status: string){
+    this.router.navigate(['/batches'], {queryParams: {filter: status}});
+  }
+
+  redirectToAssociates(){
+    this.router.navigate(['/associates']);
+  }
+
+  redirectToTrainers(){
+    this.router.navigate(['/trainers']);
+  }
+
+  redirectToAssessments(){
+    this.router.navigate(['/assessments']);
   }
 }

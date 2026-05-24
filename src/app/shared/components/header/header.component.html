@@ -23,15 +23,15 @@
 
     <mat-menu #userMenu="matMenu" class="user-dropdown">
       <div class="menu-user-info">
-        <span class="menu-username">{{ username }}</span>
+        <span class="menu-username" style="font-size: 1.2rem; width: 100%; overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ username }}</span>
         <span class="menu-role">{{ getRoleLabel() }}</span>
       </div>
       <mat-divider></mat-divider>
-      <button mat-menu-item (click)="goToProfile()">
-        <mat-icon>person_outline</mat-icon><span>My Profile</span>
+      <button mat-menu-item (click)="goToProfile()" >
+        <mat-icon>person_outline</mat-icon><span style="font-size: 0.85rem;">My Profile</span>
       </button>
       <button mat-menu-item (click)="logout()" class="logout-item">
-        <mat-icon>logout</mat-icon><span>Sign Out</span>
+        <mat-icon>logout</mat-icon><span style="font-size: 0.85rem;">Sign Out</span>
       </button>
     </mat-menu>
   </div>

@@ -9,7 +9,7 @@
     <a (click)="scrollTo('features')">Features</a>
     <a (click)="scrollTo('demo')">Demo</a>
   </div>
-  <button class="btn-signin" (click)="goToLogin()">Sign In</button>
+  <button class="btn-signin" (click)="goToLogin()">{{ loggedIn()? 'Dashboard': 'Sign In' }}</button>
 </nav>
 
 <!-- ── HERO ── -->

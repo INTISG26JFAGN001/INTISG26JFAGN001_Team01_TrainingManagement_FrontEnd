@@ -166,6 +166,7 @@
   .user-info {
     display: flex; flex-direction: column; overflow: hidden;
     .user-name {
+      width: 90%;
       font-size: 12px; font-weight: 600; color: var(--text-primary);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }

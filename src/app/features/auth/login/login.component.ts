@@ -16,6 +16,7 @@ export class LoginComponent {
   });
   loading = false;
   hidePassword = true;
+  submitClick = false;
   features = [
     { icon: 'groups', text: 'Manage Training Batches' },
     { icon: 'quiz', text: 'Assessments & Evaluations' },
@@ -28,9 +29,17 @@ export class LoginComponent {
     private auth: AuthService,
     private router: Router,
     private snack: MatSnackBar
-  ) {}
+  ) {
+    if(auth.isLoggedIn()){
+      router.navigate(['/dashboard']);
+    }
+  }
+
+
 
   submit(): void {
+    this.submitClick = true;
+    console.log(this.loading);
     if (this.form.invalid) return;
     this.loading = true;
     this.auth.login(this.form.value as any).subscribe({
@@ -40,5 +49,9 @@ export class LoginComponent {
         this.snack.open(err.error?.message || 'Invalid credentials', 'Close', { duration: 4000, panelClass: 'snack-error' });
       }
     });
+    this.submitClick = false;
+  }
+  redirectToHome(){
+    this.router.navigateByUrl("/");
   }
 }

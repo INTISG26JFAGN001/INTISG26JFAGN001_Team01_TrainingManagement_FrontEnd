@@ -4,7 +4,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { BatchService } from '../../../core/services/batch.service';
@@ -34,10 +34,17 @@ export class BatchListComponent implements OnInit {
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private router: Router,
-    private auth: AuthService
-  ) {}
+    private auth: AuthService,
+    private route: ActivatedRoute
+  ) {
+    const filter = route.snapshot.queryParamMap.get('filter');
+    if(filter!=null){
+      this.statusFilter=filter.toUpperCase();
+      
+    }
+  }
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void { this.load();  }
 
   load(): void {
     this.loading = true;

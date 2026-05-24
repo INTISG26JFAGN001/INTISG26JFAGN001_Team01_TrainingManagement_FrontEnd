@@ -158,12 +158,48 @@
   padding: 44px 40px;
 }
 
+.back-to-home{
+  position: relative;
+  display: grid;
+  grid-template-columns: 10px auto;
+  width: fit-content;
+  margin: auto;
+  place-items: center;
+  color: gray;
+  margin-top: 30px;
+  text-align: center; 
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:hover{
+    color: var(--text-primary);
+    column-gap: 6px;
+  }
+  column-gap: 3px;
+}
+.back-to-home::after{
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%);
+  transform-origin: center;
+  background-color: var(--text-primary);
+  transition: all 0.25s ease;
+}
+.back-to-home:hover::after{
+  width: 90%;
+}
+
 .form-title {
   font-size: 26px;
   font-weight: 700;
   color: #fff;
   margin: 0 0 28px;
   letter-spacing: 0.3px;
+  text-align: center;
 }
 
 /* ── Form inputs ── */
@@ -243,7 +279,15 @@
   box-shadow: 0 6px 20px rgba(0,114,255,0.4);
 
   &:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.login-btn.disabled-btn{
+  background: linear-gradient(135deg, #cdf2fd, #d0e2f8);
+  border: none;
+  color: rgb(97, 97, 97);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
 }
 
 .hint-text {

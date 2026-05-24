@@ -28,7 +28,8 @@
     </div>
 
     <!-- Right: Form -->
-    <div class="login-right">
+    <div class="login-right" style="position: relative;">
+      <div>
       <h2 class="form-title">Login</h2>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
@@ -36,7 +37,7 @@
           <span class="input-icon"><mat-icon>email</mat-icon></span>
           <input formControlName="username" type="text" placeholder="Username / Email" class="form-input" autocomplete="username"/>
         </div>
-        <div class="input-error" *ngIf="form.get('username')?.touched && form.get('username')?.hasError('required')">
+        <div class="input-error" *ngIf="(form.get('username')?.touched && form.get('username')?.hasError('required'))">
           Username is required
         </div>
 
@@ -57,7 +58,9 @@
         </button>
       </form>
 
-      <p class="hint-text">Use: <strong>admin</strong> / <strong>pass</strong></p>
+      <!-- <p class="hint-text">Use: <strong>admin</strong> / <strong>pass</strong></p> -->
+      <div class="back-to-home" (click)="redirectToHome()"><mat-icon style="transform: rotate(180deg);">arrow_right</mat-icon>Back To Home</div>
+      </div>
     </div>
   </div>
 
