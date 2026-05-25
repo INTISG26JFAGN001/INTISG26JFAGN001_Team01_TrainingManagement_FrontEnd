@@ -19,13 +19,13 @@ import { Trainer, Course, User } from '../../../core/models';
         <div class="form-row">
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Start Date</mat-label>
-            <input matInput [matDatepicker]="startPicker" formControlName="startDate"/>
+            <input matInput [matDatepicker]="startPicker" formControlName="startDate" [min]="minStartDate"/>
             <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>End Date</mat-label>
-            <input matInput [matDatepicker]="endPicker" formControlName="endDate"/>
+            <input matInput [matDatepicker]="endPicker" formControlName="endDate" [min]="minEndDate"/>
             <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
@@ -77,7 +77,12 @@ export class BatchFormComponent implements OnInit {
   trainers: Trainer[] = [];
   courses: Course[] = [];
   saving = false;
-
+  minStartDate = new Date();
+  minEndDate = (()=>{
+    const after = new Date();
+    after.setDate(after.getDate()+1);
+    return after;
+  })();
   constructor(
     private fb: FormBuilder,
     private svc: BatchService,
@@ -86,7 +91,10 @@ export class BatchFormComponent implements OnInit {
     private userSvc: UserService,
     private snack: MatSnackBar,
     public dialogRef: MatDialogRef<BatchFormComponent>
-  ) {}
+  ) {
+    console.log(this.minStartDate);
+    console.log(this.minEndDate);
+  }
 
   ngOnInit(): void {
     forkJoin({

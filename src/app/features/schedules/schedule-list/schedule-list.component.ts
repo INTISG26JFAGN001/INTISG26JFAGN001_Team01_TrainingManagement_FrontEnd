@@ -241,6 +241,7 @@ export class ScheduleListComponent implements OnInit {
       // console.log(e);
       const batchToSchedule = this.batches.filter(b=>b.id===e)[0];
       this.maxDate = this.toLocalDateTimeString(new Date(batchToSchedule.endDate));
+      this.form.get('sessionDate')?.setValue('');
       this.form.get('sessionDate')?.enable();
     }
 }
