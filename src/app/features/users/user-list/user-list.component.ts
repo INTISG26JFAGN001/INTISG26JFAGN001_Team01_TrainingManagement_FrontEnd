@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -8,6 +8,7 @@ import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { UserFormComponent } from '../user-form/user-form.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-user-list',
@@ -18,20 +19,28 @@ export class UserListComponent implements OnInit {
   displayedColumns = ['id', 'username', 'fullName', 'email', 'role', 'actions'];
   dataSource = new MatTableDataSource<User>();
   loading = true;
+  filterUsername = signal('');
 
   @ViewChild(MatPaginator) set paginator(mp: MatPaginator | null) { if (mp) this.dataSource.paginator = mp; }
   @ViewChild(MatSort) set sort(ms: MatSort | null) { if (ms) this.dataSource.sort = ms; }
 
-  constructor(private svc: UserService, private dialog: MatDialog, private snack: MatSnackBar) {}
+  constructor(private svc: UserService, private dialog: MatDialog, private snack: MatSnackBar, 
+    private route: ActivatedRoute
+  ) {
+  }
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void { 
+    this.load();
+   }
 
   load(): void {
     this.loading = true;
     this.svc.getAll().subscribe({ next: (data) => { this.dataSource.data = data; this.loading = false; }, error: () => this.loading = false });
   }
 
-  applyFilter(e: Event): void { this.dataSource.filter = (e.target as HTMLInputElement).value.trim().toLowerCase(); }
+  filterUsers(e: Event): void { this.filterUsername.set((e.target as HTMLInputElement)?.value); this.applyFilter();}
+
+  applyFilter(): void { this.dataSource.filter = this.filterUsername().trim().toLowerCase(); }
 
   openForm(user?: User): void {
     this.dialog.open(UserFormComponent, { width: '500px', data: user }).afterClosed().subscribe(r => { if (r) this.load(); });

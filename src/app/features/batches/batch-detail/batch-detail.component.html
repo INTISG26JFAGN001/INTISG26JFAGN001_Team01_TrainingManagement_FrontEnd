@@ -57,7 +57,7 @@
       <mat-icon>school</mat-icon>
       <h3>Trainer</h3>
     </div>
-    <div class="trainer-row" *ngIf="batch.trainerId">
+    <div class="trainer-row" *ngIf="batch.trainerId" (click)="redirectToUserTrainer(batch.trainerId)">
       <div class="trainer-avatar">{{ (trainerName || 'T').charAt(0) }}</div>
       <div class="trainer-info">
         <span class="trainer-name">{{ trainerName || ('Trainer #' + batch.trainerId) }}</span>

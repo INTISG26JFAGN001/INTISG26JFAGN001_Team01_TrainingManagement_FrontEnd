@@ -13,6 +13,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 import { TrainerFormComponent } from '../trainer-form/trainer-form.component';
 import { TrainerEditFormComponent } from '../trainer-edit-form/trainer-edit-form.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({ selector: 'app-trainer-list', templateUrl: './trainer-list.component.html', styleUrls: ['./trainer-list.component.scss'] })
 export class TrainerListComponent implements OnInit {
@@ -29,10 +30,20 @@ export class TrainerListComponent implements OnInit {
     private userSvc: UserService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {}
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void { 
+    const searchUserId = this.route.snapshot.queryParamMap.get("id");
+    if(searchUserId!=null){
+      this.dataSource.filter = searchUserId;
+      this.dataSource.filterPredicate = (user, filter): boolean =>{
+        return String(user.trainerId)==filter;
+      }
+    }
+    this.load();
+  }
 
   load(): void {
     this.loading = true;

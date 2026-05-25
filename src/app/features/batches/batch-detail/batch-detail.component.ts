@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap, map } from 'rxjs/operators';
@@ -26,7 +26,8 @@ export class BatchDetailComponent implements OnInit {
     private userSvc: UserService,
     private associateSvc: AssociateService,
     private auth: AuthService,
-    private snack: MatSnackBar
+    private snack: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -118,5 +119,9 @@ export class BatchDetailComponent implements OnInit {
     if (experienceLevel) return experienceLevel;
     const map: Record<number, string> = { 0: 'Junior', 1: 'Mid', 2: 'Senior' };
     return xp !== undefined ? (map[xp] ?? String(xp)) : '—';
+  }
+
+  redirectToUserTrainer(trainerId: number){
+    this.router.navigate(['/trainers'], {queryParams:{id: trainerId}});
   }
 }
