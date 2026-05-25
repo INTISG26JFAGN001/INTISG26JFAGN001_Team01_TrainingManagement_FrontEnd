@@ -17,7 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({ selector: 'app-trainer-list', templateUrl: './trainer-list.component.html', styleUrls: ['./trainer-list.component.scss'] })
 export class TrainerListComponent implements OnInit {
-  displayedColumns = ['userId', 'fullName', 'email', 'technologies', 'actions'];
+  displayedColumns = ['userId','trainerId', 'fullName', 'email', 'technologies', 'actions'];
   dataSource = new MatTableDataSource<Trainer>();
   loading = true;
   isAdmin = this.auth.isAdmin();
@@ -67,6 +67,7 @@ export class TrainerListComponent implements OnInit {
           const u = userMap.get(t.userId);
           return u ? { ...t, fullName: u.fullName || u.username, email: u.email } : t;
         });
+        console.log(enriched);
         this.dataSource.data = enriched;
         this.loading = false;
       },

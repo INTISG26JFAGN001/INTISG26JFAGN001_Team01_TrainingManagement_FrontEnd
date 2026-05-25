@@ -19,12 +19,17 @@
     </div>
 
     <div class="table-container" *ngIf="!loading; else loadingTpl">
-      <table mat-table [dataSource]="dataSource" matSort class="data-table">
+      <table mat-table [dataSource]="dataSource" matSort class="data-table" style="overflow-x:auto;">
 
         <!-- User ID -->
         <ng-container matColumnDef="userId">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>User ID</th>
-          <td mat-cell *matCellDef="let t"><span class="id-chip">{{ t.userId }}</span></td>
+          <td mat-cell *matCellDef="let t" style="text-align:center;"><span class="id-chip">{{ t.userId }}</span></td>
+        </ng-container>
+
+        <ng-container matColumnDef="trainerId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Trainer ID</th>
+          <td mat-cell *matCellDef="let t" style="text-align: center;"><span class="id-chip">{{ t.trainerId }}</span></td>
         </ng-container>
 
         <!-- Name -->
@@ -59,7 +64,7 @@
         <!-- Actions (admin only) -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let t">
+          <td mat-cell *matCellDef="let t" >
             <button mat-icon-button color="primary" (click)="openEdit(t)" *ngIf="isAdmin"
                     matTooltip="Edit trainer">
               <mat-icon>edit</mat-icon>
