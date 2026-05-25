@@ -12,6 +12,22 @@ export class HeaderComponent implements OnInit {
   username = this.auth.getUsername();
   role = this.auth.getRole() ?? '';
   isDark = true;
+  map: Record<string, string> = {
+      '/dashboard': 'Dashboard',
+      '/users': 'User Management',
+      '/batches': 'Batch Management',
+      '/associates': 'Associates',
+      '/trainers': 'Trainers',
+      '/schedules': 'Schedules',
+      '/enrollments': 'Enrollments',
+      '/catalog/technologies': 'Technologies',
+      '/catalog/courses': 'Courses',
+      '/catalog/stages': 'Stages',
+      '/assessments/quizzes': 'Quizzes',
+      '/assessments/interviews': 'Interviews',
+      '/projects': 'Projects',
+      '/evaluations': 'Evaluations',
+    };
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -37,24 +53,8 @@ export class HeaderComponent implements OnInit {
 
   getPageTitle(): string {
     const url = this.router.url;
-    const map: Record<string, string> = {
-      '/dashboard': 'Dashboard',
-      '/users': 'User Management',
-      '/batches': 'Batch Management',
-      '/associates': 'Associates',
-      '/trainers': 'Trainers',
-      '/schedules': 'Schedules',
-      '/enrollments': 'Enrollments',
-      '/catalog/technologies': 'Technologies',
-      '/catalog/courses': 'Courses',
-      '/catalog/stages': 'Stages',
-      '/assessments/quizzes': 'Quizzes',
-      '/assessments/interviews': 'Interviews',
-      '/projects': 'Projects',
-      '/evaluations': 'Evaluations',
-    };
-    for (const key of Object.keys(map)) {
-      if (url.startsWith(key)) return map[key];
+    for (const key of Object.keys(this.map)) {
+      if (url.startsWith(key)) return this.map[key];
     }
     return 'Training Management System';
   }
@@ -79,5 +79,14 @@ export class HeaderComponent implements OnInit {
       ROLE_TECH_LEAD: 'Tech Lead', ROLE_SCRUM_LEAD: 'Scrum Lead'
     };
     return map[this.role] ?? this.role;
+  }
+
+  handleSearch(searchInput: string): void{
+    const keys = (Object.keys(this.map) as Array<string>);
+    const key = keys.find(k=>this.map[k].toLowerCase()===searchInput.toLowerCase())!;
+    console.log(key);
+    const url = this.map[key];
+    console.log(url);
+    this.router.navigate([key]);
   }
 }

@@ -6,8 +6,21 @@
 
     <div class="search-bar">
       <mat-icon class="search-icon">search</mat-icon>
-      <input type="text" placeholder="Search SkillSync..." class="search-input" />
-      <button class="search-btn">Search</button>
+      <input #searchFieldInput type="text" placeholder="Search SkillSync..." class="search-input" list="searchDataList"/>
+      <button class="search-btn" (click)="handleSearch(searchFieldInput.value)">Search</button>
+      <datalist id="searchDataList">
+        <option>Users</option>
+        <option>Associates</option>
+        <option>Trainers</option>
+        <option>Schedules</option>
+        <option>Enrollments</option>
+        <option>Technologies</option>
+        <option>Courses</option>
+        <option>Stages</option>
+        <option>Quizzes</option>
+        <option>Projects</option>
+        <option>Interviews</option>
+      </datalist>
     </div>
   </div>
 

@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { switchMap, catchError, map } from 'rxjs/operators';
@@ -28,8 +28,13 @@ export class ScheduleListComponent implements OnInit {
   loading = false;
   saving = false;
   showForm = false;
-
   isAssociate = this.auth.isAssociate();
+  minDate = this.toLocalDateTimeString(new Date());
+  maxDate = this.toLocalDateTimeString((()=>{
+    const after = new Date();
+    after.setMonth(after.getMonth()+1);
+    return after;
+  })());
   canManage = this.auth.hasRole('ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_TECH_LEAD');
   private trainerBatchIds: Set<number> | null = null;
 
@@ -52,7 +57,8 @@ export class ScheduleListComponent implements OnInit {
     private fb: FormBuilder,
     private snack: MatSnackBar,
     private auth: AuthService
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {
     if (this.isAssociate) {
@@ -77,10 +83,17 @@ export class ScheduleListComponent implements OnInit {
     } else {
       this.loading = true;
       this.batchSvc.getAll().subscribe(b => {
+        b = b.filter(b=>b.status!=='COMPLETED');
         this.batches = b;
         this.loadAllSchedules();
       });
     }
+    this.form.get('sessionDate')?.disable();
+  }
+  // 2026-05-25T14:00
+  private toLocalDateTimeString(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   private loadAssociateView(): void {
@@ -218,9 +231,16 @@ export class ScheduleListComponent implements OnInit {
         console.log(s.scheduleId);
         if (c && s.scheduleId) 
           this.svc.deleteSchedule(s.scheduleId).subscribe({
-            next: (res) => { console.log(res);this.snack.open('Schedule deleted', 'Close', { duration: 3000 }); this.loadSchedules(); },
-            error: (res) => { console.log(res);this.snack.open('Failed to delete', 'Close', { duration: 3000 });}
+            next: (res) => { this.snack.open('Schedule deleted', 'Close', { duration: 3000 }); this.loadSchedules(); },
+            error: (res) => { this.snack.open('Failed to delete', 'Close', { duration: 3000 });}
           });
       });
+    }
+
+    handleBatchAddSchedule(e: Number){
+      // console.log(e);
+      const batchToSchedule = this.batches.filter(b=>b.id===e)[0];
+      this.maxDate = this.toLocalDateTimeString(new Date(batchToSchedule.endDate));
+      this.form.get('sessionDate')?.enable();
     }
 }

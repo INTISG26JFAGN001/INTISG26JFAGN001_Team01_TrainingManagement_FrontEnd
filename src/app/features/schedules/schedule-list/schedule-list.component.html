@@ -19,17 +19,17 @@
       <form [formGroup]="form" class="add-form">
         <mat-form-field appearance="outline" class="field">
           <mat-label>Batch</mat-label>
-          <mat-select formControlName="batchId">
+          <mat-select formControlName="batchId" (valueChange)="handleBatchAddSchedule($event)">
             <mat-option *ngFor="let b of batches" [value]="b.id">
-              {{ getBatchLabel(b.id) }} — {{ b.status }}
+              {{ getBatchLabel(b.id) }}  {{ b.status }}
             </mat-option>
           </mat-select>
           <mat-error>Batch is required</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="field">
+        <mat-form-field appearance="outline" class="field"  [ngStyle]="{'cursor':form.get('batchId')?.invalid!?'not-allowed':'default'}">
           <mat-label>Session Date</mat-label>
-          <input matInput type="datetime-local" formControlName="sessionDate"/>
+          <input matInput type="datetime-local" formControlName="sessionDate" [min]="minDate" [max]="maxDate"/>
           <mat-error>Session date is required</mat-error>
         </mat-form-field>
 
