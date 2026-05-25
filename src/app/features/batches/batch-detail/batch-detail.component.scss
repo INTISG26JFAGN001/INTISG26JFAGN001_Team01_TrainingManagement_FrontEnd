@@ -1,6 +1,6 @@
 .page-header {
   align-items: flex-start;
-  .header-info { display: flex; align-items: center; gap: 8px; h2 { margin: 0 0 4px; } }
+  .header-info { display: flex; align-items: center; gap: 8px; div{display: flex; gap: 10px;}; .status-chip{display: grid;place-items: center;}; }
 }
 
 .batch-id-accent { color: var(--accent); font-family: monospace; }
@@ -23,6 +23,12 @@
   .info-label { display: block; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
   .info-value { display: block; font-size: 24px; font-weight: 700; color: var(--text-primary); }
   .info-value-sm { display: block; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  & div{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 /* Section cards */

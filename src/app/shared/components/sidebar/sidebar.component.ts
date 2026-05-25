@@ -73,7 +73,6 @@ export class SidebarComponent {
 
   navigate(route: string): void {
     this.router.navigate([route]);
-    this.closeSidenav.emit();
   }
 
   isActive(route?: string): boolean {
