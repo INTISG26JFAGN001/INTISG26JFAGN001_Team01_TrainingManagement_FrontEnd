@@ -11,8 +11,8 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class LoginComponent {
   form = this.fb.group({
-    username: ['', Validators.required],
-    password: ['', Validators.required]
+    username: ['', [Validators.required, Validators.minLength(3)]],
+    password: ['', [Validators.required, Validators.minLength(4)]]
   });
   loading = false;
   hidePassword = true;

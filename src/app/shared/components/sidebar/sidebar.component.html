@@ -1,10 +1,12 @@
 <div class="sidebar">
   <!-- Brand -->
   <div class="sidebar-brand">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer;" routerLink="/landing">
     <div class="brand-icon">
       <mat-icon>school</mat-icon>
     </div>
     <span class="brand-title">SkillSync</span>
+    </div>
     <button class="collapse-btn" (click)="closeSidenav.emit()">
       <mat-icon>chevron_left</mat-icon>
     </button>

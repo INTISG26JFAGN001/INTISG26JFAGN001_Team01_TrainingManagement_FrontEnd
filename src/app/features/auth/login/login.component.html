@@ -35,13 +35,16 @@
       <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
         <div class="input-group">
           <span class="input-icon"><mat-icon>email</mat-icon></span>
-          <input formControlName="username" type="text" placeholder="Username / Email" class="form-input" autocomplete="username"/>
+          <input formControlName="username" type="text" placeholder="Username" class="form-input" autocomplete="username"/>
         </div>
         <div class="input-error" *ngIf="(form.get('username')?.touched && form.get('username')?.hasError('required'))">
           Username is required
         </div>
+        <div class="input-error" *ngIf="(form.get('username')?.touched && form.get('username')?.hasError('minlength'))">
+          Username must be atleast 3 characters
+        </div>
 
-        <div class="input-group">
+        <div class="input-group" >
           <span class="input-icon"><mat-icon>lock</mat-icon></span>
           <input formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Password" class="form-input" autocomplete="current-password"/>
           <button type="button" class="eye-btn" (click)="hidePassword = !hidePassword">
@@ -51,8 +54,11 @@
         <div class="input-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('required')">
           Password is required
         </div>
+        <div class="input-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('minlength')">
+          Password must be atleast 4 characters
+        </div>
 
-        <button type="submit" class="login-btn" [disabled]="loading">
+        <button type="submit" class="login-btn" [ngClass]="{'disabled-btn':loading|| form.invalid}" [disabled]="loading || form.invalid">
           <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
           <span *ngIf="!loading">Get Started</span>
         </button>
